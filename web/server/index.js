@@ -86,11 +86,14 @@ function compileMermaid(mermaidText) {
 
 function tryServeStatic(req, res) {
   if (req.method !== 'GET') return false;
-  let urlPath = req.url.split('?')[0];
-  if (urlPath === '/flow' || urlPath === '/flow/') urlPath = '/';
-  else if (urlPath.startsWith('/flow/')) urlPath = urlPath.replace(/^\/flow/, '');
+  let urlPath = req.url.split('?')[0] || '/';
+  // Normalize known prefixes (/flow) or root
+  if (urlPath === '/' || urlPath === '') urlPath = '/index.html';
+  if (urlPath === '/flow') urlPath = '/index.html';
+  if (urlPath.startsWith('/flow/')) urlPath = urlPath.replace(/^\/flow/, '') || '/index.html';
+
   const safePath = path.normalize(urlPath).replace(/^(\.\.[/\\])+/, '');
-  const filePath = path.join(__dirname, '../frontend', safePath === '/' ? 'index.html' : safePath);
+  const filePath = path.join(__dirname, '../frontend', safePath);
 
   if (!filePath.startsWith(path.join(__dirname, '../frontend'))) {
     return false;
