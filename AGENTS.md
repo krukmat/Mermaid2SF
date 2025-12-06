@@ -47,3 +47,4 @@
 - Si el proyecto no tiene tareas abiertas, revisa los documentos por si hay contenido relevante que agregar al `README`.
 - Al cerrar el branch o el proyecto, elimina documentos generados que no sean el `README` para evitar basura.
 - Para tareas de deploy, genera un documento aparte llamado `DEPLOY_STEPS.MD` con el detalle completo de pasos y consideraciones.
+- Antes de hacer commit y push, reporta el mensaje de commit (con detalle funcional del feature) en pantalla para evaluación y autorización.
