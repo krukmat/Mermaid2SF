@@ -89,11 +89,16 @@ function tryServeStatic(req, res) {
   let urlPath = req.url.split('?')[0] || '/';
   // Normalize known prefixes (/flow) or root
   if (urlPath === '/' || urlPath === '') urlPath = '/index.html';
-  if (urlPath === '/flow') urlPath = '/index.html';
-  if (urlPath.startsWith('/flow/')) urlPath = urlPath.replace(/^\/flow/, '') || '/index.html';
+  if (urlPath === '/flow' || urlPath === '/flow/') urlPath = '/index.html';
+  if (urlPath.startsWith('/flow/')) {
+    urlPath = urlPath.replace(/^\/flow/, '');
+    if (urlPath === '' || urlPath === '/') urlPath = '/index.html';
+  }
 
   const safePath = path.normalize(urlPath).replace(/^(\.\.[/\\])+/, '');
-  const filePath = path.join(__dirname, '../frontend', safePath);
+  const relativePath = safePath.replace(/^\/+/, '');
+  const finalPath = relativePath === '' ? 'index.html' : relativePath;
+  const filePath = path.join(__dirname, '../frontend', finalPath);
 
   if (!filePath.startsWith(path.join(__dirname, '../frontend'))) {
     return false;
