@@ -1,5 +1,7 @@
 // Minimal HTTP server scaffold (no external deps)
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
 const PORT = process.env.PORT || 4000;
 
@@ -42,12 +44,15 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Serve static frontend (web/frontend)
+  const served = tryServeStatic(req, res);
+  if (served) return;
+
   res.writeHead(404, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({ error: 'Not found' }));
 });
 
 function compileMermaid(mermaidText) {
-  const path = require('path');
   const { MermaidParser } = require(path.join(__dirname, '../../dist/parser/mermaid-parser'));
   const { MetadataExtractor } = require(path.join(__dirname, '../../dist/extractor/metadata-extractor'));
   const { IntermediateModelBuilder } = require(path.join(__dirname, '../../dist/dsl/intermediate-model-builder'));
@@ -77,6 +82,36 @@ function compileMermaid(mermaidText) {
     errors: validation.errors,
     warnings: validation.warnings,
   };
+}
+
+function tryServeStatic(req, res) {
+  if (req.method !== 'GET') return false;
+  const urlPath = req.url.split('?')[0];
+  const safePath = path.normalize(urlPath).replace(/^(\.\.[/\\])+/, '');
+  const filePath = path.join(__dirname, '../frontend', safePath === '/' ? 'index.html' : safePath);
+
+  if (!filePath.startsWith(path.join(__dirname, '../frontend'))) {
+    return false;
+  }
+
+  if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+    return false;
+  }
+
+  const ext = path.extname(filePath).toLowerCase();
+  const mime =
+    {
+      '.html': 'text/html',
+      '.js': 'application/javascript',
+      '.css': 'text/css',
+      '.json': 'application/json',
+      '.svg': 'image/svg+xml',
+      '.png': 'image/png',
+    }[ext] || 'application/octet-stream';
+
+  res.writeHead(200, { 'Content-Type': mime });
+  fs.createReadStream(filePath).pipe(res);
+  return true;
 }
 
 server.listen(PORT, () => {
