@@ -10,6 +10,7 @@ coverage/
 # Generated files
 .generated/
 /output/
+demo/
 
 # Logs
 *.log

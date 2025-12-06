@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Important: AGENTS.md Synchronization
+
+**CRITICAL:** When changes are made to `AGENTS.md`, you MUST:
+1. Read and understand the updates in `AGENTS.md`
+2. Adapt the instructions to fit the context of this `CLAUDE.md` file
+3. Incorporate them as valid guidelines in the appropriate sections below
+4. Maintain consistency between both files without duplicating content verbatim
+
 ## Project Overview
 
 **Mermaid-to-Flow Compiler** (`mermaid-flow-compiler`) is a Node.js + TypeScript CLI that compiles Mermaid flowchart diagrams into Salesforce Flow metadata (`*.flow-meta.xml`).
@@ -306,3 +314,50 @@ hardis:package:deploy --flow-folder force-app/main/default/flows
 - Avoid over-engineering; follow "simple and composable" principle
 - Before deleting code, confirm intent (check instructions in `/Users/matiasleandrokruk/.claude/CLAUDE.md`)
 - When stuck, search web for relevant approaches (e.g., "Mermaid parser TypeScript")
+
+---
+
+## Agent Working Instructions
+
+### Pre-Development
+- **Leer el plan antes de desarrollar**: Revisar `PROJECT_PLAN.md` y respetar el plan sin desvíos
+- **Revisar tareas padre**: Antes de trabajar en una tarea hija, completar los pasos relacionados de la tarea padre
+- **Evaluar documentos de review**: Si existe un documento de review pendiente, evaluarlo y corregir según se solicite para pasar el proceso de revisión
+
+### Durante el Desarrollo
+- **Preserve pipeline separation**: Mermaid → Intermediate Flow DSL → Flow XML. Cada etapa debe ser testeable independientemente
+- **Normalize inputs**: Antes de generar, normalizar para mantener diffs estables (ordenamiento determinístico de nodos/edges/variables)
+- **Surface validation errors**: Incluir mensajes accionables (element id, línea, forma esperada) para ayudar tanto a humanos como agentes AI
+- **TypeScript strict mode**: Usar modo estricto, preferir composición sobre herencia, mantener módulos pequeños
+- **Naming conventions**: Files en kebab-case (e.g., `mermaid-parser.ts`); types/interfaces en PascalCase
+- **Code style**: 2 espacios de indentación, semicolons habilitados, tipos de retorno explícitos en funciones exportadas
+
+### Testing
+- **Always run tests**: Siempre ejecutar todos los unit tests con cobertura cuando apliques cambios de código
+- **Run linting**: Asegurarse de que ESLint/linting también pase
+- **Coverage requirements**: Happy paths y casos de falla (e.g., sintaxis Mermaid inválida, nodos faltantes)
+- **Add fixtures**: Usar `examples/` cuando la claridad del escenario ayude
+- **Test boundaries**: Cubrir parsing, extracción, validación y generación de XML; snapshots solo cuando el output es estable
+
+### Post-Development
+- **Marcar tareas**: Al terminar una tarea, marcarla como cerrada o en revisión en `PROJECT_PLAN.md`
+- **Reportar cambios**: Reportar los cambios de código con rutas/ubicaciones para facilitar la revisión visual
+- **Documentar features**: Todo feature nuevo debe estar documentado en el `README.md`
+- **Mostrar estado**: Al finalizar una tarea, mostrar el mapa del proyecto con el estado actualizado
+- **Reportar bugs**: Reportar bugs o incidencias en el plan
+
+### Commits & Pull Requests
+- **Before commit**: Antes de hacer commit y push, reportar el mensaje de commit (con detalle funcional del feature) en pantalla para evaluación y autorización
+- **Commit style**: Usar commits claros en presente (e.g., `feat: add decision outcome parsing`, `test: cover invalid edge labels`)
+- **Conventional Commits**: Preferir Conventional Commits para friendly changelogs
+- **PR requirements**: Incluir descripción concisa, issue/task vinculado, resultados de tests (`npm test` output), y sample CLI input/output si cambia comportamiento
+- **Keep PRs small**: PRs pequeños y enfocados; actualizar docs (README/PROJECT_PLAN/architecture) cuando se alteren CLI flags o Flow DSL shape
+
+### Documentation & Cleanup
+- **README updates**: Si el proyecto no tiene tareas abiertas, revisar los documentos por si hay contenido relevante que agregar al `README`
+- **Deploy documentation**: Para tareas de deploy, generar un documento aparte llamado `DEPLOY_STEPS.md` con el detalle completo de pasos y consideraciones
+- **Cleanup on close**: Al cerrar el branch o el proyecto, eliminar documentos generados que no sean el `README` para evitar basura
+
+### Build Artifacts
+- **Never commit**: No commitear `dist/`, `node_modules/`, o `coverage/`
+- **Debug artifacts**: Los artifacts de debug van a `.debug/` (gitignored)

@@ -1,6 +1,63 @@
 # Mermaid-to-Salesforce Flow Compiler
 
+> **Turn Mermaid diagrams into deployable Salesforce Flows** - Version control, CI/CD, and AI-ready workflows for Flow development.
+
 CLI tool to compile Mermaid flowcharts into Salesforce Flow metadata.
+
+---
+
+## 🎯 Why This Tool?
+
+**Problem:** Salesforce Flows live locked in the UI - hard to version control, review, or collaborate on.
+
+**Solution:** Treat Flows like code with this compiler:
+
+```mermaid
+flowchart LR
+    A[Mermaid Diagram] -->|compile| B[Flow DSL JSON]
+    B -->|validate| C[Salesforce XML]
+    C -->|deploy| D[Your Org]
+```
+
+**Result:** Git workflows, pull requests, CI/CD, automated testing, and AI-powered analysis for your Flows!
+
+---
+
+## ⚡ Quick Demo (30 Seconds)
+
+### 1️⃣ You have a diagram:
+
+```mermaid
+flowchart TD
+    Start([START: Customer Onboarding])
+    Screen[SCREEN: Collect Info]
+    Decision{DECISION: New Customer?}
+    Create[CREATE: Account]
+    End([END: Done])
+
+    Start --> Screen --> Decision
+    Decision -->|Yes| Create --> End
+    Decision -->|No default| End
+```
+
+### 2️⃣ Run ONE command:
+
+```bash
+npm run cli -- compile --input my-flow.mmd --out-flow ./flows
+```
+
+### 3️⃣ Get deployable output:
+
+```bash
+✓ Compilation successful
+  Flow XML: ./flows/my-flow.flow-meta.xml  ← Deploy to Salesforce!
+  DSL JSON: ./flows/my-flow.flow.json     ← Version control!
+  Docs: ./flows/my-flow.md                ← Auto documentation!
+```
+
+**[Quick Start Guide →](docs/QUICK_START.md)** - Get started in 2 minutes!
+
+---
 
 ## Features
 
@@ -417,6 +474,46 @@ Current coverage:
 - Deployment hosting is deferred
 
 See `PROJECT_PLAN.md` for complete roadmap.
+
+## 📚 Documentation & Resources
+
+### **Getting Started:**
+- 🚀 **[Quick Start Guide](docs/QUICK_START.md)** - From zero to working Flow in 2 minutes (start here!)
+- 🏗️ **[Architecture Document](mermaid-flow-compiler-architecture.md)** - System design and spec
+- 📝 **[CLAUDE.md](CLAUDE.md)** - Development guidelines and codebase overview
+- 📋 **[Project Plan](PROJECT_PLAN.md)** - Complete roadmap and task tracking
+
+### **Quick Commands:**
+- ⚡ `npm run cli -- interactive` - Try interactive mode wizard
+- 📊 `npm run cli -- explain --input examples/v1/complete-flow.mmd` - Analyze a flow
+- ✅ `npm run cli -- lint --input examples/v1/` - Validate flows
+- 🔄 `npm run cli -- compile --input my-flow.mmd --watch` - Watch mode
+
+---
+
+## 🌟 What Makes This Special?
+
+### **For Solo Developers:**
+- ✅ **Git-based workflow** - Version control your Flows like any other code
+- ✅ **Local development** - Edit in VS Code with Mermaid preview
+- ✅ **Fast iteration** - Watch mode for instant feedback
+
+### **For Teams:**
+- ✅ **Code reviews** - Pull requests with clear diffs in DSL JSON
+- ✅ **Collaboration** - Multiple developers on same Flow without conflicts
+- ✅ **Documentation** - Always up-to-date, auto-generated docs
+
+### **For DevOps:**
+- ✅ **CI/CD ready** - Automated validation, testing, deployment
+- ✅ **Quality gates** - Strict mode prevents bad Flows
+- ✅ **Performance** - Sub-second compilation for rapid pipelines
+
+### **For AI/Automation:**
+- ✅ **AI-friendly DSL** - ChatGPT/Claude can read, analyze, and suggest improvements
+- ✅ **Programmatic** - Generate Flows from requirements automatically
+- ✅ **Analyzable** - Complexity metrics, recommendations, pattern detection
+
+---
 
 ## Contributing
 
