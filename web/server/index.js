@@ -86,7 +86,9 @@ function compileMermaid(mermaidText) {
 
 function tryServeStatic(req, res) {
   if (req.method !== 'GET') return false;
-  const urlPath = req.url.split('?')[0];
+  let urlPath = req.url.split('?')[0];
+  if (urlPath === '/flow' || urlPath === '/flow/') urlPath = '/';
+  else if (urlPath.startsWith('/flow/')) urlPath = urlPath.replace(/^\/flow/, '');
   const safePath = path.normalize(urlPath).replace(/^(\.\.[/\\])+/, '');
   const filePath = path.join(__dirname, '../frontend', safePath === '/' ? 'index.html' : safePath);
 
