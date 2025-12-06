@@ -16,20 +16,7 @@
 
 **The Solution:** Write flows as code (Mermaid diagrams), version control them like any other code, integrate with your CI/CD pipeline, and deploy with confidence.
 
-### Who is this for?
-
-- **Salesforce Developers** - Build, test, and deploy flows from the command line
-- **Flow Architects** - Design flows visually, review in PRs, collaborate with teams
-- **DevOps Engineers** - Automate flow deployment, enforce validation gates, track changes
-- **AI/Automation** - Generate flows programmatically, analyze flow patterns, suggest improvements
-
----
-
-## 🎯 Why This Tool?
-
-**Problem:** Salesforce Flows live locked in the UI - hard to version control, review, or collaborate on.
-
-**Solution:** Treat Flows like code with this compiler:
+### How it works:
 
 ```mermaid
 flowchart LR
@@ -39,6 +26,13 @@ flowchart LR
 ```
 
 **Result:** Git workflows, pull requests, CI/CD, automated testing, and AI-powered analysis for your Flows!
+
+### Who is this for?
+
+- **Salesforce Developers** - Build, test, and deploy flows from the command line
+- **Flow Architects** - Design flows visually, review in PRs, collaborate with teams
+- **DevOps Engineers** - Automate flow deployment, enforce validation gates, track changes
+- **AI/Automation** - Generate flows programmatically, analyze flow patterns, suggest improvements
 
 ---
 
