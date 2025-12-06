@@ -1256,7 +1256,7 @@ Esta tarea requiere integración con un **proyecto externo** (`agnostic-ai-pipel
 **4.2.2: Implementar visualizer de DSL**
 - [x] Render flow visualmente (lista de nodos/edges en canvas)
 - [x] Interactive nodes (selección, edición de metadata básica)
-- [ ] Zoom/pan controls (pendiente/optativo)
+- [x] Zoom/pan controls (canvas con botones + wheel/drag)
 
 **4.2.3: Implementar editor gráfico**
 - [x] Drag-and-drop elementos y reordenamiento

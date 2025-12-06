@@ -11,6 +11,7 @@ CLI tool to compile Mermaid flowcharts into Salesforce Flow metadata.
 - ✅ **Lint Command**: Validate flows without generating output
 - ✅ **Interactive Mode**: Wizard to compile or create flows with live validation
 - ✅ **Decompile Command**: Reverse Flow XML into DSL + Mermaid
+- ✅ **Web Visualizer**: Drag/drop editor with live XML preview and zoom/pan
 - ✅ **Strict Mode**: Treat warnings as errors for stricter validation
 - ✅ **Deterministic Output**: Same input always produces identical output (Git-friendly)
 

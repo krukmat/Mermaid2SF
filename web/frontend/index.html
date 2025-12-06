@@ -25,7 +25,8 @@
     button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
     .row { display: flex; gap: 0.5rem; align-items: center; }
     .row button { flex: 1; }
-    .canvas { background: #0f1531; border: 1px dashed #223054; border-radius: 10px; padding: 1rem; min-height: 520px; overflow: auto; position: relative; }
+    .canvas { background: #0f1531; border: 1px dashed #223054; border-radius: 10px; padding: 1rem; min-height: 520px; overflow: auto; position: relative; cursor: grab; }
+    .canvas-inner { transform-origin: top left; transition: transform 120ms ease-out; min-height: 520px; }
     .node { padding: 0.4rem 0.75rem; border-radius: 8px; margin: 0.25rem 0; display: inline-block; }
     .node.start { background: #14d88e33; border: 1px solid #14d88e; }
     .node.end { background: #ff758c33; border: 1px solid #ff758c; }
@@ -82,7 +83,15 @@
     <section class="content">
       <div class="card">
         <h3 style="margin-top:0;">Canvas</h3>
-        <div class="canvas" id="canvas"></div>
+        <div class="row" style="gap:0.5rem; margin-bottom:0.5rem; flex-wrap: wrap;">
+          <span class="pill">View</span>
+          <button class="secondary" id="zoomOut" style="min-width:72px;">-</button>
+          <button class="secondary" id="zoomIn" style="min-width:72px;">+</button>
+          <button id="resetView" style="min-width:120px;">Reset</button>
+        </div>
+        <div class="canvas" id="canvas">
+          <div class="canvas-inner" id="canvasInner"></div>
+        </div>
       </div>
       <div class="card">
         <h3 style="margin-top:0;">Mermaid Preview</h3>
@@ -102,6 +111,7 @@
   <script>
     const output = document.getElementById('output');
     const canvas = document.getElementById('canvas');
+    const canvasInner = document.getElementById('canvasInner');
     const list = document.getElementById('nodeList');
     const form = document.getElementById('form');
     const editorCard = document.getElementById('editorCard');
@@ -109,6 +119,11 @@
 
     let nodes = [];
     let selectedId = null;
+    let scale = 1;
+    let panX = 0;
+    let panY = 0;
+    let isPanning = false;
+    let panStart = { x: 0, y: 0 };
 
     const sampleNodes = [
       { id: 'Start_1', type: 'Start', label: 'Demo Start', apiName: 'Start_1', next: 'Screen_1' },
@@ -137,6 +152,10 @@
       renderCanvas();
       renderPreview();
       renderForm();
+    }
+
+    function applyTransform() {
+      canvasInner.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
     }
 
     function renderList() {
@@ -192,7 +211,7 @@
     }
 
     function renderCanvas() {
-      canvas.innerHTML = '';
+      canvasInner.innerHTML = '';
       nodes.forEach((n) => {
         const div = document.createElement('div');
         let cls = 'node default';
@@ -201,7 +220,7 @@
         else if (n.type === 'Decision') cls = 'node decision';
         div.className = cls;
         div.textContent = `${n.id}: ${n.label || n.apiName || n.type}`;
-        canvas.appendChild(div);
+        canvasInner.appendChild(div);
       });
       const edgeBlock = document.createElement('div');
       edgeBlock.style.marginTop = '0.5rem';
@@ -217,7 +236,13 @@
           edgeBlock.appendChild(edgeLine(n.id, n.next));
         }
       });
-      canvas.appendChild(edgeBlock);
+      canvasInner.appendChild(edgeBlock);
+      applyTransform();
+    }
+
+    function setScale(next) {
+      scale = Math.min(2, Math.max(0.4, next));
+      applyTransform();
     }
 
     function edgeLine(from, to, label = '') {
@@ -368,6 +393,42 @@
       const text = JSON.stringify(dsl, null, 2);
       navigator.clipboard?.writeText(text).catch(() => {});
       output.textContent = 'DSL JSON generated (copied to clipboard if permitted).';
+    });
+
+    document.getElementById('zoomIn').addEventListener('click', () => setScale(scale + 0.15));
+    document.getElementById('zoomOut').addEventListener('click', () => setScale(scale - 0.15));
+    document.getElementById('resetView').addEventListener('click', () => {
+      scale = 1;
+      panX = 0;
+      panY = 0;
+      applyTransform();
+    });
+
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      setScale(scale + delta);
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+      isPanning = true;
+      panStart = { x: e.clientX, y: e.clientY };
+      canvas.style.cursor = 'grabbing';
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isPanning) return;
+      const dx = e.clientX - panStart.x;
+      const dy = e.clientY - panStart.y;
+      panStart = { x: e.clientX, y: e.clientY };
+      panX += dx;
+      panY += dy;
+      applyTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isPanning = false;
+      canvas.style.cursor = 'grab';
     });
 
     document.getElementById('compileXml').addEventListener('click', async () => {
