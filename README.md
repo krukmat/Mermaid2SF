@@ -213,6 +213,12 @@ Artifacts:
 - Mermaid: `output/docs/complete-flow.mmd` (open in https://mermaid.live or VS Code)
 - Markdown summary: `output/docs/complete-flow.md`
 
+## API / OpenAPI
+
+- Local API server: `node web/server/index.js` (defaults to port 4000) with `/health` and `/api/compile`.
+- OpenAPI spec: `docs/openapi.yaml` (references `schemas/flow-dsl.schema.json` for DSL payloads).
+- Validate the spec: `npm run openapi:validate`.
+
 ## View the result without running commands
 
 Pre-generated outputs live under `examples/output/` so visitors can inspect the full pipeline without compiling locally:

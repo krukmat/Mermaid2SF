@@ -1,0 +1,149 @@
+openapi: 3.0.3
+info:
+  title: Mermaid-to-Salesforce Flow Compiler API
+  version: 1.0.0
+  description: >-
+    HTTP facade for the CLI compiler. Compile Mermaid to Salesforce Flow XML (and DSL)
+    via POST /api/compile. Spec references the Flow DSL schema for request/response payloads.
+servers:
+  - url: http://localhost:4000
+    description: Local dev server (node web/server/index.js)
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  version:
+                    type: string
+                    example: 1.0.0
+  /api/compile:
+    post:
+      summary: Compile Mermaid into Flow XML/DSL
+      description: >-
+        Accepts Mermaid text (or Flow DSL) and returns generated Salesforce Flow XML plus
+        any validation errors. Uses the same pipeline as the CLI command `compile`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompileRequest'
+      responses:
+        '200':
+          description: Compile result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompileResponse'
+        '400':
+          description: Invalid input
+        '500':
+          description: Internal error
+components:
+  schemas:
+    CompileRequest:
+      type: object
+      properties:
+        mermaidText:
+          type: string
+          description: Mermaid flowchart text
+          example: |
+            flowchart TD
+              Start([START: Demo])
+              End([END: Done])
+              Start --> End
+        dsl:
+          description: Flow DSL JSON (alternative to mermaidText)
+          $ref: '#/components/schemas/FlowDSL'
+        options:
+          type: object
+          properties:
+            strict:
+              type: boolean
+              description: Treat warnings as errors
+              default: false
+            debug:
+              type: boolean
+              description: Include debug timing info
+              default: false
+      anyOf:
+        - required: [mermaidText]
+        - required: [dsl]
+    CompileResponse:
+      type: object
+      properties:
+        xml:
+          type: string
+          description: Generated Salesforce Flow XML
+        dsl:
+          $ref: '#/components/schemas/FlowDSL'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationMessage'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationMessage'
+      example:
+        xml: "<Flow>...</Flow>"
+        errors: []
+        warnings: []
+    ValidationMessage:
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_CONNECTOR
+        message:
+          type: string
+          example: targetReference must point to an existing element
+        elementId:
+          type: string
+          example: Decision_1
+    FlowDSL:
+      description: Simplified Flow DSL shape (see schemas/flow-dsl.schema.json for full contract)
+      type: object
+      properties:
+        version:
+          type: integer
+          example: 1
+        flowApiName:
+          type: string
+          example: Demo_Flow
+        label:
+          type: string
+          example: Demo Flow
+        processType:
+          type: string
+          enum: [Autolaunched, RecordTriggered, Screen]
+        startElement:
+          type: string
+          example: Start_1
+        elements:
+          type: array
+          items:
+            type: object
+            description: Flow element (Start, End, Assignment, Decision, Screen, RecordCreate, RecordUpdate, Subflow, Loop, Wait, GetRecords, Fault)
+            properties:
+              id:
+                type: string
+              type:
+                type: string
+              apiName:
+                type: string
+              label:
+                type: string
+      externalDocs:
+        description: Full JSON Schema
+        url: ../schemas/flow-dsl.schema.json

@@ -922,8 +922,9 @@ Mermaid Diagram (.mmd) → Flow DSL (JSON/YAML) → Salesforce Flow XML
 - [x] Tests: 29 tests (100% passing)
 
 **3.0.3: Generar OpenAPI spec** ⬜
-- [ ] Opcional - Solo si se implementa web service
-- [ ] No requerido para CLI actual
+- [x] OpenAPI 3.0 (docs/openapi.yaml) para `/health` y `/api/compile`
+- [x] Referencia a schema DSL (schemas/flow-dsl.schema.json)
+- [x] Script de validación: `npm run openapi:validate`
 
 **3.0.4: VSCode schema integration** ✅
 - [x] Configurar `.vscode/settings.json` para `*.flow.json`
