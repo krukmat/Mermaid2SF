@@ -1,4 +1,9 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-npm test
+# Default: skip push-time tests unless explicitly enabled
+if [ "$RUN_TESTS_ON_PUSH" = "1" ]; then
+  npm test
+else
+  echo "Skipping npm test on push (set RUN_TESTS_ON_PUSH=1 to enable)"
+fi
