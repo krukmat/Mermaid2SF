@@ -1,5 +1,10 @@
 # Mermaid-to-Salesforce Flow Compiler
 
+[![CI](https://github.com/krukmat/Mermaid2SF/actions/workflows/ci.yml/badge.svg)](https://github.com/krukmat/Mermaid2SF/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/krukmat/Mermaid2SF/branch/main/graph/badge.svg)](https://codecov.io/gh/krukmat/Mermaid2SF)
+[![npm version](https://badge.fury.io/js/mermaid-flow-compiler.svg)](https://badge.fury.io/js/mermaid-flow-compiler)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 > **Turn Mermaid diagrams into deployable Salesforce Flows** - Version control, CI/CD, and AI-ready workflows for Flow development.
 
 ## What is this?
@@ -318,6 +323,7 @@ Artifacts:
 - Local API server: `node web/server/index.js` (defaults to port 4000) with `/health` and `/api/compile`.
 - OpenAPI spec: `docs/openapi.yaml` (references `schemas/flow-dsl.schema.json` for DSL payloads).
 - Validate the spec: `npm run openapi:validate`.
+- CI/CD guide: see `docs/CI_CD_GUIDE.md` for GH Actions and Husky instructions.
 
 -### Web visualizer
 - Serve the static UI directly from the Node server (included): start `node web/server/index.js` and open `http://<host>/flow/` if you proxy WordPress on `/` (adjust Apache/Nginx ProxyPass accordingly), or `/` if Node serves the root.

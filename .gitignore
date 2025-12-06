@@ -11,6 +11,7 @@ coverage/
 .generated/
 /output/
 demo/
+.ci-output/
 
 # Logs
 *.log

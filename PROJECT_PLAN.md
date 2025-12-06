@@ -864,29 +864,29 @@ Mermaid Diagram (.mmd) → Flow DSL (JSON/YAML) → Salesforce Flow XML
 ---
 
 ### **TASK 2.8: CI/CD Integration**
-**Estado**: ⬜ Pending (dejar para después)
-**Archivos afectados**: `.github/workflows/`, `.gitlab-ci.yml`
+**Estado**: ✅ Completed (GitHub Actions + hooks + badges + testing)
+**Archivos afectados**: `.github/workflows/ci.yml`, `.husky/`, `docs/CI_CD_GUIDE.md`, `README.md`
 
 #### Subtareas:
 
 **2.8.1: Configurar GitHub Actions**
-- [ ] Crear `.github/workflows/ci.yml`
-- [ ] Job: lint & test
-- [ ] Job: build
-- [ ] Job: compile examples
-- [ ] Job: validate generated XML
-- [ ] Artifacts: compiled flows
+- [x] Crear `.github/workflows/ci.yml` con jobs de lint, test matrix, build, compile, validate
+- [x] Job: lint & format check
+- [x] Job: test matrix + coverage upload
+- [x] Job: build
+- [x] Job: compile examples + artifacts
+- [x] Job: validate generated XML
 
 **2.8.2: Configurar pre-commit hooks**
-- [ ] Instalar husky
-- [ ] Hook: lint staged files
-- [ ] Hook: run affected tests
-- [ ] Hook: format code
+- [x] Instalar husky
+- [x] Hook: lint staged files (lint-staged)
+- [x] Hook: run lint + format
+- [x] Hook: run tests on push
 
 **2.8.3: Agregar badge de CI al README**
-- [ ] Badge de build status
-- [ ] Badge de coverage
-- [ ] Badge de version
+- [x] Badge de flujo de trabajo (build status)
+- [x] Badge de coverage (Codecov)
+- [x] Badge de versión npm te
 
 **2.8.4: Configurar GitLab CI (opcional)**
 - [ ] Crear `.gitlab-ci.yml`
@@ -894,9 +894,9 @@ Mermaid Diagram (.mmd) → Flow DSL (JSON/YAML) → Salesforce Flow XML
 - [ ] Integration con GitLab artifacts
 
 **2.8.5: Tests de CI pipeline**
-- [ ] Verificar que pipeline corre en PR
-- [ ] Verificar que falla con errores
-- [ ] Verificar que artifacts se generan
+- [x] Verificar que pipeline corre en push/PR (Actions triggered)
+- [x] Verificar que falla con errores (lint/test as gate)
+- [x] Verificar que artifacts se generan (compiled examples uploaded)
 
 ---
 
