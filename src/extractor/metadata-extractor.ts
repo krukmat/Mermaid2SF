@@ -292,7 +292,7 @@ export class MetadataExtractor {
   }
 
   private extractWaitProperties(label: string): Record<string, any> {
-    const lines = label.split('\n');
+    const lines = label.replace(/\\n/g, '\n').split('\n');
     let condition: string | undefined;
     let durationValue: number | undefined;
     let durationUnit: 'Seconds' | 'Minutes' | 'Hours' | 'Days' | undefined;
@@ -336,28 +336,38 @@ export class MetadataExtractor {
   }
 
   private extractGetRecordsProperties(label: string): Record<string, any> {
-    const lines = label.split('\n');
+    const lines = label.replace(/\\n/g, '\n').split('\n');
     const fields: string[] = [];
     const filters: any[] = [];
     let object = '';
+    let sortField: string | undefined;
+    let sortDirection: 'Ascending' | 'Descending' | undefined;
 
     for (const line of lines) {
-      const obj = line.match(/object:\s*(\w+)/i);
+      const obj = line.match(/object:\s*([A-Za-z0-9_]+)/i);
       if (obj) {
         object = obj[1];
         continue;
       }
-      const f = line.match(/field:\s*(\w+)/i);
+      const f = line.match(/field:\s*([A-Za-z0-9_.]+)/i);
       if (f) {
         fields.push(f[1]);
         continue;
       }
-      const filt = line.match(/filter:\s*(\w+)\s*=\s*(.+)/i);
+      const filt = line.match(/filter:\s*([A-Za-z0-9_.]+)\s*=\s*(.+)/i);
       if (filt) {
         filters.push({ field: filt[1], operator: 'EqualTo', value: filt[2].trim() });
       }
+      const sort = line.match(/sort:\s*([A-Za-z0-9_.]+)\s*(asc|desc)?/i);
+      if (sort) {
+        sortField = sort[1];
+        if (sort[2]) {
+          const dir = sort[2].toLowerCase();
+          sortDirection = dir === 'desc' ? 'Descending' : 'Ascending';
+        }
+      }
     }
 
-    return { object, fields, filters };
+    return { object, fields, filters, sortField, sortDirection };
   }
 }

@@ -281,20 +281,24 @@ function parseWaits(xml: string, elements: FlowElement[]) {
 }
 
 function parseLookups(xml: string, elements: FlowElement[]) {
-  const regex = /<recordLookups>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<object>(.*?)<\/object>[\s\S]*?(<filters>[\s\S]*?<\/filters>)*[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
+  const regex = /<recordLookups>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<object>(.*?)<\/object>[\s\S]*?(<filters>[\s\S]*?<\/filters>)*[\s\S]*?(<sortField>[\s\S]*?<\/sortField>)?[\s\S]*?(<sortOrder>[\s\S]*?<\/sortOrder>)?[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
   let m;
   while ((m = regex.exec(xml)) !== null) {
     const apiName = m[1];
     const label = m[2];
     const object = m[3];
     const filtersBlock = m[4] || '';
-    const connectorBlock = m[5] || '';
+    const sortFieldBlock = m[5] || '';
+    const sortOrderBlock = m[6] || '';
+    const connectorBlock = m[7] || '';
     const filters: any[] = [];
     const fRegex = /<filters>[\s\S]*?<field>(.*?)<\/field>[\s\S]*?<operator>(.*?)<\/operator>[\s\S]*?<stringValue>(.*?)<\/stringValue>[\s\S]*?<\/filters>/g;
     let fm;
     while ((fm = fRegex.exec(filtersBlock)) !== null) {
       filters.push({ field: fm[1], operator: fm[2], value: fm[3] });
     }
+    const sortField = extractValue(sortFieldBlock, /<sortField>(.*?)<\/sortField>/);
+    const sortOrder = extractValue(sortOrderBlock, /<sortOrder>(.*?)<\/sortOrder>/);
     const next = extractValue(connectorBlock, /<targetReference>(.*?)<\/targetReference>/);
     elements.push({
       id: apiName,
@@ -303,6 +307,8 @@ function parseLookups(xml: string, elements: FlowElement[]) {
       type: 'GetRecords',
       object,
       filters,
+      sortField: sortField || undefined,
+      sortDirection: (sortOrder as any) || undefined,
       next: next || undefined,
     } as any);
   }

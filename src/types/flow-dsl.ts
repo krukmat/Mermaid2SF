@@ -211,6 +211,10 @@ export interface GetRecordsElement extends BaseElement {
   filters?: RecordFilter[];
   /** Fields to return */
   fields?: string[];
+  /** Sort field API name */
+  sortField?: string;
+  /** Sort direction */
+  sortDirection?: 'Ascending' | 'Descending';
   /** Next element */
   next?: string;
 }

@@ -16,7 +16,7 @@ describe('Advanced elements (Loop, Wait, GetRecords, Fault)', () => {
 flowchart TD
   Start([START: Demo])
   LoopNode[[LOOP: Iterate\\n api: Loop_Demo\\n collection: coll_Items]]
-  GetNode[GET: Accounts\\n api: Get_Accounts\\n object: Account\\n field: Id\\n filter: Name = 'Test']
+  GetNode[GET: Accounts\\n api: Get_Accounts\\n object: Account\\n field: Id\\n filter: Name = 'Test'\\n sort: Name desc]
   WaitNode([WAIT: Pause\\n api: Wait_Demo\\n condition: $Flow > 0])
   FaultNode([FAULT: Handle\\n api: Fault_Handler])
   End([END: Done])
@@ -39,11 +39,17 @@ flowchart TD
     const validation = validator.validate(dsl);
     expect(validation.valid).toBe(true);
 
+    const get = dsl.elements.find((e: any) => e.type === 'GetRecords') as any;
+    expect(get.sortField).toBe('Name');
+    expect(get.sortDirection).toBe('Descending');
+
     const xml = xmlGen.generate(dsl);
     expect(xml).toContain('<loops>');
     expect(xml).toContain('<recordLookups>');
     expect(xml).toContain('<waits>');
     expect(xml).toContain('<faults>');
+    expect(xml).toContain('<sortField>Name</sortField>');
+    expect(xml).toContain('<sortOrder>Descending</sortOrder>');
   });
 
   it('supports Wait duration and event variants', () => {

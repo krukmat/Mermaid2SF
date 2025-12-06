@@ -336,6 +336,8 @@ export class IntermediateModelBuilder {
       object: metadata.properties.object || '',
       filters: metadata.properties.filters || [],
       fields: metadata.properties.fields || [],
+      sortField: metadata.properties.sortField,
+      sortDirection: metadata.properties.sortDirection,
       next: edges[0]?.to,
     };
   }

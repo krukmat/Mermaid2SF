@@ -307,6 +307,11 @@
             "fields": {
               "type": "array",
               "items": { "type": "string" }
+            },
+            "sortField": { "type": "string" },
+            "sortDirection": {
+              "type": "string",
+              "enum": ["Ascending", "Descending"]
             }
           }
         }

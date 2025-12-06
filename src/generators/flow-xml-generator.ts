@@ -510,6 +510,11 @@ export class FlowXmlGenerator {
       }
     }
 
+    if (element.sortField) {
+      lines.push(`        <sortField>${element.sortField}</sortField>`);
+      lines.push(`        <sortOrder>${element.sortDirection || 'Ascending'}</sortOrder>`);
+    }
+
     if (element.fields && element.fields.length > 0) {
       for (const f of element.fields.sort()) {
         lines.push(`        <outputAssignments>`);
