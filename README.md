@@ -211,6 +211,15 @@ Artifacts:
 - Mermaid: `output/docs/complete-flow.mmd` (open in https://mermaid.live or VS Code)
 - Markdown summary: `output/docs/complete-flow.md`
 
+## View the result without running commands
+
+Pre-generated outputs live under `examples/output/` so visitors can inspect the full pipeline without compiling locally:
+- Mermaid: `examples/output/complete-flow.mmd`
+- Flow XML: `examples/output/complete-flow.flow-meta.xml`
+- DSL JSON: `examples/output/complete-flow.flow.json`
+
+Open the Mermaid file in https://mermaid.live, skim the XML in an editor, or diff the DSL/mermaid/XML pair to see the deterministic round-trip.
+
 ## Supported Flow Elements
 
 | Element Type | Mermaid Shape | Prefix | Description |
@@ -375,9 +384,18 @@ Current coverage:
 - Comprehensive examples
 - Documentation
 
-### 🔄 Future Phases
-- Phase 3: Advanced features (loops, collections, formulas)
-- Phase 4: Production-ready (org metadata validation, SFDX integration)
+### ✅ Phase 3 - Advanced DX (Complete)
+- Reverse engineering (`decompile`) and round-trip tests
+- Explain/analyze reports (text/json/html)
+- Interactive CLI wizard
+- Performance instrumentation and watch mode
+
+### ✅ Phase 4 - Extensions (Core implemented; deploy optional)
+- Advanced elements: Loop, Wait, GetRecords, Fault paths
+- Web visualizer/editor with live XML preview
+- Reverse XML parser to DSL/Mermaid
+- YAML DSL export
+- Deployment hosting is deferred
 
 See `PROJECT_PLAN.md` for complete roadmap.
 

@@ -1243,29 +1243,29 @@ Esta tarea requiere integración con un **proyecto externo** (`agnostic-ai-pipel
 ---
 
 ### **TASK 4.2: Web-based Visualizer/Editor**
-**Estado**: In progress (4.2.1 scaffold done, 4.2.2 visualizer básico completado)
+**Estado**: ✅ Completed (visualizer + editor + live XML preview; deploy separado en 4.2.5)
 **Archivos afectados**: `web/`, `server/`
 
 #### Subtareas:
 
 **4.2.1: Setup web project**
-- [x] Scaffold inicial (backend HTTP básico + placeholder frontend)
-- [ ] React/Vue frontend (pendiente)
-- [ ] API endpoints para CLI (pendiente)
+- [x] Servidor HTTP con `/health` y `/api/compile` conectado al compilador (`dist`)
+- [x] Frontend vanilla (HTML/CSS/JS) con layout y estilos iniciales
+- [x] Wiring de API → CLI para compilar Mermaid en XML
 
 **4.2.2: Implementar visualizer de DSL**
 - [x] Render flow visualmente (lista de nodos/edges en canvas)
 - [x] Interactive nodes (selección, edición de metadata básica)
-- [ ] Zoom/pan controls (pendiente)
+- [ ] Zoom/pan controls (pendiente/optativo)
 
 **4.2.3: Implementar editor gráfico**
-- [ ] Drag-and-drop elementos
-- [ ] Edit metadata en forms
-- [ ] Export a Mermaid/DSL
+- [x] Drag-and-drop elementos y reordenamiento
+- [x] Edición de metadata en formularios
+- [x] Export a Mermaid/DSL
 
 **4.2.4: Live preview de XML**
 - [x] Preview Flow XML en tiempo real (backend /api/compile + frontend)
-- [ ] Syntax highlighting (pendiente)
+- [ ] Syntax highlighting (pendiente/optativo)
 - [x] Download generated files
 
 **4.2.5: Deploy web app**
