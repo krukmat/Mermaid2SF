@@ -185,6 +185,32 @@ mermaid-flow-compile decompile \
   --out-mermaid docs/flows
 ```
 
+## End-to-end example
+
+```bash
+# Build
+npm run build
+
+# Compile a sample Mermaid to XML/DSL/docs
+node dist/cli/index.js compile \
+  --input examples/v1/complete-flow.mmd \
+  --out-flow output/flows \
+  --out-json output/dsl \
+  --out-docs output/docs
+
+# Decompile the generated XML back to DSL/Mermaid
+node dist/cli/index.js decompile \
+  --input output/flows/complete-flow.flow-meta.xml \
+  --out-json output/dsl \
+  --out-mermaid output/docs
+```
+
+Artifacts:
+- Flow XML: `output/flows/complete-flow.flow-meta.xml`
+- DSL JSON: `output/dsl/complete-flow.flow.json`
+- Mermaid: `output/docs/complete-flow.mmd` (open in https://mermaid.live or VS Code)
+- Markdown summary: `output/docs/complete-flow.md`
+
 ## Supported Flow Elements
 
 | Element Type | Mermaid Shape | Prefix | Description |
