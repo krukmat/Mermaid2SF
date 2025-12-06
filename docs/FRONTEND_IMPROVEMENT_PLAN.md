@@ -456,6 +456,160 @@ npm install zustand  # Simple, no boilerplate
 
 ---
 
+## 🔧 Arquitectura Técnica y Flujo de Datos
+
+- **Carpetas**: `web/frontend/` para UI actual (vanilla JS), `web/server/index.js` como static server/proxy (`/api/compile`, `/health`).
+- **API contrato** (backend CLI existente):
+  - `POST /api/compile` → body: `{ mermaidText: string }` → `{ dsl, xml, errors, warnings }`
+  - `GET /health` → `{ status: 'ok' }`
+  - CORS habilitado; mantener timeouts < 10s y respuestas deterministas.
+- **Estado global** (Zustand recomendado para React): `flowStore` con `nodes`, `edges`, `selectedNode`, `theme`, `templates`, `compileStatus`.
+- **Data flow**: Canvas (React Flow) ↔ Node editor ↔ DSL builder ↔ `/api/compile` → XML preview panel. Sincronizar por `useEffect` con debounce (300ms) para evitar spam al backend.
+- **Persistence**: `localStorage` para drafts y última plantilla; `IndexedDB` para versiones si se activa version history.
+- **Migration path**: Nueva app React en `web/app/`, mantener `web/frontend/` como fallback hasta migración completa.
+
+## 🧪 Testing y Calidad
+- **Unit**: utils de DSL y parsers (Jest/Vitest).
+- **Component**: React Testing Library para NodeEditor, TemplateGallery, XMLPreview.
+- **E2E ligero**: Playwright para flujos clave (abrir app, cargar template, compilar, descargar).
+- **Lighthouse**: meta >90 en Performance/Best Practices/Accessibility; budget: FCP < 1.5s, TTI < 3s, bundle < 500KB.
+- **Accesibilidad**: ARIA en botones/inputs, focus visible, contrast ratio ≥ 4.5, soporte keyboard drag (teclas para mover nodos en canvas).
+- **CI**: `npm run lint`, `npm run test`, `npm run build`, `npm run preview:e2e` (headless) en GitHub Actions.
+
+## 🖧 Integración y Deploy
+- **Dev server**: `npm install` → `npm run dev` (Vite). Proxiar `/api` a `localhost:4000` en `vite.config.ts`.
+- **Build**: `npm run build` → `dist/` listo para servir en Nginx/Apache/S3; `npm run preview` para validar.
+- **Producción (Digital Ocean - iotforce.es)**:
+  - Backend: `node web/server/index.js` corriendo en puerto 4000 (PM2 para persistencia)
+  - Apache proxy configurado en `/flow/`:
+    ```apache
+    ProxyPass /flow/api http://127.0.0.1:4000/api
+    ProxyPassReverse /flow/api http://127.0.0.1:4000/api
+    ProxyPass /flow/health http://127.0.0.1:4000/health
+    ProxyPassReverse /flow/health http://127.0.0.1:4000/health
+    ProxyPass /flow http://127.0.0.1:4000/flow
+    ProxyPassReverse /flow http://127.0.0.1:4000/flow
+    ```
+  - Frontend actual: servido por Node server desde `web/frontend/index.html`
+  - Frontend React (futuro): construir `dist/` y servir desde `/var/www/html/flow/` o integrar en Node server
+- **Vite config** (para React app):
+  ```typescript
+  export default defineConfig({
+    base: '/flow/',
+    server: {
+      proxy: {
+        '/api': 'http://localhost:4000',
+        '/health': 'http://localhost:4000'
+      }
+    }
+  })
+  ```
+- **Observabilidad** (opcional): consola con nivel `debug/info/error`, hook global `window.onerror` → log server; Sentry si se habilita.
+
+## ♿ Mejoras adicionales al planteo original
+- **Keyboard shortcuts**: `Cmd/Ctrl+S` guardar, `Cmd/Ctrl+Z/Y` undo/redo, `Del` borrar nodo, `Cmd/Ctrl+D` duplicar.
+- **Autosave + snapshot**: cada 30s o cambio significativo; mostrar toast "Saved".
+- **Error banners**: si `/api/compile` falla, mostrar mensaje con trace y opción "Retry".
+- **Offline mode**: cache de assets + plantilla local para demo sin backend.
+- **Docs in-app**: panel lateral con atajos y sintaxis Mermaid; link a ejemplos.
+- **Internationalización**: estructura simple i18n (ES/EN) con diccionario JSON.
+
+## 🔒 Seguridad y Mejores Prácticas
+
+### Seguridad del Frontend
+- **Input sanitization**: Validar y sanitizar todo input del usuario antes de enviar a `/api/compile`
+- **XSS prevention**: Usar `textContent` en lugar de `innerHTML` para contenido dinámico
+- **CSP headers**: Configurar Content Security Policy en servidor
+- **Rate limiting**: Limitar requests a `/api/compile` (max 10 por minuto por IP)
+- **File upload**: Si se implementa upload de Mermaid, validar extensión y tamaño (<5MB)
+
+### Performance
+- **Code splitting**: Lazy load de componentes pesados (tutorial, templates, XML preview)
+- **Image optimization**: Comprimir assets, usar WebP donde sea posible
+- **Bundle analysis**: `npm run build -- --analyze` para identificar dependencias pesadas
+- **Memoization**: React.memo para componentes que renderizan frecuentemente
+- **Virtual scrolling**: Para listas de nodos/templates grandes
+
+### Accesibilidad (a11y)
+- **Semantic HTML**: Usar `<button>`, `<nav>`, `<main>`, `<article>` correctamente
+- **ARIA labels**: Todos los botones/icons tienen aria-label descriptivo
+- **Focus management**: Trap focus en modales, restaurar focus al cerrar
+- **Keyboard navigation**: Tab order lógico, Enter/Space en botones
+- **Screen reader**: Anunciar cambios de estado (compilación exitosa/fallida)
+- **Color contrast**: WCAG AA mínimo (4.5:1 para texto normal)
+
+### Developer Experience
+- **TypeScript strict**: Habilitar `strict: true` en tsconfig.json
+- **ESLint**: Configurar reglas para React hooks, a11y, performance
+- **Prettier**: Auto-format on save
+- **Husky**: Pre-commit hooks para lint + format + tests
+- **Conventional commits**: Mensajes de commit estructurados
+- **Storybook** (opcional): Documentar componentes UI en aislamiento
+
+---
+
+## 📁 Estructura de Proyecto Propuesta (React + Vite)
+
+```
+web/
+├── app/                          # Nueva app React (migración)
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── canvas/
+│   │   │   │   ├── FlowCanvas.tsx       # React Flow canvas principal
+│   │   │   │   ├── NodeToolbox.tsx      # Toolbox de elementos
+│   │   │   │   └── Minimap.tsx          # Minimap para navegación
+│   │   │   ├── editor/
+│   │   │   │   ├── NodeEditor.tsx       # Editor modal de nodos
+│   │   │   │   └── PropertyPanel.tsx    # Panel de propiedades
+│   │   │   ├── preview/
+│   │   │   │   ├── MermaidPreview.tsx   # Preview de Mermaid
+│   │   │   │   └── XMLPreview.tsx       # Preview XML con syntax highlighting
+│   │   │   ├── landing/
+│   │   │   │   ├── HeroSection.tsx      # Hero landing animado
+│   │   │   │   ├── TemplateGallery.tsx  # Galería de templates
+│   │   │   │   └── QuickActions.tsx     # CTAs y acciones rápidas
+│   │   │   ├── tutorial/
+│   │   │   │   └── OnboardingOverlay.tsx # Tutorial interactivo
+│   │   │   └── ui/
+│   │   │       ├── Button.tsx           # Componentes base (shadcn/ui)
+│   │   │       ├── Dialog.tsx
+│   │   │       └── Tooltip.tsx
+│   │   ├── stores/
+│   │   │   └── flowStore.ts             # Zustand state management
+│   │   ├── utils/
+│   │   │   ├── api.ts                   # Cliente API para /api/compile
+│   │   │   ├── mermaidBuilder.ts        # DSL → Mermaid converter
+│   │   │   └── localStorage.ts          # Persistence helpers
+│   │   ├── hooks/
+│   │   │   ├── useFlowCompiler.ts       # Hook para compilación
+│   │   │   ├── useAutoSave.ts           # Hook para auto-save
+│   │   │   └── useKeyboardShortcuts.ts  # Hook para shortcuts
+│   │   ├── types/
+│   │   │   └── flow.types.ts            # TypeScript types
+│   │   ├── App.tsx                      # Componente raíz
+│   │   ├── main.tsx                     # Entry point
+│   │   └── index.css                    # Estilos globales
+│   ├── public/
+│   │   └── assets/                      # Assets estáticos
+│   ├── index.html
+│   ├── vite.config.ts
+│   ├── tsconfig.json
+│   └── package.json
+├── frontend/                     # UI actual (vanilla JS) - mantener como fallback
+│   └── index.html
+└── server/
+    └── index.js                  # Backend server (mantener)
+```
+
+**Notas de migración:**
+- Iniciar con `npm create vite@latest web/app -- --template react-ts`
+- Configurar `base: '/flow/'` en vite.config.ts
+- Mantener `web/frontend/` funcionando durante migración gradual
+- Servir nueva app desde `web/server/index.js` una vez lista
+
+---
+
 ## 📅 Timeline Estimado
 
 ### Sprint 1 (1 semana): Landing + Basic Improvements
