@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flow Visualizer</title>
+  <style>
+    :root {
+      --bg: #0b1021;
+      --panel: #131a33;
+      --accent: #66e0ff;
+      --text: #e8ecff;
+      --muted: #9aa5d3;
+      --surface: #1c2547;
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+    header { padding: 1rem 1.5rem; background: var(--panel); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #223054; }
+    main { display: grid; grid-template-columns: 340px 1fr; min-height: 100vh; }
+    .sidebar { background: var(--panel); padding: 1.5rem; border-right: 1px solid #223054; overflow-y: auto; }
+    .content { padding: 1.5rem; }
+    .card { background: var(--surface); border: 1px solid #223054; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.9rem; }
+    input, textarea { width: 100%; padding: 0.6rem 0.7rem; border-radius: 8px; border: 1px solid #223054; background: #0f1531; color: var(--text); }
+    textarea { min-height: 120px; }
+    button { background: var(--accent); color: #04132e; border: none; border-radius: 8px; padding: 0.7rem 1rem; font-weight: 700; cursor: pointer; }
+    button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+    .row { display: flex; gap: 0.5rem; align-items: center; }
+    .row button { flex: 1; }
+    .canvas { background: #0f1531; border: 1px dashed #223054; border-radius: 10px; padding: 1rem; min-height: 520px; overflow: auto; position: relative; }
+    .node { padding: 0.4rem 0.75rem; border-radius: 8px; margin: 0.25rem 0; display: inline-block; }
+    .node.start { background: #14d88e33; border: 1px solid #14d88e; }
+    .node.end { background: #ff758c33; border: 1px solid #ff758c; }
+    .node.decision { background: #f5a52433; border: 1px solid #f5a524; }
+    .node.default { background: #66e0ff33; border: 1px solid #66e0ff; }
+    .edge { color: var(--muted); font-size: 0.85rem; }
+    .list { list-style: none; padding: 0; margin: 0; }
+    .list li { background: #0f1531; border: 1px solid #223054; border-radius: 8px; padding: 0.6rem; margin-bottom: 0.4rem; display: flex; justify-content: space-between; align-items: center; cursor: grab; }
+    .list li.dragging { opacity: 0.6; }
+    .pill { padding: 0.2rem 0.5rem; border-radius: 8px; background: #223054; color: var(--muted); font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>Flow Visualizer</h2>
+    <div class="row" style="gap:0.75rem;">
+      <button id="ping">Check Backend</button>
+      <button class="secondary" id="reset">Reset</button>
+    </div>
+  </header>
+  <main>
+    <section class="sidebar">
+      <div class="card">
+        <strong>Toolbox</strong>
+        <div class="row" style="margin-top:0.5rem; flex-wrap: wrap;">
+          <button data-add="Start">+ Start</button>
+          <button data-add="Screen">+ Screen</button>
+          <button data-add="Assignment">+ Assignment</button>
+          <button data-add="Decision">+ Decision</button>
+          <button data-add="GetRecords">+ GetRecords</button>
+          <button data-add="End">+ End</button>
+        </div>
+      </div>
+      <div class="card">
+        <strong>Nodes (drag to reorder)</strong>
+        <ul id="nodeList" class="list"></ul>
+      </div>
+      <div class="card" id="editorCard" style="display:none;">
+        <strong>Edit Node</strong>
+        <div style="margin-top:0.5rem;" id="form"></div>
+      </div>
+      <div class="card">
+        <strong>Export</strong>
+        <div class="row" style="margin-top:0.5rem;">
+          <button id="exportMermaid">Mermaid</button>
+          <button class="secondary" id="exportDsl">DSL JSON</button>
+        </div>
+      </div>
+      <div class="card">
+        <strong>Status</strong>
+        <pre id="output" style="white-space:pre-wrap; background:#0f1531; padding:0.75rem; border-radius:8px; border:1px solid #223054;">Ready.</pre>
+      </div>
+    </section>
+    <section class="content">
+      <div class="card">
+        <h3 style="margin-top:0;">Canvas</h3>
+        <div class="canvas" id="canvas"></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;">Mermaid Preview</h3>
+        <pre id="mermaidPreview" style="background:#0f1531; padding:1rem; border-radius:8px; border:1px solid #223054; white-space:pre-wrap;"></pre>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;">XML Preview</h3>
+        <div class="row" style="margin-bottom:0.5rem;">
+          <button id="compileXml">Compile &amp; Preview XML</button>
+          <button class="secondary" id="downloadXml">Download XML</button>
+        </div>
+        <pre id="xmlPreview" style="background:#0f1531; padding:1rem; border-radius:8px; border:1px solid #223054; white-space:pre-wrap; max-height:260px; overflow:auto;">Not compiled yet.</pre>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const output = document.getElementById('output');
+    const canvas = document.getElementById('canvas');
+    const list = document.getElementById('nodeList');
+    const form = document.getElementById('form');
+    const editorCard = document.getElementById('editorCard');
+    const mermaidPreview = document.getElementById('mermaidPreview');
+
+    let nodes = [];
+    let selectedId = null;
+
+    const sampleNodes = [
+      { id: 'Start_1', type: 'Start', label: 'Demo Start', apiName: 'Start_1', next: 'Screen_1' },
+      { id: 'Screen_1', type: 'Screen', label: 'Collect Data', apiName: 'Screen_1', next: 'Decision_1' },
+      { id: 'Decision_1', type: 'Decision', label: 'Route', apiName: 'Decision_1', yesNext: 'Assign_1', noNext: 'End_1' },
+      { id: 'Assign_1', type: 'Assignment', label: 'Set Flag', apiName: 'Assign_1', next: 'End_1', assignments: 'v_Flag = true' },
+      { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1' },
+    ];
+
+    const typeDefaults = {
+      Start: () => ({ type: 'Start', label: 'Start', next: '' }),
+      End: () => ({ type: 'End', label: 'End' }),
+      Screen: () => ({ type: 'Screen', label: 'Screen', next: '' }),
+      Assignment: () => ({ type: 'Assignment', label: 'Assignment', assignments: '', next: '' }),
+      Decision: () => ({ type: 'Decision', label: 'Decision', yesNext: '', noNext: '' }),
+      GetRecords: () => ({ type: 'GetRecords', label: 'Get Records', object: '', fields: '', filters: '', next: '' }),
+    };
+
+    function init() {
+      nodes = [...sampleNodes];
+      renderAll();
+    }
+
+    function renderAll() {
+      renderList();
+      renderCanvas();
+      renderPreview();
+      renderForm();
+    }
+
+    function renderList() {
+      list.innerHTML = '';
+      nodes.forEach((n) => {
+        const li = document.createElement('li');
+        li.draggable = true;
+        li.dataset.id = n.id;
+        li.innerHTML = `<div>${n.id}</div><span class="pill">${n.type}</span>`;
+        li.addEventListener('click', () => {
+          selectedId = n.id;
+          renderForm();
+        });
+        li.addEventListener('dragstart', (e) => {
+          li.classList.add('dragging');
+          e.dataTransfer.setData('text/plain', n.id);
+        });
+        li.addEventListener('dragend', () => li.classList.remove('dragging'));
+        list.appendChild(li);
+      });
+      list.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const dragging = document.querySelector('.dragging');
+        const afterElement = getDragAfterElement(list, e.clientY);
+        if (!dragging) return;
+        if (afterElement == null) {
+          list.appendChild(dragging);
+        } else {
+          list.insertBefore(dragging, afterElement);
+        }
+      });
+      list.addEventListener('drop', () => {
+        const newOrder = Array.from(list.children).map((li) => li.dataset.id);
+        nodes.sort((a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id));
+        renderAll();
+      });
+    }
+
+    function getDragAfterElement(container, y) {
+      const elements = [...container.querySelectorAll('li:not(.dragging)')];
+      return elements.reduce(
+        (closest, child) => {
+          const box = child.getBoundingClientRect();
+          const offset = y - box.top - box.height / 2;
+          if (offset < 0 && offset > closest.offset) {
+            return { offset, element: child };
+          } else {
+            return closest;
+          }
+        },
+        { offset: Number.NEGATIVE_INFINITY, element: null },
+      ).element;
+    }
+
+    function renderCanvas() {
+      canvas.innerHTML = '';
+      nodes.forEach((n) => {
+        const div = document.createElement('div');
+        let cls = 'node default';
+        if (n.type === 'Start') cls = 'node start';
+        else if (n.type === 'End') cls = 'node end';
+        else if (n.type === 'Decision') cls = 'node decision';
+        div.className = cls;
+        div.textContent = `${n.id}: ${n.label || n.apiName || n.type}`;
+        canvas.appendChild(div);
+      });
+      const edgeBlock = document.createElement('div');
+      edgeBlock.style.marginTop = '0.5rem';
+      nodes.forEach((n) => {
+        if (n.type === 'Decision') {
+          if (n.yesNext) {
+            edgeBlock.appendChild(edgeLine(n.id, n.yesNext, '[Yes]'));
+          }
+          if (n.noNext) {
+            edgeBlock.appendChild(edgeLine(n.id, n.noNext, '[No/default]'));
+          }
+        } else if (n.next) {
+          edgeBlock.appendChild(edgeLine(n.id, n.next));
+        }
+      });
+      canvas.appendChild(edgeBlock);
+    }
+
+    function edgeLine(from, to, label = '') {
+      const p = document.createElement('div');
+      p.className = 'edge';
+      p.textContent = `${from} -> ${to} ${label}`;
+      return p;
+    }
+
+    function renderForm() {
+      const node = nodes.find((n) => n.id === selectedId);
+      if (!node) {
+        editorCard.style.display = 'none';
+        return;
+      }
+      editorCard.style.display = 'block';
+      form.innerHTML = '';
+      form.appendChild(inputField('Label', node.label || '', (v) => (node.label = v)));
+      form.appendChild(inputField('API Name', node.apiName || '', (v) => (node.apiName = v)));
+      if (node.type !== 'End' && node.type !== 'Decision') {
+        form.appendChild(inputField('Next', node.next || '', (v) => (node.next = v)));
+      }
+      if (node.type === 'Decision') {
+        form.appendChild(inputField('Yes Next', node.yesNext || '', (v) => (node.yesNext = v)));
+        form.appendChild(inputField('No/Default Next', node.noNext || '', (v) => (node.noNext = v)));
+      }
+      if (node.type === 'Assignment') {
+        form.appendChild(inputField('Assignments (text)', node.assignments || '', (v) => (node.assignments = v)));
+      }
+      if (node.type === 'GetRecords') {
+        form.appendChild(inputField('Object', node.object || '', (v) => (node.object = v)));
+        form.appendChild(inputField('Fields (comma)', node.fields || '', (v) => (node.fields = v)));
+        form.appendChild(inputField('Filters (key=value;)', node.filters || '', (v) => (node.filters = v)));
+      }
+    }
+
+    function inputField(labelText, value, onChange) {
+      const wrap = document.createElement('div');
+      wrap.style.marginBottom = '0.75rem';
+      const lab = document.createElement('label');
+      lab.textContent = labelText;
+      const input = document.createElement('input');
+      input.value = value;
+      input.addEventListener('input', (e) => onChange(e.target.value));
+      wrap.appendChild(lab);
+      wrap.appendChild(input);
+      return wrap;
+    }
+
+    function renderPreview() {
+      const mermaid = generateMermaid(nodes);
+      mermaidPreview.textContent = mermaid;
+    }
+
+    function generateMermaid(nodesList) {
+      const lines = ['flowchart TD'];
+      nodesList.forEach((n) => {
+        const label = n.label || n.type;
+        if (n.type === 'Start') lines.push(`  ${n.id}([START: ${label}])`);
+        else if (n.type === 'End') lines.push(`  ${n.id}([END: ${label}])`);
+        else if (n.type === 'Decision') lines.push(`  ${n.id}{DECISION: ${label}\\n api: ${n.apiName || n.id}}`);
+        else if (n.type === 'Assignment') lines.push(`  ${n.id}[ASSIGNMENT: ${label}\\n api: ${n.apiName || n.id}\\n set: ${n.assignments || ''}]`);
+        else if (n.type === 'Screen') lines.push(`  ${n.id}[SCREEN: ${label}\\n api: ${n.apiName || n.id}]`);
+        else if (n.type === 'GetRecords') lines.push(`  ${n.id}[GET: ${label}\\n api: ${n.apiName || n.id}\\n object: ${n.object || ''}\\n field: ${(n.fields || '').split(',')[0] || ''}]`);
+        else lines.push(`  ${n.id}[${label}]`);
+      });
+      nodesList.forEach((n, idx) => {
+        if (n.type === 'Decision') {
+          if (n.yesNext) lines.push(`  ${n.id} -->|Yes| ${n.yesNext}`);
+          if (n.noNext) lines.push(`  ${n.id} -->|No default| ${n.noNext}`);
+        } else if (n.next) {
+          lines.push(`  ${n.id} --> ${n.next}`);
+        } else if (!n.next && idx < nodesList.length - 1 && n.type !== 'End') {
+          lines.push(`  ${n.id} --> ${nodesList[idx + 1].id}`);
+        }
+      });
+      return lines.join('\\n');
+    }
+
+    function generateDsl(nodesList) {
+      const start = nodesList.find((n) => n.type === 'Start')?.id || nodesList[0]?.id || '';
+      const elements = nodesList.map((n) => {
+        const base = {
+          id: n.id,
+          type: n.type,
+          apiName: n.apiName || n.id,
+          label: n.label,
+        };
+        if (n.type === 'Decision') {
+          const outcomes = [];
+          if (n.yesNext) outcomes.push({ name: 'Yes', next: n.yesNext });
+          if (n.noNext) outcomes.push({ name: 'No', next: n.noNext, isDefault: true });
+          return { ...base, outcomes };
+        }
+        if (n.type === 'Assignment') {
+          return { ...base, assignments: n.assignments ? [{ variable: 'v_Flag', value: n.assignments }] : [], next: n.next };
+        }
+        if (n.type === 'GetRecords') {
+          const fields = (n.fields || '')
+            .split(',')
+            .map((f) => f.trim())
+            .filter(Boolean);
+          const filters = (n.filters || '')
+            .split(';')
+            .map((p) => p.trim())
+            .filter(Boolean)
+            .map((pair) => {
+              const [field, value] = pair.split('=').map((s) => s.trim());
+              return { field, operator: 'EqualTo', value };
+            });
+          return { ...base, object: n.object || '', fields, filters, next: n.next };
+        }
+        if (n.type !== 'End') {
+          return { ...base, next: n.next };
+        }
+        return base;
+      });
+      return {
+        version: 1,
+        flowApiName: 'VisualizerFlow',
+        label: 'Visualizer Flow',
+        processType: 'Autolaunched',
+        startElement: start,
+        elements,
+      };
+    }
+
+    document.querySelectorAll('[data-add]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.add;
+        const base = typeDefaults[type] ? typeDefaults[type]() : { type, label: type };
+        const id = `${type}_${nodes.filter((n) => n.type === type).length + 1}`;
+        nodes.push({ id, apiName: id, ...base });
+        selectedId = id;
+        renderAll();
+      });
+    });
+
+    document.getElementById('exportMermaid').addEventListener('click', () => {
+      const mermaid = generateMermaid(nodes);
+      navigator.clipboard?.writeText(mermaid).catch(() => {});
+      output.textContent = 'Mermaid generated (copied to clipboard if permitted).';
+      mermaidPreview.textContent = mermaid;
+    });
+
+    document.getElementById('exportDsl').addEventListener('click', () => {
+      const dsl = generateDsl(nodes);
+      const text = JSON.stringify(dsl, null, 2);
+      navigator.clipboard?.writeText(text).catch(() => {});
+      output.textContent = 'DSL JSON generated (copied to clipboard if permitted).';
+    });
+
+    document.getElementById('compileXml').addEventListener('click', async () => {
+      const mermaid = generateMermaid(nodes);
+      mermaidPreview.textContent = mermaid;
+      try {
+        const res = await fetch('http://localhost:4000/api/compile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mermaidText: mermaid }),
+        });
+        const data = await res.json();
+        if (data.errors && data.errors.length > 0) {
+          xmlPreview.textContent = 'Errors:\n' + data.errors.map((e) => `- ${e.code}: ${e.message}`).join('\n');
+          output.textContent = 'Validation errors; XML not generated.';
+          return;
+        }
+        xmlPreview.textContent = data.xml || 'No XML generated.';
+        output.textContent = 'XML compiled via backend.';
+        xmlPreview.dataset.xml = data.xml || '';
+      } catch (err) {
+        xmlPreview.textContent = 'Error: ' + err.message;
+      }
+    });
+
+    document.getElementById('downloadXml').addEventListener('click', () => {
+      const xml = xmlPreview.dataset.xml;
+      if (!xml) {
+        output.textContent = 'No XML to download. Compile first.';
+        return;
+      }
+      const blob = new Blob([xml], { type: 'application/xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'flow.flow-meta.xml';
+      a.click();
+      URL.revokeObjectURL(url);
+      output.textContent = 'XML downloaded.';
+    });
+
+    document.getElementById('ping').addEventListener('click', async () => {
+      try {
+        const res = await fetch('http://localhost:4000/health');
+        const data = await res.json();
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        output.textContent = 'Error: ' + err.message;
+      }
+    });
+
+    document.getElementById('reset').addEventListener('click', () => {
+      nodes = [...sampleNodes];
+      selectedId = null;
+      output.textContent = 'Ready.';
+      renderAll();
+    });
+
+    init();
+  </script>
+</body>
+</html>

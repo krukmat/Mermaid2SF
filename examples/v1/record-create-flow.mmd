@@ -1,0 +1,9 @@
+flowchart TD
+    Start([START: Create Account Flow])
+    Assign[ASSIGNMENT: Set Account Values]
+    Create[CREATE: Create Account Record]
+    End([END: Account Created])
+
+    Start --> Assign
+    Assign --> Create
+    Create --> End

@@ -1,0 +1,85 @@
+// Minimal HTTP server scaffold (no external deps)
+const http = require('http');
+
+const PORT = process.env.PORT || 4000;
+
+function setCors(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
+const server = http.createServer((req, res) => {
+  setCors(res);
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  if (req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok' }));
+    return;
+  }
+
+  if (req.url === '/api/compile' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (chunk) => (body += chunk.toString()));
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const mermaidText = payload.mermaidText || '';
+        const result = compileMermaid(mermaidText);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  res.writeHead(404, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ error: 'Not found' }));
+});
+
+function compileMermaid(mermaidText) {
+  const path = require('path');
+  const { MermaidParser } = require(path.join(__dirname, '../../dist/parser/mermaid-parser'));
+  const { MetadataExtractor } = require(path.join(__dirname, '../../dist/extractor/metadata-extractor'));
+  const { IntermediateModelBuilder } = require(path.join(__dirname, '../../dist/dsl/intermediate-model-builder'));
+  const { FlowValidator } = require(path.join(__dirname, '../../dist/validator/flow-validator'));
+  const { FlowXmlGenerator } = require(path.join(__dirname, '../../dist/generators/flow-xml-generator'));
+
+  const parser = new MermaidParser();
+  const extractor = new MetadataExtractor();
+  const builder = new IntermediateModelBuilder();
+  const validator = new FlowValidator();
+  const xmlGen = new FlowXmlGenerator();
+
+  const graph = parser.parse(mermaidText);
+  const metadataMap = new Map();
+  for (const node of graph.nodes) {
+    const metadata = extractor.extract(node);
+    metadataMap.set(node.id, metadata);
+  }
+  const flowApiName = 'WebFlow';
+  const dsl = builder.build(graph, metadataMap, flowApiName, flowApiName.replace(/_/g, ' '));
+  const validation = validator.validate(dsl);
+  const xml = validation.valid ? xmlGen.generate(dsl) : null;
+
+  return {
+    dsl,
+    xml,
+    errors: validation.errors,
+    warnings: validation.warnings,
+  };
+}
+
+server.listen(PORT, () => {
+  // eslint-disable-next-line no-console
+  console.log(`Web server listening on http://localhost:${PORT}`);
+});

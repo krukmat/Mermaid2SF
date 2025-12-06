@@ -1,0 +1,11 @@
+flowchart TD
+    Start([START: Screen Flow Example])
+    Screen1[SCREEN: User Input Screen]
+    Assign[ASSIGNMENT: Process Input]
+    Screen2[SCREEN: Confirmation Screen]
+    End([END: Complete])
+
+    Start --> Screen1
+    Screen1 --> Assign
+    Assign --> Screen2
+    Screen2 --> End

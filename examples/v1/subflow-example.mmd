@@ -1,0 +1,13 @@
+flowchart TD
+    Start([START: Main Flow])
+    Assign[ASSIGNMENT: Prepare Data]
+    Subflow[[SUBFLOW: Validation Subflow]]
+    Decision{DECISION: Check Result}
+    End1([END: Success])
+    End2([END: Failed])
+
+    Start --> Assign
+    Assign --> Subflow
+    Subflow --> Decision
+    Decision -->|Valid| End1
+    Decision -->|Invalid default| End2

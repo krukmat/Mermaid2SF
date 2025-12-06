@@ -1,0 +1,20 @@
+flowchart TD
+    Start([START: Complete Flow Example])
+    Screen1[SCREEN: Collect Customer Info]
+    Assign1[ASSIGNMENT: Initialize Variables]
+    Decision1{DECISION: Customer Type}
+    CreateNew[CREATE: Create New Account]
+    UpdateExisting[UPDATE: Update Existing Account]
+    Subflow1[[SUBFLOW: Send Welcome Email]]
+    Screen2[SCREEN: Show Confirmation]
+    End([END: Process Complete])
+
+    Start --> Screen1
+    Screen1 --> Assign1
+    Assign1 --> Decision1
+    Decision1 -->|New Customer| CreateNew
+    Decision1 -->|Existing default| UpdateExisting
+    CreateNew --> Subflow1
+    UpdateExisting --> Subflow1
+    Subflow1 --> Screen2
+    Screen2 --> End

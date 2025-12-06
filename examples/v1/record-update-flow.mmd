@@ -1,0 +1,12 @@
+flowchart TD
+    Start([START: Update Account Status])
+    Decision{DECISION: Check Account Type}
+    Update1[UPDATE: Update Enterprise Account]
+    Update2[UPDATE: Update Standard Account]
+    End([END: Updated])
+
+    Start --> Decision
+    Decision -->|Enterprise| Update1
+    Decision -->|Standard default| Update2
+    Update1 --> End
+    Update2 --> End

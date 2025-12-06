@@ -1,0 +1,332 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Flow DSL",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "flowApiName", "label", "processType", "startElement", "elements"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "flowApiName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "processType": {
+      "type": "string",
+      "enum": ["Autolaunched", "RecordTriggered", "Screen"]
+    },
+    "apiVersion": {
+      "type": "string"
+    },
+    "startElement": {
+      "type": "string",
+      "minLength": 1
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/FlowVariable"
+      }
+    },
+    "elements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/FlowElement"
+      }
+    }
+  },
+  "definitions": {
+    "BaseElement": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_]+$"
+        },
+        "type": {
+          "type": "string"
+        },
+        "apiName": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+        },
+        "label": {
+          "type": "string"
+        },
+        "next": {
+          "type": "string"
+        }
+      }
+    },
+    "FlowVariable": {
+      "type": "object",
+      "required": ["name", "dataType", "isCollection", "isInput", "isOutput"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "dataType": { "type": "string", "minLength": 1 },
+        "isCollection": { "type": "boolean" },
+        "isInput": { "type": "boolean" },
+        "isOutput": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "Assignment": {
+      "type": "object",
+      "required": ["variable", "value"],
+      "properties": {
+        "variable": { "type": "string", "minLength": 1 },
+        "value": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "DecisionOutcome": {
+      "type": "object",
+      "required": ["name", "next"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "condition": { "type": "string" },
+        "isDefault": { "type": "boolean" },
+        "next": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "ScreenComponent": {
+      "type": "object",
+      "required": ["type", "name"],
+      "properties": {
+        "type": { "type": "string", "enum": ["Field", "DisplayText", "DisplayImage"] },
+        "name": { "type": "string", "minLength": 1 },
+        "dataType": { "type": "string" },
+        "target": { "type": "string" },
+        "text": { "type": "string" },
+        "required": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "RecordFilter": {
+      "type": "object",
+      "required": ["field", "operator", "value"],
+      "properties": {
+        "field": { "type": "string", "minLength": 1 },
+        "operator": {
+          "type": "string",
+          "enum": ["EqualTo", "NotEqualTo", "GreaterThan", "LessThan"]
+        },
+        "value": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "VariableMapping": {
+      "type": "object",
+      "required": ["name", "value"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "value": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "StartElement": {
+      "allOf": [
+        { "$ref": "#/definitions/BaseElement" },
+        {
+          "properties": {
+            "type": { "const": "Start" }
+          }
+        }
+      ]
+    },
+    "EndElement": {
+      "allOf": [
+        { "$ref": "#/definitions/BaseElement" },
+        {
+          "properties": {
+            "type": { "const": "End" }
+          }
+        }
+      ]
+    },
+    "AssignmentElement": {
+      "allOf": [
+        { "$ref": "#/definitions/BaseElement" },
+        {
+          "required": ["assignments"],
+          "properties": {
+            "type": { "const": "Assignment" },
+            "assignments": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/Assignment" }
+            }
+          }
+        }
+      ]
+    },
+    "DecisionElement": {
+      "allOf": [
+        { "$ref": "#/definitions/BaseElement" },
+        {
+          "required": ["outcomes"],
+          "properties": {
+            "type": { "const": "Decision" },
+            "outcomes": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/DecisionOutcome" }
+            }
+          }
+        }
+      ]
+    },
+    "ScreenElement": {
+      "allOf": [
+        { "$ref": "#/definitions/BaseElement" },
+        {
+          "required": ["components"],
+          "properties": {
+            "type": { "const": "Screen" },
+            "components": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/ScreenComponent" }
+            },
+            "allowBack": { "type": "boolean" },
+            "allowFinish": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "RecordCreateElement": {
+      "allOf": [
+        { "$ref": "#/definitions/BaseElement" },
+        {
+          "required": ["fields", "object"],
+          "properties": {
+            "type": { "const": "RecordCreate" },
+            "object": { "type": "string" },
+            "fields": {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            },
+            "storeOutputAutomatically": { "type": "boolean" },
+            "assignRecordIdToReference": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "RecordUpdateElement": {
+      "allOf": [
+        { "$ref": "#/definitions/BaseElement" },
+        {
+          "required": ["fields", "object"],
+          "properties": {
+            "type": { "const": "RecordUpdate" },
+            "object": { "type": "string" },
+            "fields": {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            },
+            "filters": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/RecordFilter" }
+            },
+            "updateMode": { "type": "string", "enum": ["single", "all"] }
+          }
+        }
+      ]
+    },
+    "SubflowElement": {
+      "allOf": [
+        { "$ref": "#/definitions/BaseElement" },
+        {
+          "required": ["flowName"],
+          "properties": {
+            "type": { "const": "Subflow" },
+            "flowName": { "type": "string" },
+            "inputAssignments": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/VariableMapping" }
+            },
+            "outputAssignments": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/VariableMapping" }
+            }
+          }
+        }
+      ]
+    },
+    "LoopElement": {
+      "allOf": [
+        { "$ref": "#/definitions/BaseElement" },
+        {
+          "required": ["collection"],
+          "properties": {
+            "type": { "const": "Loop" },
+            "collection": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "WaitElement": {
+      "allOf": [
+        { "$ref": "#/definitions/BaseElement" },
+        {
+          "properties": {
+            "type": { "const": "Wait" },
+            "condition": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "GetRecordsElement": {
+      "allOf": [
+        { "$ref": "#/definitions/BaseElement" },
+        {
+          "required": ["object"],
+          "properties": {
+            "type": { "const": "GetRecords" },
+            "object": { "type": "string" },
+            "filters": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/RecordFilter" }
+            },
+            "fields": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      ]
+    },
+    "FaultElement": {
+      "allOf": [
+        { "$ref": "#/definitions/BaseElement" },
+        {
+          "properties": {
+            "type": { "const": "Fault" }
+          }
+        }
+      ]
+    },
+    "FlowElement": {
+      "oneOf": [
+        { "$ref": "#/definitions/StartElement" },
+        { "$ref": "#/definitions/EndElement" },
+        { "$ref": "#/definitions/AssignmentElement" },
+        { "$ref": "#/definitions/DecisionElement" },
+        { "$ref": "#/definitions/ScreenElement" },
+        { "$ref": "#/definitions/RecordCreateElement" },
+        { "$ref": "#/definitions/RecordUpdateElement" },
+        { "$ref": "#/definitions/SubflowElement" },
+        { "$ref": "#/definitions/LoopElement" },
+        { "$ref": "#/definitions/WaitElement" },
+        { "$ref": "#/definitions/GetRecordsElement" },
+        { "$ref": "#/definitions/FaultElement" }
+      ]
+    }
+  }
+}

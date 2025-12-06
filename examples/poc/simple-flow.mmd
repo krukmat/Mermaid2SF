@@ -1,0 +1,10 @@
+flowchart TD
+    Start([START: Flow Start])
+    Assign[ASSIGNMENT: Set Flag]
+    Decision{DECISION: Check Flag}
+    End1([END: Success])
+    End2([END: Failure])
+    Start --> Assign
+    Assign --> Decision
+    Decision -->|Yes| End1
+    Decision -->|No default| End2
