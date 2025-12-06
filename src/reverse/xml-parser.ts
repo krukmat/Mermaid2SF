@@ -246,13 +246,35 @@ function parseWaits(xml: string, elements: FlowElement[]) {
     const eventsBlock = m[3] || '';
     const connectorBlock = m[4] || '';
     const condition = extractValue(eventsBlock, /<conditionLogic>(.*?)<\/conditionLogic>/);
+    const eventType = extractValue(eventsBlock, /<eventType>(.*?)<\/eventType>/);
+    const platformEventName = extractValue(eventsBlock, /<platformEventName>(.*?)<\/platformEventName>/);
+    const offsetNumber = extractValue(eventsBlock, /<offsetNumber>(.*?)<\/offsetNumber>/);
+    const offsetUnit = extractValue(eventsBlock, /<offsetUnit>(.*?)<\/offsetUnit>/);
     const next = extractValue(connectorBlock, /<targetReference>(.*?)<\/targetReference>/);
+    let waitType: 'condition' | 'duration' | 'event' | undefined;
+    let durationValue: number | undefined;
+    let durationUnit: string | undefined;
+
+    if (offsetNumber) {
+      waitType = 'duration';
+      durationValue = parseFloat(offsetNumber);
+      durationUnit = offsetUnit || 'Seconds';
+    } else if (platformEventName) {
+      waitType = 'event';
+    } else if (condition) {
+      waitType = 'condition';
+    }
+
     elements.push({
       id: apiName,
       apiName,
       label,
       type: 'Wait',
+      waitType,
       condition: condition || undefined,
+      durationValue,
+      durationUnit: (durationUnit as any) || undefined,
+      eventName: platformEventName || undefined,
       next: next || undefined,
     } as any);
   }

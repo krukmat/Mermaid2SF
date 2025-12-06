@@ -189,8 +189,16 @@ export interface LoopElement extends BaseElement {
 
 export interface WaitElement extends BaseElement {
   type: 'Wait';
-  /** Condition or duration expression */
+  /** Wait mode */
+  waitType?: 'condition' | 'duration' | 'event';
+  /** Condition logic (for condition/event waits) */
   condition?: string;
+  /** Duration value (numeric) */
+  durationValue?: number;
+  /** Duration unit */
+  durationUnit?: 'Seconds' | 'Minutes' | 'Hours' | 'Days';
+  /** Platform event API name for event waits */
+  eventName?: string;
   /** Next element after wait */
   next?: string;
 }

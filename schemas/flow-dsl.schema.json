@@ -277,7 +277,17 @@
         {
           "properties": {
             "type": { "const": "Wait" },
-            "condition": { "type": "string" }
+            "waitType": {
+              "type": "string",
+              "enum": ["condition", "duration", "event"]
+            },
+            "condition": { "type": "string" },
+            "durationValue": { "type": "number", "minimum": 0 },
+            "durationUnit": {
+              "type": "string",
+              "enum": ["Seconds", "Minutes", "Hours", "Days"]
+            },
+            "eventName": { "type": "string" }
           }
         }
       ]

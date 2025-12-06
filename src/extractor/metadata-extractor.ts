@@ -293,13 +293,46 @@ export class MetadataExtractor {
 
   private extractWaitProperties(label: string): Record<string, any> {
     const lines = label.split('\n');
+    let condition: string | undefined;
+    let durationValue: number | undefined;
+    let durationUnit: 'Seconds' | 'Minutes' | 'Hours' | 'Days' | undefined;
+    let eventName: string | undefined;
+    let waitType: 'condition' | 'duration' | 'event' | undefined;
+
     for (const line of lines) {
+      const modeMatch = line.match(/mode:\s*(\w+)/i);
+      if (modeMatch) {
+        const mode = modeMatch[1].toLowerCase();
+        if (mode === 'duration' || mode === 'event' || mode === 'condition') {
+          waitType = mode as any;
+        }
+      }
       const cond = line.match(/condition:\s*(.+)/i);
-      if (cond) return { condition: cond[1].trim() };
-      const dur = line.match(/duration:\s*(.+)/i);
-      if (dur) return { condition: dur[1].trim() };
+      if (cond) {
+        condition = cond[1].trim();
+        waitType = waitType || 'condition';
+      }
+      const dur = line.match(/duration:\s*([\d.]+)\s*([smhd]?)/i);
+      if (dur) {
+        const value = parseFloat(dur[1]);
+        const unitToken = (dur[2] || 's').toLowerCase();
+        const unitMap: Record<string, any> = {
+          s: 'Seconds',
+          m: 'Minutes',
+          h: 'Hours',
+          d: 'Days',
+        };
+        durationValue = value;
+        durationUnit = unitMap[unitToken] || 'Seconds';
+        waitType = 'duration';
+      }
+      const evt = line.match(/event:\s*(\w+)/i);
+      if (evt) {
+        eventName = evt[1];
+        waitType = 'event';
+      }
     }
-    return {};
+    return { waitType, condition, durationValue, durationUnit, eventName };
   }
 
   private extractGetRecordsProperties(label: string): Record<string, any> {

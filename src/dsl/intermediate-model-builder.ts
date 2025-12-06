@@ -306,10 +306,20 @@ export class IntermediateModelBuilder {
     edgeMap: Map<string, MermaidEdge[]>,
   ) {
     const edges = edgeMap.get(base.id) || [];
+    const waitType =
+      (metadata.properties.waitType as any) ||
+      (metadata.properties.eventName ? 'event' : undefined) ||
+      (metadata.properties.durationValue ? 'duration' : undefined) ||
+      (metadata.properties.condition ? 'condition' : undefined) ||
+      'condition';
     return {
       ...base,
       type: 'Wait',
+      waitType,
       condition: metadata.properties.condition,
+      durationValue: metadata.properties.durationValue,
+      durationUnit: metadata.properties.durationUnit,
+      eventName: metadata.properties.eventName,
       next: edges[0]?.to,
     };
   }
