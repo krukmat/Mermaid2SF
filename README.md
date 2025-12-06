@@ -72,7 +72,7 @@ npm run cli -- compile --input my-flow.mmd --out-flow ./flows
 - ✅ **Strict Mode**: Treat warnings as errors for stricter validation
 - ✅ **Deterministic Output**: Same input always produces identical output (Git-friendly)
 - ✅ **Performance Checked**: 50+ node flows parse/validate/generate in <3s locally
- - ✅ **Hosted Frontend Ready**: Static UI can be served from `web/server/index.js` (open `/flow/` if you proxy WordPress on `/`)
+- ✅ **Hosted Frontend Ready**: Static UI can be served from `web/server/index.js` (open `/flow/` if you proxy WordPress on `/`)
 
 ## Quick Start
 
@@ -277,8 +277,9 @@ Artifacts:
 - OpenAPI spec: `docs/openapi.yaml` (references `schemas/flow-dsl.schema.json` for DSL payloads).
 - Validate the spec: `npm run openapi:validate`.
 
-### Web visualizer
+-### Web visualizer
 - Serve the static UI directly from the Node server (included): start `node web/server/index.js` and open `http://<host>/flow/` if you proxy WordPress on `/` (adjust Apache/Nginx ProxyPass accordingly), or `/` if Node serves the root.
+- Online demo: [http://iotforce.es/flow/](http://iotforce.es/flow/) (same UI backed by the live API).
 - Backend endpoints: `/health` and `/api/compile` (used by the UI). Frontend uses `window.location.origin` as base URL.
 
 ## View the result without running commands
