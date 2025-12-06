@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <title>Flow Visualizer</title>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css"
+  />
   <style>
     :root {
       --bg: #0b1021;
@@ -103,11 +107,13 @@
           <button id="compileXml">Compile &amp; Preview XML</button>
           <button class="secondary" id="downloadXml">Download XML</button>
         </div>
-        <pre id="xmlPreview" style="background:#0f1531; padding:1rem; border-radius:8px; border:1px solid #223054; white-space:pre-wrap; max-height:260px; overflow:auto;">Not compiled yet.</pre>
+        <pre id="xmlPreview" class="language-xml" style="background:#0f1531; padding:1rem; border-radius:8px; border:1px solid #223054; white-space:pre-wrap; max-height:260px; overflow:auto;">Not compiled yet.</pre>
       </div>
     </section>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
   <script>
     const output = document.getElementById('output');
     const canvas = document.getElementById('canvas');
@@ -297,6 +303,12 @@
       mermaidPreview.textContent = mermaid;
     }
 
+    function highlightXmlBlock() {
+      if (typeof Prism === 'undefined') return;
+      const block = document.getElementById('xmlPreview');
+      Prism.highlightElement(block);
+    }
+
     function generateMermaid(nodesList) {
       const lines = ['flowchart TD'];
       nodesList.forEach((n) => {
@@ -444,13 +456,16 @@
         if (data.errors && data.errors.length > 0) {
           xmlPreview.textContent = 'Errors:\n' + data.errors.map((e) => `- ${e.code}: ${e.message}`).join('\n');
           output.textContent = 'Validation errors; XML not generated.';
+          highlightXmlBlock();
           return;
         }
         xmlPreview.textContent = data.xml || 'No XML generated.';
         output.textContent = 'XML compiled via backend.';
         xmlPreview.dataset.xml = data.xml || '';
+        highlightXmlBlock();
       } catch (err) {
         xmlPreview.textContent = 'Error: ' + err.message;
+        highlightXmlBlock();
       }
     });
 

@@ -1265,7 +1265,7 @@ Esta tarea requiere integración con un **proyecto externo** (`agnostic-ai-pipel
 
 **4.2.4: Live preview de XML**
 - [x] Preview Flow XML en tiempo real (backend /api/compile + frontend)
-- [ ] Syntax highlighting (pendiente/optativo)
+- [x] Syntax highlighting (Prism en panel XML)
 - [x] Download generated files
 
 **4.2.5: Deploy web app**
