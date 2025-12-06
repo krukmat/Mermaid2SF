@@ -42,3 +42,4 @@
 - Al finalizar, reporta los cambios de código con rutas/ubicaciones para facilitar la revisión visual.
 - Al finalizar una tarea, muestra el mapa del proyecto con el estado actualizado.
 - Cuando recibas un documento de review, léelo (puede haber sido editado externamente) y aplica las correcciones requeridas.
+- Siempre ejecuta todos los unit tests con cobertura cuando apliques cambios de código (cualquier lenguaje). Si corresponde, asegúrate de que ESLint/linting también pase.
