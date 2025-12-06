@@ -234,6 +234,16 @@ Open the Mermaid file in https://mermaid.live, skim the XML in an editor, or dif
 | RecordUpdate | `[...]` | `UPDATE:` | Update Salesforce records |
 | Subflow | `[[...]]` | `SUBFLOW:` | Invoke another flow |
 
+GetRecords supports filters, field selection, and optional sorting:
+```
+GET: Accounts
+ api: Get_Accounts
+ object: Account
+ field: Id
+ filter: Name = 'Test'
+ sort: Name desc
+```
+
 ## Example Mermaid Flow
 
 ```mermaid
