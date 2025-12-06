@@ -214,9 +214,10 @@ Artifacts:
 ## View the result without running commands
 
 Pre-generated outputs live under `examples/output/` so visitors can inspect the full pipeline without compiling locally:
-- Mermaid: [examples/output/complete-flow.mmd](examples/output/complete-flow.mmd)
-- Flow XML: [examples/output/complete-flow.flow-meta.xml](examples/output/complete-flow.flow-meta.xml)
-- DSL JSON: [examples/output/complete-flow.flow.json](examples/output/complete-flow.flow.json)
+- Mermaid: [examples/output/complete-flow.mmd](https://github.com/krukmat/Mermaid2SF/blob/main/examples/output/complete-flow.mmd)
+- Flow XML: [examples/output/complete-flow.flow-meta.xml](https://github.com/krukmat/Mermaid2SF/blob/main/examples/output/complete-flow.flow-meta.xml)
+- DSL JSON: [examples/output/complete-flow.flow.json](https://github.com/krukmat/Mermaid2SF/blob/main/examples/output/complete-flow.flow.json)
+Input source diagram lives at [examples/v1/complete-flow.mmd](https://github.com/krukmat/Mermaid2SF/blob/main/examples/v1/complete-flow.mmd).
 
 Open the Mermaid file in https://mermaid.live, skim the XML in an editor, or diff the DSL/mermaid/XML pair to see the deterministic round-trip.
 
