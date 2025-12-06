@@ -69,10 +69,39 @@ npm run cli -- compile --input my-flow.mmd --out-flow ./flows
 - ✅ **Interactive Mode**: Wizard to compile or create flows with live validation
 - ✅ **Decompile Command**: Reverse Flow XML into DSL + Mermaid
 - ✅ **Web Visualizer**: Drag/drop editor with live XML preview (syntax highlighting) and zoom/pan
+  ![Web Visualizer Frontend](docs/images/web-visualizer.png)
 - ✅ **Strict Mode**: Treat warnings as errors for stricter validation
 - ✅ **Deterministic Output**: Same input always produces identical output (Git-friendly)
 - ✅ **Performance Checked**: 50+ node flows parse/validate/generate in <3s locally
 - ✅ **Hosted Frontend Ready**: Static UI can be served from `web/server/index.js` (open `/flow/` if you proxy WordPress on `/`)
+
+---
+
+## 🎨 Web Visualizer (Interactive Editor)
+
+The **Web Visualizer** provides a complete drag-and-drop interface for building and editing Salesforce Flows visually:
+
+### Features:
+- **Toolbox**: Quick buttons to add Start, Screen, Assignment, Decision, GetRecords, End elements
+- **Canvas**: Drag-and-drop visual flow builder with auto-layout
+- **Nodes Panel**: Manage all flow elements with type labels
+- **Live Preview**:
+  - Mermaid diagram preview (real-time as you build)
+  - XML preview with syntax highlighting
+- **Export**: Download flows as Mermaid or DSL JSON
+- **Compile & Preview XML**: Generate and preview Salesforce Flow XML instantly
+
+### Try it now:
+🌐 **[Open Web Visualizer](http://iotforce.es/flow/)** (Live Demo)
+
+Or self-host:
+```bash
+npm run build
+node web/server/index.js
+# Open http://localhost:4000/flow/
+```
+
+---
 
 ## Quick Start
 
