@@ -49,3 +49,4 @@
 - Para tareas de deploy, genera un documento aparte llamado `DEPLOY_STEPS.MD` con el detalle completo de pasos y consideraciones.
 - Antes de hacer commit y push, reporta el mensaje de commit (con detalle funcional del feature) en pantalla para evaluación y autorización.
 - Revisa coherencia con `CLAUDE.MD` y adapta/incluye cualquier prompt nuevo que deba aplicarse.
+- Si se te dice que hay un commit pendiente, no lo ignores: obedece y realiza el commit antes de continuar.
