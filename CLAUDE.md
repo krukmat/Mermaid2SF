@@ -218,23 +218,26 @@ mermaid-flow-compiler/
 
 ## Workflow for New Features / Fixes
 
-1. **Before Starting**: Check `mermaid-flow-compiler-architecture.md` to align with spec
-2. **Plan First** (if complex):
+1. **Create Feature Branch**: Once a new feature is approved, create a feature branch as the first step
+   - Branch naming: `feature/<feature-name>` or `fix/<issue-name>`
+   - Example: `git checkout -b feature/web-visualizer`
+2. **Before Starting**: Check `mermaid-flow-compiler-architecture.md` to align with spec
+3. **Plan First** (if complex):
    - Identify which modules are affected
    - Sketch DSL/XML changes if needed
    - List unit & integration tests required
-3. **TDD Approach**:
+4. **TDD Approach**:
    - Write tests first (failing)
    - Implement feature
    - Verify tests pass
-4. **Code Comments**:
+5. **Code Comments**:
    - Mark line/module with task/feature reference (e.g., `// TASK: Support Subflow`)
    - Update affected files list in plan doc after completion
-5. **Validation & Formatting**:
+6. **Validation & Formatting**:
    - `npm run lint` and `npm run format`
    - Ensure `npm test` passes
    - Run `npm run type-check` for TypeScript errors
-6. **Commit**:
+7. **Commit**:
    - Include task reference in message
    - Small, focused commits preferred
    - If needed, update `mermaid-flow-compiler-architecture.md` with implementation notes
