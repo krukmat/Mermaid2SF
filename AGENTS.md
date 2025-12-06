@@ -45,7 +45,7 @@
 - Siempre ejecuta todos los unit tests con cobertura cuando apliques cambios de código (cualquier lenguaje). Si corresponde, asegúrate de que ESLint/linting también pase.
 - Todo feature nuevo debe estar documentado en el `README`.
 - Si el proyecto no tiene tareas abiertas, revisa los documentos por si hay contenido relevante que agregar al `README`.
-- Al cerrar el branch o el proyecto, elimina documentos generados que no sean el `README` para evitar basura.
+- Al cerrar el branch o el proyecto, elimina documentos generados o documentos intermedios de fase que no sean el `README` para evitar basura.
 - Para tareas de deploy, genera un documento aparte llamado `DEPLOY_STEPS.MD` con el detalle completo de pasos y consideraciones.
 - Antes de hacer commit y push, reporta el mensaje de commit (con detalle funcional del feature) en pantalla para evaluación y autorización.
 - Revisa coherencia con `CLAUDE.MD` y adapta/incluye cualquier prompt nuevo que deba aplicarse.
