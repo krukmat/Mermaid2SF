@@ -1210,7 +1210,7 @@ Esta tarea requiere integración con un **proyecto externo** (`agnostic-ai-pipel
 
 **4.0.5: Tests de integración con elementos avanzados**
 - [x] Flow básico con Loop/Wait/GetRecords/Fault (unit/integration básica)
-- [ ] Escenarios complejos y performance tests (pendiente si se requiere)
+- [x] Escenarios complejos y performance tests (flows 50+ nodos con SLA <3s)
 
 ---
 

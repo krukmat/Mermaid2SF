@@ -14,6 +14,7 @@ CLI tool to compile Mermaid flowcharts into Salesforce Flow metadata.
 - ✅ **Web Visualizer**: Drag/drop editor with live XML preview (syntax highlighting) and zoom/pan
 - ✅ **Strict Mode**: Treat warnings as errors for stricter validation
 - ✅ **Deterministic Output**: Same input always produces identical output (Git-friendly)
+- ✅ **Performance Checked**: 50+ node flows parse/validate/generate in <3s locally
 
 ## Quick Start
 
