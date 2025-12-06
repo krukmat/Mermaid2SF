@@ -2,7 +2,26 @@
 
 > **Turn Mermaid diagrams into deployable Salesforce Flows** - Version control, CI/CD, and AI-ready workflows for Flow development.
 
-CLI tool to compile Mermaid flowcharts into Salesforce Flow metadata.
+## What is this?
+
+**Mermaid2SF** is a comprehensive toolkit for Salesforce Flow development that bridges the gap between visual flow design and production deployment. It consists of:
+
+1. **CLI Compiler** - Convert Mermaid flowchart diagrams into production-ready Salesforce Flow XML metadata
+2. **Web Visualizer** - Interactive drag-and-drop editor with live XML preview and diagram generation
+3. **Flow DSL** - Intermediate JSON/YAML representation of Salesforce Flows (version-controllable, AI-friendly)
+4. **Validation Engine** - Structural and semantic validation with actionable error messages
+5. **Analysis Tools** - Complexity metrics, recommendations, and flow documentation generation
+
+**The Problem:** Salesforce Flows are trapped in the Flow Builder UI—no version control, no code review, no CI/CD, no easy collaboration.
+
+**The Solution:** Write flows as code (Mermaid diagrams), version control them like any other code, integrate with your CI/CD pipeline, and deploy with confidence.
+
+### Who is this for?
+
+- **Salesforce Developers** - Build, test, and deploy flows from the command line
+- **Flow Architects** - Design flows visually, review in PRs, collaborate with teams
+- **DevOps Engineers** - Automate flow deployment, enforce validation gates, track changes
+- **AI/Automation** - Generate flows programmatically, analyze flow patterns, suggest improvements
 
 ---
 
