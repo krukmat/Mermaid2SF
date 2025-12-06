@@ -83,7 +83,11 @@ async function compileFlowInteractive(rl: any) {
 async function createFlowWizard(rl: any) {
   const flowApiName = await promptInput(rl, 'Flow API name', 'Wizard_Flow');
   const label = await promptInput(rl, 'Flow label', flowApiName.replace(/_/g, ' '));
-  const processType = (await promptChoice(rl, 'Process type', ['Autolaunched', 'Screen', 'RecordTriggered'])) as FlowDSL['processType'];
+  const processType = (await promptChoice(rl, 'Process type', [
+    'Autolaunched',
+    'Screen',
+    'RecordTriggered',
+  ])) as FlowDSL['processType'];
   const includeScreen = await promptYesNo(rl, 'Include a Screen step?', true);
   const includeAssignment = await promptYesNo(rl, 'Include an Assignment step?', true);
   const includeDecision = await promptYesNo(rl, 'Include a Decision step?', true);
@@ -105,7 +109,12 @@ async function createFlowWizard(rl: any) {
   fs.writeFileSync(savePath, mermaid, 'utf-8');
   logger.info(`Saved Mermaid diagram to ${savePath}`);
 
-  const { dsl, validation } = buildAndValidateFromMermaid(savePath, flowApiName, label, processType);
+  const { dsl, validation } = buildAndValidateFromMermaid(
+    savePath,
+    flowApiName,
+    label,
+    processType,
+  );
   printValidation(validation);
   printPreview(dsl);
 
@@ -137,7 +146,9 @@ function buildWizardMermaid(opts: {
   }
 
   if (opts.includeAssignment) {
-    lines.push(`    Assign[ASSIGNMENT: Set Flags\\n api: Assign_${opts.flowApiName}\\n set: v_Flag = true]`);
+    lines.push(
+      `    Assign[ASSIGNMENT: Set Flags\\n api: Assign_${opts.flowApiName}\\n set: v_Flag = true]`,
+    );
   }
 
   if (opts.includeDecision) {
@@ -227,7 +238,9 @@ export function buildAsciiPreview(dsl: FlowDSL): string[] {
   const map = new Map<string, FlowElement>();
   dsl.elements.forEach((el) => map.set(el.id, el));
 
-  const sorted = [...dsl.elements].sort((a, b) => (a.apiName || a.id).localeCompare(b.apiName || b.id));
+  const sorted = [...dsl.elements].sort((a, b) =>
+    (a.apiName || a.id).localeCompare(b.apiName || b.id),
+  );
   for (const el of sorted) {
     const label = el.label || el.apiName || el.id;
     if (el.type === 'Decision') {
@@ -246,7 +259,13 @@ export function buildAsciiPreview(dsl: FlowDSL): string[] {
   return lines;
 }
 
-function writeOutputs(dsl: FlowDSL, mermaidPath: string, outFlow?: string, outDsl?: string, outDocs?: string) {
+function writeOutputs(
+  dsl: FlowDSL,
+  mermaidPath: string,
+  outFlow?: string,
+  outDsl?: string,
+  outDocs?: string,
+) {
   const flowApiName = dsl.flowApiName;
 
   if (outFlow) {

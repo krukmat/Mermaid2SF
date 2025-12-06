@@ -53,9 +53,10 @@ export class SchemaValidator {
       case 'type':
         return `Invalid type at ${location}: expected ${err.params.type}, got ${typeof err.data}`;
 
-      case 'enum':
+      case 'enum': {
         const allowedValues = err.params.allowedValues || [];
         return `Invalid value at ${location}: must be one of [${allowedValues.join(', ')}]`;
+      }
 
       case 'pattern':
         return `Invalid format at ${location}: must match pattern ${err.params.pattern}`;

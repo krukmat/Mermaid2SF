@@ -90,6 +90,6 @@ flowchart TD
     expect(xml).toContain('<offsetNumber>5</offsetNumber>');
     expect(xml).toContain('<offsetUnit>Minutes</offsetUnit>');
     expect(xml).toContain('<platformEventName>Order_Event__e</platformEventName>');
-    expect(xml).toContain("<conditionLogic>Status__c = &apos;Ready&apos;</conditionLogic>");
+    expect(xml).toContain('<conditionLogic>Status__c = &apos;Ready&apos;</conditionLogic>');
   });
 });

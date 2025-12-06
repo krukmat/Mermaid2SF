@@ -294,11 +294,11 @@ flowchart TD
       expect(xml).toContain('<decisions>');
 
       // Check for outcomes
-      const decisionElement = dsl.elements.find(e => e.type === 'Decision');
+      const decisionElement = dsl.elements.find((e) => e.type === 'Decision');
       expect(decisionElement).toBeDefined();
       if (decisionElement?.type === 'Decision') {
         expect(decisionElement.outcomes).toHaveLength(3);
-        expect(decisionElement.outcomes.some(o => o.isDefault)).toBe(true);
+        expect(decisionElement.outcomes.some((o) => o.isDefault)).toBe(true);
       }
     });
   });
@@ -419,7 +419,7 @@ flowchart TD
       const dsl = builder.build(graph, metadataMap, 'Invalid_Ref', 'Invalid Ref');
 
       // Manually add invalid reference
-      const assignElement = dsl.elements.find(e => e.type === 'Assignment');
+      const assignElement = dsl.elements.find((e) => e.type === 'Assignment');
       if (assignElement && 'next' in assignElement) {
         assignElement.next = 'NonExistentElement';
       }
@@ -427,7 +427,7 @@ flowchart TD
       const result = validator.validate(dsl);
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.code === 'INVALID_ELEMENT_REFERENCE')).toBe(true);
+      expect(result.errors.some((e) => e.code === 'INVALID_ELEMENT_REFERENCE')).toBe(true);
     });
 
     it('should detect cycles in flow', () => {
@@ -453,7 +453,7 @@ flowchart TD
       const result = validator.validate(dsl);
 
       // Cycle detection produces warnings, not errors
-      expect(result.warnings.some(w => w.code === 'CYCLE_DETECTED')).toBe(true);
+      expect(result.warnings.some((w) => w.code === 'CYCLE_DETECTED')).toBe(true);
     });
   });
 
@@ -495,9 +495,9 @@ flowchart TD
     const examplesDir = path.join(__dirname, '../../examples/v1');
 
     if (fs.existsSync(examplesDir)) {
-      const exampleFiles = fs.readdirSync(examplesDir).filter(f => f.endsWith('.mmd'));
+      const exampleFiles = fs.readdirSync(examplesDir).filter((f) => f.endsWith('.mmd'));
 
-      exampleFiles.forEach(filename => {
+      exampleFiles.forEach((filename) => {
         it(`should process ${filename} successfully`, () => {
           const filePath = path.join(examplesDir, filename);
           const mermaidText = fs.readFileSync(filePath, 'utf-8');

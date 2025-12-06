@@ -27,7 +27,10 @@ export function parseFlowXml(filePath: string): FlowDSL {
   parseFaults(text, elements);
 
   // Start element reference
-  const startNext = extractValue(text, /<start>[\s\S]*?<targetReference>(.*?)<\/targetReference>[\s\S]*?<\/start>/);
+  const startNext = extractValue(
+    text,
+    /<start>[\s\S]*?<targetReference>(.*?)<\/targetReference>[\s\S]*?<\/start>/,
+  );
   elements.push({
     id: 'Start',
     type: 'Start',
@@ -78,12 +81,16 @@ function parseAssignments(xml: string, elements: FlowElement[]) {
     const label = extractValue(segment, /<label>(.*?)<\/label>/);
     if (!apiName) continue;
     const assignments = [];
-    const itemRegex = /<assignToReference>(.*?)<\/assignToReference>[\s\S]*?<stringValue>(.*?)<\/stringValue>/g;
+    const itemRegex =
+      /<assignToReference>(.*?)<\/assignToReference>[\s\S]*?<stringValue>(.*?)<\/stringValue>/g;
     let im;
     while ((im = itemRegex.exec(segment)) !== null) {
       assignments.push({ variable: im[1], value: im[2] });
     }
-    const next = extractValue(segment, /<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/);
+    const next = extractValue(
+      segment,
+      /<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/,
+    );
     elements.push({
       id: apiName,
       apiName,
@@ -103,12 +110,16 @@ function parseDecisions(xml: string, elements: FlowElement[]) {
     const label = extractValue(segment, /<label>(.*?)<\/label>/);
     if (!apiName) continue;
     const outcomes = [];
-    const ruleRegex = /<rules>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>[\s\S]*?<\/connector>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<\/rules>/g;
+    const ruleRegex =
+      /<rules>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>[\s\S]*?<\/connector>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<\/rules>/g;
     let rm;
     while ((rm = ruleRegex.exec(segment)) !== null) {
       outcomes.push({ name: rm[1], next: rm[2], condition: rm[3], isDefault: false });
     }
-    const defNext = extractValue(segment, /<defaultConnector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/);
+    const defNext = extractValue(
+      segment,
+      /<defaultConnector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/,
+    );
     if (defNext) {
       outcomes.push({ name: 'Default', next: defNext, isDefault: true });
     }
@@ -129,7 +140,10 @@ function parseScreens(xml: string, elements: FlowElement[]) {
     const apiName = extractValue(segment, /<name>(.*?)<\/name>/);
     const label = extractValue(segment, /<label>(.*?)<\/label>/);
     if (!apiName) continue;
-    const next = extractValue(segment, /<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/);
+    const next = extractValue(
+      segment,
+      /<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/,
+    );
     elements.push({
       id: apiName,
       apiName,
@@ -142,7 +156,8 @@ function parseScreens(xml: string, elements: FlowElement[]) {
 }
 
 function parseRecordCreates(xml: string, elements: FlowElement[]) {
-  const regex = /<recordCreates>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<object>(.*?)<\/object>[\s\S]*?(<inputAssignments>[\s\S]*?<\/inputAssignments>)*[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
+  const regex =
+    /<recordCreates>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<object>(.*?)<\/object>[\s\S]*?(<inputAssignments>[\s\S]*?<\/inputAssignments>)*[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
   let m;
   while ((m = regex.exec(xml)) !== null) {
     const apiName = m[1];
@@ -151,7 +166,8 @@ function parseRecordCreates(xml: string, elements: FlowElement[]) {
     const inputBlock = m[4] || '';
     const connectorBlock = m[5] || '';
     const fields: Record<string, string> = {};
-    const inputRegex = /<inputAssignments>[\s\S]*?<field>(.*?)<\/field>[\s\S]*?<stringValue>(.*?)<\/stringValue>[\s\S]*?<\/inputAssignments>/g;
+    const inputRegex =
+      /<inputAssignments>[\s\S]*?<field>(.*?)<\/field>[\s\S]*?<stringValue>(.*?)<\/stringValue>[\s\S]*?<\/inputAssignments>/g;
     let im;
     while ((im = inputRegex.exec(inputBlock)) !== null) {
       fields[im[1]] = im[2];
@@ -170,7 +186,8 @@ function parseRecordCreates(xml: string, elements: FlowElement[]) {
 }
 
 function parseRecordUpdates(xml: string, elements: FlowElement[]) {
-  const regex = /<recordUpdates>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<object>(.*?)<\/object>[\s\S]*?(<inputAssignments>[\s\S]*?<\/inputAssignments>)*[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
+  const regex =
+    /<recordUpdates>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<object>(.*?)<\/object>[\s\S]*?(<inputAssignments>[\s\S]*?<\/inputAssignments>)*[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
   let m;
   while ((m = regex.exec(xml)) !== null) {
     const apiName = m[1];
@@ -179,7 +196,8 @@ function parseRecordUpdates(xml: string, elements: FlowElement[]) {
     const inputBlock = m[4] || '';
     const connectorBlock = m[5] || '';
     const fields: Record<string, string> = {};
-    const inputRegex = /<inputAssignments>[\s\S]*?<field>(.*?)<\/field>[\s\S]*?<stringValue>(.*?)<\/stringValue>[\s\S]*?<\/inputAssignments>/g;
+    const inputRegex =
+      /<inputAssignments>[\s\S]*?<field>(.*?)<\/field>[\s\S]*?<stringValue>(.*?)<\/stringValue>[\s\S]*?<\/inputAssignments>/g;
     let im;
     while ((im = inputRegex.exec(inputBlock)) !== null) {
       fields[im[1]] = im[2];
@@ -198,7 +216,8 @@ function parseRecordUpdates(xml: string, elements: FlowElement[]) {
 }
 
 function parseSubflows(xml: string, elements: FlowElement[]) {
-  const regex = /<subflows>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<flowName>(.*?)<\/flowName>[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
+  const regex =
+    /<subflows>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<flowName>(.*?)<\/flowName>[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
   let m;
   while ((m = regex.exec(xml)) !== null) {
     const apiName = m[1];
@@ -218,7 +237,8 @@ function parseSubflows(xml: string, elements: FlowElement[]) {
 }
 
 function parseLoops(xml: string, elements: FlowElement[]) {
-  const regex = /<loops>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<collectionReference>(.*?)<\/collectionReference>[\s\S]*?(<nextValueConnector>[\s\S]*?<\/nextValueConnector>)?/g;
+  const regex =
+    /<loops>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<collectionReference>(.*?)<\/collectionReference>[\s\S]*?(<nextValueConnector>[\s\S]*?<\/nextValueConnector>)?/g;
   let m;
   while ((m = regex.exec(xml)) !== null) {
     const apiName = m[1];
@@ -238,7 +258,8 @@ function parseLoops(xml: string, elements: FlowElement[]) {
 }
 
 function parseWaits(xml: string, elements: FlowElement[]) {
-  const regex = /<waits>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?(<waitEvents>[\s\S]*?<\/waitEvents>)?[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
+  const regex =
+    /<waits>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?(<waitEvents>[\s\S]*?<\/waitEvents>)?[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
   let m;
   while ((m = regex.exec(xml)) !== null) {
     const apiName = m[1];
@@ -246,8 +267,10 @@ function parseWaits(xml: string, elements: FlowElement[]) {
     const eventsBlock = m[3] || '';
     const connectorBlock = m[4] || '';
     const condition = extractValue(eventsBlock, /<conditionLogic>(.*?)<\/conditionLogic>/);
-    const eventType = extractValue(eventsBlock, /<eventType>(.*?)<\/eventType>/);
-    const platformEventName = extractValue(eventsBlock, /<platformEventName>(.*?)<\/platformEventName>/);
+    const platformEventName = extractValue(
+      eventsBlock,
+      /<platformEventName>(.*?)<\/platformEventName>/,
+    );
     const offsetNumber = extractValue(eventsBlock, /<offsetNumber>(.*?)<\/offsetNumber>/);
     const offsetUnit = extractValue(eventsBlock, /<offsetUnit>(.*?)<\/offsetUnit>/);
     const next = extractValue(connectorBlock, /<targetReference>(.*?)<\/targetReference>/);
@@ -281,7 +304,8 @@ function parseWaits(xml: string, elements: FlowElement[]) {
 }
 
 function parseLookups(xml: string, elements: FlowElement[]) {
-  const regex = /<recordLookups>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<object>(.*?)<\/object>[\s\S]*?(<filters>[\s\S]*?<\/filters>)*[\s\S]*?(<sortField>[\s\S]*?<\/sortField>)?[\s\S]*?(<sortOrder>[\s\S]*?<\/sortOrder>)?[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
+  const regex =
+    /<recordLookups>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<object>(.*?)<\/object>[\s\S]*?(<filters>[\s\S]*?<\/filters>)*[\s\S]*?(<sortField>[\s\S]*?<\/sortField>)?[\s\S]*?(<sortOrder>[\s\S]*?<\/sortOrder>)?[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
   let m;
   while ((m = regex.exec(xml)) !== null) {
     const apiName = m[1];
@@ -292,7 +316,8 @@ function parseLookups(xml: string, elements: FlowElement[]) {
     const sortOrderBlock = m[6] || '';
     const connectorBlock = m[7] || '';
     const filters: any[] = [];
-    const fRegex = /<filters>[\s\S]*?<field>(.*?)<\/field>[\s\S]*?<operator>(.*?)<\/operator>[\s\S]*?<stringValue>(.*?)<\/stringValue>[\s\S]*?<\/filters>/g;
+    const fRegex =
+      /<filters>[\s\S]*?<field>(.*?)<\/field>[\s\S]*?<operator>(.*?)<\/operator>[\s\S]*?<stringValue>(.*?)<\/stringValue>[\s\S]*?<\/filters>/g;
     let fm;
     while ((fm = fRegex.exec(filtersBlock)) !== null) {
       filters.push({ field: fm[1], operator: fm[2], value: fm[3] });
@@ -315,7 +340,8 @@ function parseLookups(xml: string, elements: FlowElement[]) {
 }
 
 function parseFaults(xml: string, elements: FlowElement[]) {
-  const regex = /<faults>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
+  const regex =
+    /<faults>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
   let m;
   while ((m = regex.exec(xml)) !== null) {
     const apiName = m[1];

@@ -1,52 +1,32 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
-- Source lives under `src/` with feature folders planned as `cli/`, `parser/`, `extractor/`, `dsl/`, `validator/`, `generators/`, `types/`, and `utils/`. Keep shared contracts in `src/types/`.
-- Unit tests stay alongside code in `src/__tests__/` (mirroring folder names). Add integration samples under `examples/` and long-form docs under `docs/`.
-- Build artifacts go to `dist/`; never commit `dist/`, `node_modules/`, or `coverage/`.
+## Project Structure & Modules
+- Source lives in `src/` (`cli/`, `parser/`, `dsl/`, `validator/`, `generators/`, `extractor/`, `reverse/`, `utils/`); tests are co-located in `src/__tests__/`.
+- Docs stay in `docs/`; runnable samples in `examples/`; scripts for automation in `scripts/`; build output in `dist/` (do not commit).
 
 ## Build, Test, and Development Commands
-- `npm install` — install dependencies (Node 18+ recommended).
-- `npm run build` — type-check and emit compiled JS via `tsc` into `dist/`.
-- `npm run dev` — TypeScript watch mode for rapid iterations.
-- `npm run lint` / `npm run format` — ESLint + Prettier for style enforcement and autofix.
-- `npm test`, `npm run test:watch`, `npm run test:coverage` — Jest unit tests, watch mode, and coverage report.
+- Install with `npm install` (Node 18+). `npm run dev` watches TypeScript; `npm run build` emits `dist/`.
+- Quality: `npm run lint`, `npm run lint:fix`, `npm run format`, `npm run format:check`.
+- Verification: `npm test`, `npm run test:coverage`, `npm run compile-examples`, `npm run validate-examples`, `npm run ci` (full lint/format/test/build), `npm run coverage-upload` (Codecov).
 
-## Coding Style & Naming Conventions
-- TypeScript-first; prefer composition over inheritance and keep modules small.
-- Files use kebab-case (e.g., `mermaid-parser.ts`); types/interfaces in `types/` use PascalCase.
-- 2-space indentation, semicolons enabled, `strict` TypeScript mode. Favor explicit return types on exported functions.
-- Keep public APIs predictable: parse → extract → build → validate → generate; avoid hidden side effects.
+## Coding Style & Naming
+- TypeScript strict, 2-space indent, semicolons; files use kebab-case, exported types/interfaces use PascalCase, constants use SCREAMING_SNAKE_CASE.
+- Keep modules pure and deterministic (especially generators). Add explicit return types on exported functions; avoid hidden side effects.
+- ESLint + Prettier enforced; resolve warnings before merging when feasible.
 
 ## Testing Guidelines
-- Framework: Jest with `ts-jest`. Co-locate tests as `<module>.test.ts`.
-- Cover happy paths and failure cases (e.g., invalid Mermaid syntax, missing nodes). Add fixtures in `examples/` when scenario clarity helps.
-- Aim for coverage on parsing, extraction, validation, and XML generation boundaries; add snapshot tests only when output is stable.
+- Jest for unit/integration; name tests `<file>.test.ts` and keep near code.
+- Cover happy and failure paths for parsing, DSL building, validation, and XML generation; add fixtures under `examples/` when they clarify behavior.
+- Run full suite with coverage before finishing any code change.
 
 ## Commit & Pull Request Guidelines
-- Use clear, present-tense commits (e.g., `feat: add decision outcome parsing`, `test: cover invalid edge labels`). Conventional Commits are preferred for changelog friendliness.
-- PRs should include: concise description, linked issue/task, test results (`npm test` output), and sample CLI input/output if behavior changes.
-- Keep PRs small and focused; update docs (README/PROJECT_PLAN/architecture) when altering CLI flags or Flow DSL shape.
+- Use Conventional Commits (e.g., `feat: add flow connector mapping`). Before committing/pushing, display the planned commit message for approval.
+- PRs: include summary, linked issue/task, test results, and sample CLI input/output; keep diffs focused. Update `README.md` for any new flag, feature, or workflow change.
 
-## Architecture & Agent Notes
-- Preserve the pipeline separation: Mermaid → Intermediate Flow DSL → Flow XML. Each stage should be independently testable.
-- Normalize inputs before generation to keep diffs stable (deterministic ordering of nodes/edges/variables).
-- Surface validation errors with actionable messages (element id, line, expected shape) to aid both humans and AI agents.
-
-## Working Instructions
-- Antes de desarrollar, leer el documento de proyecto y respetar el plan sin desvíos.
-- Al terminar una tarea, marcarla como cerrada o en revisión en el plan.
-- Reportar bugs o incidencias en el plan.
-- Si existe un documento de review pendiente, evaluarlo y corregir según se solicite para pasar el proceso de revisión.
-- Antes de trabajar en una tarea hija, revisa y completa los pasos relacionados de la tarea padre.
-- Al finalizar, reporta los cambios de código con rutas/ubicaciones para facilitar la revisión visual.
-- Al finalizar una tarea, muestra el mapa del proyecto con el estado actualizado.
-- Cuando recibas un documento de review, léelo (puede haber sido editado externamente) y aplica las correcciones requeridas.
-- Siempre ejecuta todos los unit tests con cobertura cuando apliques cambios de código (cualquier lenguaje). Si corresponde, asegúrate de que ESLint/linting también pase.
-- Todo feature nuevo debe estar documentado en el `README`.
-- Si el proyecto no tiene tareas abiertas, revisa los documentos por si hay contenido relevante que agregar al `README`.
-- Al cerrar el branch o el proyecto, elimina documentos generados o documentos intermedios de fase que no sean el `README` para evitar basura.
-- Para tareas de deploy, genera un documento aparte llamado `DEPLOY_STEPS.MD` con el detalle completo de pasos y consideraciones.
-- Antes de hacer commit y push, reporta el mensaje de commit (con detalle funcional del feature) en pantalla para evaluación y autorización.
-- Revisa coherencia con `CLAUDE.MD` y adapta/incluye cualquier prompt nuevo que deba aplicarse.
-- Si se te dice que hay un commit pendiente, no lo ignores: obedece y realiza el commit antes de continuar.
+## Agent Working Protocol (read every session)
+- Read `PROJECT_PLAN.md` (and parent task steps) before coding; follow the plan without deviations. If a review doc exists, read it and apply required fixes.
+- On finishing a task: mark it Closed/Review in the plan, log bugs/incidents there, report code changes with file paths, and show the updated project map.
+- Always run unit tests with coverage and ESLint; if told a commit is pending, comply immediately.
+- For deploy tasks, create `DEPLOY_STEPS.MD` with full steps; when closing a branch/project, delete generated/intermediate phase/task docs (keep `README.md`).
+- Keep this guide aligned with `CLAUDE.md`; incorporate any new prompts. If no tasks are open, scan docs for content that should move into `README.md`.
+- New features must be documented in `README.md`. Remove non-README generated docs when closing work to avoid clutter.

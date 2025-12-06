@@ -172,7 +172,10 @@ async function runCompileOnce(options: any) {
   if (options.debug) {
     const debugDir = path.join(process.cwd(), '.debug');
     writeOutput(path.join(debugDir, `${flowApiName}.debug.dsl.json`), JSON.stringify(dsl, null, 2));
-    writeOutput(path.join(debugDir, `${flowApiName}.debug.graph.json`), JSON.stringify(graph, null, 2));
+    writeOutput(
+      path.join(debugDir, `${flowApiName}.debug.graph.json`),
+      JSON.stringify(graph, null, 2),
+    );
     logger.debug('Debug artifacts written to .debug/');
     timers.logTimings(logger);
   }

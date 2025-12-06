@@ -139,7 +139,6 @@ export class MetadataExtractor {
   private extractScreenProperties(label: string): Record<string, any> {
     const components: any[] = [];
     const lines = label.split('\n');
-    let inComponentBlock = false;
     let currentComponent: any = null;
 
     for (const line of lines) {

@@ -147,10 +147,7 @@ export class FlowXmlGenerator {
     return lines;
   }
 
-  private generateDecision(
-    element: DecisionElement,
-    idToApiName: Map<string, string>,
-  ): string[] {
+  private generateDecision(element: DecisionElement, idToApiName: Map<string, string>): string[] {
     const lines: string[] = [];
     const apiName = element.apiName || element.id;
 
@@ -185,7 +182,9 @@ export class FlowXmlGenerator {
         lines.push(`            <name>${this.escapeXml(outcome.name)}</name>`);
         lines.push(`            <conditionLogic>and</conditionLogic>`);
         lines.push(`            <conditions>`);
-        lines.push(`                <leftValueReference>${outcome.condition || 'true'}</leftValueReference>`);
+        lines.push(
+          `                <leftValueReference>${outcome.condition || 'true'}</leftValueReference>`,
+        );
         lines.push(`                <operator>EqualTo</operator>`);
         lines.push(`                <rightValue>`);
         lines.push(`                    <booleanValue>true</booleanValue>`);
@@ -230,7 +229,9 @@ export class FlowXmlGenerator {
       }
 
       if (component.target) {
-        lines.push(`            <fieldReference>${this.escapeXml(component.target)}</fieldReference>`);
+        lines.push(
+          `            <fieldReference>${this.escapeXml(component.target)}</fieldReference>`,
+        );
       }
 
       if (component.text) {
@@ -280,13 +281,17 @@ export class FlowXmlGenerator {
       lines.push(`        <inputAssignments>`);
       lines.push(`            <field>${fieldName}</field>`);
       lines.push(`            <value>`);
-      lines.push(`                <stringValue>${this.escapeXml(element.fields[fieldName])}</stringValue>`);
+      lines.push(
+        `                <stringValue>${this.escapeXml(element.fields[fieldName])}</stringValue>`,
+      );
       lines.push(`            </value>`);
       lines.push(`        </inputAssignments>`);
     }
 
     if (element.assignRecordIdToReference) {
-      lines.push(`        <assignRecordIdToReference>${element.assignRecordIdToReference}</assignRecordIdToReference>`);
+      lines.push(
+        `        <assignRecordIdToReference>${element.assignRecordIdToReference}</assignRecordIdToReference>`,
+      );
     }
 
     if (element.next) {
@@ -338,7 +343,9 @@ export class FlowXmlGenerator {
       lines.push(`        <inputAssignments>`);
       lines.push(`            <field>${fieldName}</field>`);
       lines.push(`            <value>`);
-      lines.push(`                <stringValue>${this.escapeXml(element.fields[fieldName])}</stringValue>`);
+      lines.push(
+        `                <stringValue>${this.escapeXml(element.fields[fieldName])}</stringValue>`,
+      );
       lines.push(`            </value>`);
       lines.push(`        </inputAssignments>`);
     }
@@ -376,7 +383,9 @@ export class FlowXmlGenerator {
         lines.push(`        <inputAssignments>`);
         lines.push(`            <name>${assignment.name}</name>`);
         lines.push(`            <value>`);
-        lines.push(`                <stringValue>${this.escapeXml(assignment.value)}</stringValue>`);
+        lines.push(
+          `                <stringValue>${this.escapeXml(assignment.value)}</stringValue>`,
+        );
         lines.push(`            </value>`);
         lines.push(`        </inputAssignments>`);
       }
@@ -470,7 +479,9 @@ export class FlowXmlGenerator {
     } else if (element.condition) {
       lines.push(`        <waitEvents>`);
       lines.push(`            <eventType>PlatformEvent</eventType>`);
-      lines.push(`            <conditionLogic>${this.escapeXml(element.condition)}</conditionLogic>`);
+      lines.push(
+        `            <conditionLogic>${this.escapeXml(element.condition)}</conditionLogic>`,
+      );
       lines.push(`        </waitEvents>`);
     }
     if (element.next) {

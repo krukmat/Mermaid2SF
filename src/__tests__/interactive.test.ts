@@ -12,7 +12,14 @@ describe('interactive helpers', () => {
       startElement: 'Start',
       elements: [
         { id: 'Start', type: 'Start', apiName: 'Start_Api', next: 'Assign' },
-        { id: 'Assign', type: 'Assignment', apiName: 'Assign_Api', label: 'Assign', assignments: [], next: 'End' },
+        {
+          id: 'Assign',
+          type: 'Assignment',
+          apiName: 'Assign_Api',
+          label: 'Assign',
+          assignments: [],
+          next: 'End',
+        },
         { id: 'End', type: 'End', apiName: 'End_Api' },
       ],
     };

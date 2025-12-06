@@ -144,9 +144,7 @@ describe('FlowValidator', () => {
             id: 'Decision',
             type: 'Decision',
             apiName: 'Check',
-            outcomes: [
-              { name: 'Yes', condition: 'true', isDefault: false, next: 'End' },
-            ],
+            outcomes: [{ name: 'Yes', condition: 'true', isDefault: false, next: 'End' }],
           } as DecisionElement,
           {
             id: 'End',
@@ -286,9 +284,7 @@ describe('FlowValidator', () => {
             id: 'Assign',
             type: 'Assignment',
             apiName: 'SetValue',
-            assignments: [
-              { variable: 'v_Result', value: '{!v_UndefinedVar}' },
-            ],
+            assignments: [{ variable: 'v_Result', value: '{!v_UndefinedVar}' }],
             next: 'End',
           } as AssignmentElement,
           {
@@ -313,7 +309,13 @@ describe('FlowValidator', () => {
         apiVersion: '60.0',
         startElement: 'Start',
         variables: [
-          { name: 'v_Input', dataType: 'String', isCollection: false, isInput: true, isOutput: false },
+          {
+            name: 'v_Input',
+            dataType: 'String',
+            isCollection: false,
+            isInput: true,
+            isOutput: false,
+          },
         ],
         elements: [
           {
@@ -326,9 +328,7 @@ describe('FlowValidator', () => {
             id: 'Assign',
             type: 'Assignment',
             apiName: 'SetValue',
-            assignments: [
-              { variable: 'v_Result', value: '{!v_Input}' },
-            ],
+            assignments: [{ variable: 'v_Result', value: '{!v_Input}' }],
             next: 'End',
           } as AssignmentElement,
           {
@@ -362,18 +362,14 @@ describe('FlowValidator', () => {
             id: 'Assign1',
             type: 'Assignment',
             apiName: 'SetValue1',
-            assignments: [
-              { variable: 'v_Temp', value: 'Hello' },
-            ],
+            assignments: [{ variable: 'v_Temp', value: 'Hello' }],
             next: 'Assign2',
           } as AssignmentElement,
           {
             id: 'Assign2',
             type: 'Assignment',
             apiName: 'SetValue2',
-            assignments: [
-              { variable: 'v_Result', value: '{!v_Temp}' },
-            ],
+            assignments: [{ variable: 'v_Result', value: '{!v_Temp}' }],
             next: 'End',
           } as AssignmentElement,
           {

@@ -32,7 +32,10 @@ flowchart TD
     const dsl = builder.build(graph, metadataMap, 'ReverseFlow', 'Reverse Flow');
     const xml = xmlGen.generate(dsl);
 
-    const tmpPath = path.join(fs.mkdtempSync(path.join(process.cwd(), 'tmp-')), 'flow.flow-meta.xml');
+    const tmpPath = path.join(
+      fs.mkdtempSync(path.join(process.cwd(), 'tmp-')),
+      'flow.flow-meta.xml',
+    );
     fs.writeFileSync(tmpPath, xml, 'utf-8');
 
     const parsedDsl = parseFlowXml(tmpPath);

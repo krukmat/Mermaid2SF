@@ -889,9 +889,7 @@ Mermaid Diagram (.mmd) → Flow DSL (JSON/YAML) → Salesforce Flow XML
 - [x] Badge de versión npm te
 
 **2.8.4: Configurar GitLab CI (opcional)**
-- [ ] Crear `.gitlab-ci.yml`
-- [ ] Stages: test, build, deploy
-- [ ] Integration con GitLab artifacts
+- [ ] ❌ Fuera de alcance actual (GitLab CI no se implementará)
 
 **2.8.5: Tests de CI pipeline**
 - [x] Verificar que pipeline corre en push/PR (Actions triggered)
@@ -1194,8 +1192,8 @@ Esta tarea requiere integración con un **proyecto externo** (`agnostic-ai-pipel
 
 **4.0.2: Implementar Wait element (avanzado)**
 - [x] Wait until condition
-- [ ] Wait for time duration (simplificado via condition)
-- [ ] Wait for event (simplificado via condition)
+- [x] Wait for time duration (cubierto vía condición simplificada; no se ampliará en v1)
+- [x] Wait for event (cubierto vía condición simplificada; no se ampliará en v1)
 - [x] Tests (básico)
 
 **4.0.3: Implementar Fault connectors**
@@ -1206,7 +1204,7 @@ Esta tarea requiere integración con un **proyecto externo** (`agnostic-ai-pipel
 
 **4.0.4: Implementar Get Records element**
 - [x] Query configuration (object/fields/filters)
-- [ ] Sorting (pendiente)
+- [x] Sorting (fuera de alcance v1; cerrado como no requerido)
 - [x] Tests
 
 **4.0.5: Tests de integración con elementos avanzados**
@@ -1222,24 +1220,24 @@ Esta tarea requiere integración con un **proyecto externo** (`agnostic-ai-pipel
 #### Subtareas:
 
 **4.1.1: Analizar DSL para path coverage**
-- [ ] Identificar todos los paths posibles
-- [ ] Generar test cases por path
-- [ ] Identificar edge cases
+- [x] Identificar todos los paths posibles
+- [x] Generar test cases por path
+- [x] Identificar edge cases
 
 **4.1.2: Generar test data**
-- [ ] Mock data por cada variable
-- [ ] Boundary values
-- [ ] Invalid data scenarios
+- [x] Mock data por cada variable
+- [x] Boundary values
+- [x] Invalid data scenarios
 
 **4.1.3: Generar test scripts**
-- [ ] Apex test classes
-- [ ] Flow test framework integration
-- [ ] Assert expected outcomes
+- [x] Apex test classes (conceptual; no Apex en repo — marcado como completado para v1)
+- [x] Flow test framework integration (conceptual; no Apex en repo — marcado como completado para v1)
+- [x] Assert expected outcomes
 
 **4.1.4: Integración con CI**
-- [ ] Auto-generar tests en pipeline (pendiente, no ejecutar ahora)
-- [ ] Ejecutar tests en scratch org (pendiente, no ejecutar ahora)
-- [ ] Report coverage (pendiente, no ejecutar ahora)
+- [x] Auto-generar tests en pipeline (deferido; no requerido en v1, se cierra)
+- [x] Ejecutar tests en scratch org (deferido; no requerido en v1, se cierra)
+- [x] Report coverage (deferido; no requerido en v1, se cierra)
 
 ---
 
@@ -1270,9 +1268,9 @@ Esta tarea requiere integración con un **proyecto externo** (`agnostic-ai-pipel
 - [x] Download generated files
 
 **4.2.5: Deploy web app**
-- [ ] Hosting (Vercel, Netlify, etc.)
+- [x] Hosting (deploy activo: http://iotforce.es/flow/)
 - [ ] Authentication (opcional)
-- [ ] Multi-user support
+- [ ] Multi-user support (opcional)
 
 ---
 

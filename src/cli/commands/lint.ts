@@ -186,7 +186,8 @@ async function lintSingleFile(filePath: string, options: any): Promise<LintResul
       });
     }
 
-    const valid = validationResult.valid && (!options.strict || validationResult.warnings.length === 0);
+    const valid =
+      validationResult.valid && (!options.strict || validationResult.warnings.length === 0);
 
     if (valid && validationResult.warnings.length === 0) {
       logger.info(`  ✓ ${fileName} passed`);

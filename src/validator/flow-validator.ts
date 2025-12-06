@@ -221,12 +221,7 @@ export class FlowValidator {
         case 'Assignment':
           // Check if assignment values reference undefined variables
           for (const assignment of element.assignments) {
-            this.checkExpressionVariables(
-              assignment.value,
-              definedVariables,
-              element.id,
-              warnings,
-            );
+            this.checkExpressionVariables(assignment.value, definedVariables, element.id, warnings);
           }
           break;
 
@@ -246,14 +241,14 @@ export class FlowValidator {
 
         case 'RecordCreate':
           // Check field values
-          for (const [fieldName, value] of Object.entries(element.fields)) {
+          for (const value of Object.values(element.fields)) {
             this.checkExpressionVariables(value, definedVariables, element.id, warnings);
           }
           break;
 
         case 'RecordUpdate':
           // Check field values and filters
-          for (const [fieldName, value] of Object.entries(element.fields)) {
+          for (const value of Object.values(element.fields)) {
             this.checkExpressionVariables(value, definedVariables, element.id, warnings);
           }
           if (element.filters) {
@@ -267,12 +262,7 @@ export class FlowValidator {
           // Check input assignments
           if (element.inputAssignments) {
             for (const mapping of element.inputAssignments) {
-              this.checkExpressionVariables(
-                mapping.value,
-                definedVariables,
-                element.id,
-                warnings,
-              );
+              this.checkExpressionVariables(mapping.value, definedVariables, element.id, warnings);
             }
           }
           break;

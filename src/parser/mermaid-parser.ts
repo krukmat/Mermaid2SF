@@ -57,6 +57,7 @@ export class MermaidParser {
     for (const line of lines) {
       // Match node definitions: ID[Label], ID([Label]), ID{Label}, etc.
       // Handle multi-line labels by collecting consecutive lines
+      // eslint-disable-next-line no-useless-escape
       const nodeRegex = /(\w+)([\[\(\{]+)([^\]\)\}]+)([\]\)\}]+)/g;
       let match;
 

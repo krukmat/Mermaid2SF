@@ -1,5 +1,10 @@
 // TASK 3.1: Explain command - comprehensive test suite
-import { summarizeFlow, buildDslFromMermaid, renderSummary, loadDsl } from '../cli/commands/explain';
+import {
+  summarizeFlow,
+  buildDslFromMermaid,
+  renderSummary,
+  loadDsl,
+} from '../cli/commands/explain';
 import { FlowValidator } from '../validator/flow-validator';
 import { FlowDSL } from '../types/flow-dsl';
 import * as fs from 'fs';
@@ -95,9 +100,7 @@ describe('Explain command helpers', () => {
         label: 'Invalid',
         processType: 'Autolaunched',
         startElement: 'Start',
-        elements: [
-          { id: 'Start', type: 'Start', next: 'Missing' },
-        ],
+        elements: [{ id: 'Start', type: 'Start', next: 'Missing' }],
       };
 
       const validator = new FlowValidator();
@@ -206,7 +209,15 @@ describe('Explain command helpers', () => {
         label: 'Simple',
         processType: 'Autolaunched',
         startElement: 'Start',
-        variables: [{ name: 'var1', dataType: 'String', isCollection: false, isInput: false, isOutput: false }],
+        variables: [
+          {
+            name: 'var1',
+            dataType: 'String',
+            isCollection: false,
+            isInput: false,
+            isOutput: false,
+          },
+        ],
         elements: [
           { id: 'Start', type: 'Start', next: 'End' },
           { id: 'End', type: 'End' },

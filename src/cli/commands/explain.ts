@@ -81,7 +81,9 @@ async function explainFlow(options: any) {
   }
 
   if (!validation.valid) {
-    logger.warn(`Validation errors (${validation.errors.length}) detected. Summary will include them.`);
+    logger.warn(
+      `Validation errors (${validation.errors.length}) detected. Summary will include them.`,
+    );
   } else if (validation.warnings.length > 0) {
     logger.warn(`Validation warnings (${validation.warnings.length}) detected.`);
   }
@@ -253,7 +255,9 @@ function buildRecommendations(summary: FlowSummary): string[] {
   if (summary.complexityLevel === 'VERY_HIGH') {
     recs.push('- HIGH: Very high complexity detected. Consider breaking into subflows.');
   } else if (summary.complexityLevel === 'HIGH') {
-    recs.push('- HIGH: High complexity detected. Review decision logic for simplification opportunities.');
+    recs.push(
+      '- HIGH: High complexity detected. Review decision logic for simplification opportunities.',
+    );
   }
 
   // MEDIUM: Many decisions
@@ -263,7 +267,9 @@ function buildRecommendations(summary: FlowSummary): string[] {
 
   // MEDIUM: Large flow
   if (summary.counts.elements > 15) {
-    recs.push('- MEDIUM: Flow has many elements. Consider breaking into subflows for maintainability.');
+    recs.push(
+      '- MEDIUM: Flow has many elements. Consider breaking into subflows for maintainability.',
+    );
   }
 
   // LOW: No variables declared
@@ -278,7 +284,9 @@ function buildRecommendations(summary: FlowSummary): string[] {
 
   // Positive feedback when flow is clean
   if (recs.length === 0) {
-    recs.push('- No issues detected; flow follows best practices. Keep validations and docs in sync.');
+    recs.push(
+      '- No issues detected; flow follows best practices. Keep validations and docs in sync.',
+    );
   }
 
   return recs;

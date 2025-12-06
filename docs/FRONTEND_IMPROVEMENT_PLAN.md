@@ -6,11 +6,11 @@ Plan para transformar el frontend actual en una experiencia moderna, atractiva y
 
 ## 🎯 Objetivos
 
-1. **Primera Impresión Clara** - Mostrar qué hace la herramienta inmediatamente
-2. **Feedback Visual** - El usuario entiende qué está pasando
-3. **Fácil de Usar** - Sin tutoriales complicados, intuitivo
-4. **Funcional** - Que compile flows correctamente sin errores
-5. **Presentable** - UI limpia y moderna (no needs to be "enterprise")
+1. **Primera Impresión Impactante** - Landing page que muestre valor inmediato
+2. **Interactividad Moderna** - Animaciones fluidas y feedback visual
+3. **Fácil de Usar** - Intuitivo, con onboarding claro
+4. **UX Profesional** - Experiencia comparable a herramientas modernas
+5. **Mobile Responsive** - Funcional en tablets y móviles
 
 ---
 
@@ -39,36 +39,41 @@ Plan para transformar el frontend actual en una experiencia moderna, atractiva y
 ```
 ╔══════════════════════════════════════════════════════════╗
 ║                                                          ║
-║     Flow Visualizer                                      ║
-║     Build Salesforce Flows from Mermaid diagrams        ║
+║     🎨  Build Salesforce Flows Visually                 ║
+║     Drag, drop, compile. From diagram to deployment.    ║
+║                                                          ║
+║     [Try Live Demo ↓]  [Start Building →]               ║
 ║                                                          ║
 ║     ┌─────────────────────────────────────┐             ║
-║     │  Example Flow (pre-loaded)           │             ║
-║     │  Start → Screen → Decision → End     │             ║
+║     │  Animated Flow Preview (auto-play)   │             ║
+║     │  Shows flow being built in 5 seconds │             ║
 ║     └─────────────────────────────────────┘             ║
 ║                                                          ║
-║     [Load Template]  [Start Fresh]                      ║
+║     ✓ Design flows in minutes                           ║
+║     ✓ Export to Salesforce XML                          ║
+║     ✓ Version control ready                             ║
 ║                                                          ║
 ╚══════════════════════════════════════════════════════════╝
 ```
 
 ### Features Clave
 
-1. **Simple Hero**
-   - Título claro de qué hace
-   - Un flow de ejemplo ya cargado (no animación complicada)
-   - 2 botones: Template o Fresh start
+1. **Animated Hero**
+   - Auto-play: Muestra un flow construyéndose solo
+   - Smooth transitions al agregar nodos
+   - Subtle gradient background
+   - CTA claro y llamativo
 
-2. **Templates Básicos**
-   - Customer Onboarding
-   - Lead Assignment
-   - Case Creation
-   - (3 ejemplos simples pero útiles)
+2. **Live Preview** (sin tocar nada)
+   - Un flow completo ya renderizado
+   - Botón "Compile Now" que muestra el XML en tiempo real
+   - Demuestra el poder de la herramienta inmediatamente
 
-3. **Sin Fluff**
-   - No stats inventados
-   - No animaciones innecesarias
-   - Directo al builder
+3. **Quick Actions**
+   - "Start from Template" (3-4 templates predefinidos)
+   - "Start Blank"
+   - "Upload Mermaid File"
+   - "View Examples"
 
 ---
 
@@ -164,27 +169,41 @@ Header:
 
 ---
 
-## 📋 Fase 3: Ayuda Simple
+## 📋 Fase 3: Onboarding Interactivo
 
-### Tooltips Básicos
+### Interactive Tutorial (Primera visita)
 
-**En lugar de tutorial complejo:**
+**Step-by-step overlay:**
 
 ```
-Primera vez:
+Step 1: Welcome!
 ┌────────────────────────────────────────┐
-│  💡 Tip: Click buttons on the left to │
-│     add nodes to your flow             │
+│  👋 Welcome to Flow Visualizer!       │
 │                                        │
-│  [Got it]  [Don't show again]          │
+│  Let's build your first Salesforce    │
+│  Flow in 60 seconds.                  │
+│                                        │
+│  [Skip Tutorial]    [Let's Start! →]  │
 └────────────────────────────────────────┘
+
+Step 2: Add a Start Node
+┌────────────────────────────────────────┐
+│  Click "+ Start" to begin your flow    │
+│         ↓↓↓                            │
+│  [+ Start] ← Click here                │
+└────────────────────────────────────────┘
+
+Step 3: Add a Screen
+Step 4: Connect Nodes
+Step 5: Compile & Download
 ```
 
 **Features:**
-- Tooltip simple al cargar por primera vez
-- Help icon en header con FAQ básico
-- Error messages claros cuando algo falla
-- Eso es todo, no complicar
+- Tooltips contextuales
+- Highlight de elementos relevantes
+- Progreso visual (1/5, 2/5...)
+- Se puede saltar en cualquier momento
+- Se guarda progreso (localStorage)
 
 ---
 
@@ -261,36 +280,52 @@ Nuevo:  [▶️ Start] → Icon + label
 
 ---
 
-## 📋 Fase 5: Features Útiles (No Fluff)
+## 📋 Fase 5: Features Avanzadas
 
-### 5.1: **Save/Load Flow**
-
-```
-Simple:
-[Save Flow] → Descarga .json
-[Load Flow] → Sube .json y restaura estado
-```
-
-### 5.2: **Import Mermaid File**
+### 5.1: **Multi-file Support**
 
 ```
-[Upload .mmd] → Parse y carga en builder
+Tabs:
+┌─────┬─────┬─────┬───────┐
+│ Flow1│Flow2│Flow3│ + New │
+└─────┴─────┴─────┴───────┘
 ```
 
-### 5.3: **Copy/Paste Nodes**
+### 5.2: **Import/Export Hub**
 
 ```
-Click derecho en node:
-- Copy
-- Delete
-- Duplicate
+╔══════════════════════════════════════╗
+║  Import/Export                       ║
+╠══════════════════════════════════════╣
+║  📥 Import from:                     ║
+║  • Mermaid file (.mmd)               ║
+║  • Salesforce XML (.flow-meta.xml)   ║
+║  • DSL JSON (.flow.json)             ║
+║                                      ║
+║  📤 Export to:                       ║
+║  • Mermaid diagram                   ║
+║  • Salesforce XML                    ║
+║  • DSL JSON                          ║
+║  • PNG Image                         ║
+║  • SVG Diagram                       ║
+║                                      ║
+║  [Choose File] [Browse Templates]    ║
+╚══════════════════════════════════════╝
 ```
 
-**SIN:**
-- ❌ Multi-file tabs (overkill)
-- ❌ Version history (YAGNI)
-- ❌ AI Assistant (pretencioso)
-- ❌ PNG/SVG export (no es prioridad)
+### 5.3: **Version History**
+
+```
+┌──────────────────────────────────────┐
+│  Version History (Auto-saved)        │
+├──────────────────────────────────────┤
+│  • 2:34 PM - Added Decision node     │
+│  • 2:30 PM - Changed Screen label    │
+│  • 2:25 PM - Initial version         │
+│                                      │
+│  [Restore] [Compare] [Delete]        │
+└──────────────────────────────────────┘
+```
 
 ---
 
@@ -337,89 +372,155 @@ Click derecho en node:
 
 ## 🛠️ Stack Tecnológico Recomendado
 
-### Opción Recomendada: **Mantener Vanilla JS** (Por ahora)
+### Opción A: **Vanilla JS + Web Components** (Más simple)
+```javascript
+Pros:
+- Sin build step
+- Rápido para iterar
+- Fácil de mantener
+- Ya estás usando esto
+
+Contras:
+- Más código manual
+- Menos libraries disponibles
+```
+
+### Opción B: **React + Vite** (Más moderno) ⭐ RECOMENDADO
 
 ```javascript
-Por qué:
-- Ya funciona
-- Sin build complexity
-- Fácil de iterar rápido
-- Menos overkill para el scope actual
+Pros:
+- Ecosistema maduro
+- Component libraries (shadcn/ui, Radix)
+- React Flow para canvas
+- Hot reload
+- Mejor DX
 
-Solo agregar:
-- Lucide Icons (CDN)
-- Alpine.js (si necesitás reactivity simple)
+Contras:
+- Build step necesario
+- Más complejo
+- Bundle size más grande
 ```
 
-### Si Necesitás Escalar Después
+### Opción C: **Vue 3 + Vite** (Balance)
+```javascript
+Pros:
+- Más simple que React
+- Excelente DX
+- Vue Flow para canvas
+- Progressive enhancement
 
-**React + Vite** solo si:
-- El canvas drag & drop se vuelve muy complejo
-- Necesitás state management real
-- El código vanilla se vuelve unmaintainable
+Contras:
+- Menos popular que React
+- Build step necesario
+```
 
-**No lo hagas solo porque "es más moderno"**
+**Mi recomendación:** **Opción B (React + Vite)** por las siguientes razones:
+1. React Flow es perfecto para el canvas interactivo
+2. shadcn/ui ofrece componentes modernos listos
+3. Ecosystem grande para features futuras
+4. Easy to hire/onboard developers
 
 ---
 
-## 📦 Libraries Recomendadas (Vanilla JS)
+## 📦 Libraries Recomendadas
 
-### Solo CDN, nada de npm
-
-```html
-<!-- Icons -->
-<script src="https://unpkg.com/lucide@latest"></script>
-
-<!-- Ya tenés Prism para syntax highlighting -->
-
-<!-- Si necesitás reactivity básica -->
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+### UI Components
+```bash
+npm install @radix-ui/react-dialog
+npm install @radix-ui/react-dropdown-menu
+npm install @radix-ui/react-tooltip
+npm install lucide-react  # Icons
 ```
 
-**Eso es todo. Keep it simple.**
+### Canvas/Diagramming
+```bash
+npm install reactflow  # Drag & drop canvas
+# O alternativa:
+npm install @xyflow/react
+```
+
+### Animations
+```bash
+npm install framer-motion
+```
+
+### Code Highlighting
+```bash
+npm install prism-react-renderer
+```
+
+### State Management
+```bash
+npm install zustand  # Simple, no boilerplate
+```
 
 ---
 
-## 📅 Timeline Estimado (Realista)
+## 📅 Timeline Estimado
 
-### Fase 1 (2-3 días): Quick Wins
-- [ ] Header simple con título claro
-- [ ] 3 templates básicos
-- [ ] Icons en lugar de pills
-- [ ] Better error messages
+### Sprint 1 (1 semana): Landing + Basic Improvements
+- [ ] Hero landing page con animación
+- [ ] Templates gallery
+- [ ] Theme switcher
+- [ ] Better icons
 
-### Fase 2 (2-3 días): UX Basics
+### Sprint 2 (1 semana): Interactive Builder
+- [ ] React Flow integration
+- [ ] Drag & drop canvas real
+- [ ] Visual connections
+- [ ] Node editor modal
+
+### Sprint 3 (1 semana): Onboarding & UX
+- [ ] Interactive tutorial
 - [ ] Empty states
-- [ ] Loading indicators
-- [ ] Theme toggle (light/dark)
-- [ ] Help tooltip
+- [ ] Error handling
+- [ ] Loading states
 
-### Fase 3 (2 días): Import/Export
-- [ ] Save flow (download JSON)
-- [ ] Load flow (upload JSON)
-- [ ] Upload Mermaid file
+### Sprint 4 (1 semana): Advanced Features
+- [ ] Multi-file tabs
+- [ ] Import/Export hub
+- [ ] Version history
+- [ ] Keyboard shortcuts
 
-### Fase 4 (1 día): Polish
-- [ ] Fix bugs
-- [ ] Better mobile layout
-- [ ] Keyboard shortcuts básicos
+### Sprint 5 (3 días): Mobile & Polish
+- [ ] Responsive design
+- [ ] Mobile layout
+- [ ] Performance optimization
+- [ ] Final polish
 
-**Total: ~1-1.5 semanas** (developer trabajando en ratos)
+**Total: ~5 semanas** (con 1 developer full-time)
 
 ---
 
 ## 🎨 Mockups Visuales (Propuestos)
 
-### Simple Header
+### Landing Page
 ```
 ╔════════════════════════════════════════════════════════════╗
-║  Flow Visualizer - Build Salesforce Flows from Mermaid    ║
+║                    Flow Visualizer                         ║
 ╠════════════════════════════════════════════════════════════╣
-║  [Load Template ▼] [Help ?]  [Theme 🌙]                   ║
+║                                                            ║
+║            🎨 Build Salesforce Flows Visually             ║
+║        Design, validate, and deploy in minutes            ║
+║                                                            ║
+║        [🚀 Try Live Demo]  [📖 Documentation]             ║
+║                                                            ║
+║    ┌──────────────────────────────────────────┐           ║
+║    │  Animated Flow Building (auto-play)      │           ║
+║    │  Start → Screen → Decision → Create      │           ║
+║    │      ↓        ↓        ↓         ↓       │           ║
+║    │  [Compiling...] → [✓ XML Ready!]        │           ║
+║    └──────────────────────────────────────────┘           ║
+║                                                            ║
+║    ┌─────────────┬─────────────┬─────────────┐            ║
+║    │ ✓ Visual    │ ✓ Version   │ ✓ Deploy    │            ║
+║    │   Builder   │   Control   │   Ready     │            ║
+║    └─────────────┴─────────────┴─────────────┘            ║
+║                                                            ║
+║    [↓ Start Building Below ↓]                             ║
+║                                                            ║
 ╚════════════════════════════════════════════════════════════╝
 ```
-
-Eso es todo. No landing page gigante.
 
 ### Builder Interface (Mejorado)
 ```
@@ -456,7 +557,7 @@ Eso es todo. No landing page gigante.
 
 ### Semana 1 - Quick Improvements (Sin cambiar stack)
 
-**Mejoras que podés hacer YA sin React:**
+**Mejoras que se pueden hacer YA sin React:**
 
 1. **Template Selector** (2 horas)
 ```javascript
@@ -490,48 +591,81 @@ document.body.classList.toggle('light-theme');
 <!-- Mensaje cuando canvas está vacío -->
 ```
 
-**Total: ~8 horas** para mejoras útiles
+**Total: ~8 horas** para mejoras inmediatas
 
 ---
 
-## ✅ Success Metrics (Simples)
+## ✅ Success Metrics
 
 ### Engagement
-- ☑️ **Alguien lo usó:** >5 usuarios reales en primera semana
-- ☑️ **Compiló XML:** Al menos 1 flow compilado por visitante
-- ☑️ **No se quejaron:** Zero complaints sobre bugs graves
+- **First-time users:** >10 usuarios en primera semana
+- **Flow compilation:** Al menos 1 flow compilado por visitante
+- **Return rate:** >20% de usuarios regresan
+- **Tutorial completion:** >50% completa el onboarding
 
 ### Quality
-- ☑️ **Funciona:** No crashes
-- ☑️ **Load time:** <3 segundos
-- ☑️ **Mobile:** No se rompe en mobile (aunque no sea perfecto)
+- **Zero crashes:** No errores fatales
+- **Load time:** <2 segundos initial load
+- **Mobile responsive:** Funciona en 95% de devices
+- **Template usage:** >30% usan templates predefinidos
 
-**Eso es todo. No analytics complejos todavía.**
-
----
-
-## 📝 Next Steps (Realistas)
-
-### Recomendación: Quick Wins Only
-
-1. **Fase 1:** Template selector + Icons (1 día)
-2. **Fase 2:** Theme toggle + Empty states (1 día)
-3. **Fase 3:** Save/Load flow (1 día)
-4. **Fase 4:** Polish básico (medio día)
-
-**Total: 3.5 días de trabajo**
-
-### NO hacer (por ahora):
-- ❌ React rewrite (overkill)
-- ❌ Landing page gigante (innecesario)
-- ❌ Drag & drop canvas (nice to have, no critical)
-- ❌ AI features (pretencioso)
-- ❌ Version control (YAGNI)
+### Technical
+- **Lighthouse Score:** >90 en performance
+- **Bundle size:** <500KB total
+- **First Contentful Paint:** <1.5s
+- **Time to Interactive:** <3s
 
 ---
 
-**¿Empezamos con los Quick Wins?**
+## 📝 Next Steps
 
-Opción A: Yo implemento todo (3.5 días)
-Opción B: Te paso specs y vos lo hacés
-Opción C: Lo dejamos como está (ya funciona)
+### Approach A: Full Modern Rebuild (Recomendado)
+
+Implementar todas las fases con React + Vite:
+- Semana 1-2: Hero landing + Modern builder
+- Semana 3: Onboarding + UX improvements
+- Semana 4: Advanced features (multi-file, import/export, version history)
+- Semana 5: Mobile responsive + polish
+
+**Total: 5 semanas** para experiencia profesional completa
+
+### Approach B: Incremental Improvements
+
+Mantener vanilla JS y agregar features gradualmente:
+- Fase 1: Quick wins (templates, icons, themes) - 3 días
+- Fase 2: Canvas improvements - 1 semana
+- Fase 3: Advanced features - 1 semana
+- Fase 4: Mobile responsive - 3 días
+
+**Total: 2-3 semanas** para mejoras incrementales
+
+### Approach C: Hybrid (Balance)
+
+Migrar a React Flow para canvas, mantener resto simple:
+- Fase 1: Setup React + Vite - 2 días
+- Fase 2: Migrate canvas to React Flow - 3 días
+- Fase 3: Add templates + themes - 2 días
+- Fase 4: Polish + responsive - 2 días
+
+**Total: ~2 semanas** para balance entre modernidad y simplicidad
+
+---
+
+## 🎯 Recomendación Final
+
+**Approach A (Full Modern Rebuild)** es la mejor inversión a largo plazo:
+- Experiencia profesional que impresiona
+- Fácil de extender con nuevas features
+- Stack moderno facilita colaboración
+- Atrae más usuarios y contribuidores
+
+**Prioridad de implementación:**
+1. Hero landing + Templates (impacto inmediato)
+2. React Flow canvas (mejor UX)
+3. Onboarding tutorial (retención)
+4. Advanced features (diferenciación)
+5. Mobile responsive (alcance)
+
+---
+
+**Status:** Plan aprobado, listo para implementación

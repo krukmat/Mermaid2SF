@@ -18,7 +18,7 @@ describe('Performance and large flows', () => {
     lines.push('  LoopNode[[LOOP: Iterate\\n api: Loop_1\\n collection: coll_Items]]');
     lines.push('  WaitNode([WAIT: Pause\\n api: Wait_1\\n duration: 5m])');
     lines.push(
-      '  GetNode[GET: Accounts\\n api: Get_Accounts\\n object: Account\\n field: Id\\n filter: Name = \'Test\'\\n sort: Name desc]',
+      "  GetNode[GET: Accounts\\n api: Get_Accounts\\n object: Account\\n field: Id\\n filter: Name = 'Test'\\n sort: Name desc]",
     );
     for (let i = 1; i <= assignmentCount; i++) {
       lines.push(`  A${i}[ASSIGNMENT: Step ${i}\\n api: Assign_${i}\\n set: v${i} = ${i}]`);
