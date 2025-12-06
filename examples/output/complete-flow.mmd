@@ -1,0 +1,16 @@
+flowchart TD
+    Initialize_Variables[Initialize Variables]
+    Customer_Type{Customer Type}
+    SCREEN_Collect_Customer_Info[SCREEN: Collect Customer Info]
+    SCREEN_Show_Confirmation[SCREEN: Show Confirmation]
+    CREATE_Create_New_Account[CREATE: Create New Account]
+    UPDATE_Update_Existing_Account[UPDATE: Update Existing Account]
+    SUBFLOW_Send_Welcome_Email[[SUBFLOW: Send Welcome Email]]
+    Start([Start])
+    End([End])
+    Initialize_Variables --> Customer_Type
+    Customer_Type -->|New Customer| CREATE_Create_New_Account
+    Customer_Type -->|Default| UPDATE_Update_Existing_Account
+    SCREEN_Collect_Customer_Info --> Initialize_Variables
+    SCREEN_Show_Confirmation --> Process_Complete
+    Start --> SCREEN_Collect_Customer_Info

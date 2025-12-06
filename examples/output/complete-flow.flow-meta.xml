@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>60.0</apiVersion>
+    <label>complete-flow</label>
+    <processType>Autolaunched</processType>
+    <recordCreates>
+        <name>CREATE_Create_New_Account</name>
+        <label>CREATE: Create New Account</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <object></object>
+        <connector>
+            <targetReference>SUBFLOW_Send_Welcome_Email</targetReference>
+        </connector>
+    </recordCreates>
+    <decisions>
+        <name>Customer_Type</name>
+        <label>Customer Type</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <rules>
+            <name>New Customer</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>New Customer</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>CREATE_Create_New_Account</targetReference>
+            </connector>
+            <label>New Customer</label>
+        </rules>
+        <defaultConnector>
+            <targetReference>UPDATE_Update_Existing_Account</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Existing default</defaultConnectorLabel>
+    </decisions>
+    <assignments>
+        <name>Initialize_Variables</name>
+        <label>Initialize Variables</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Customer_Type</targetReference>
+        </connector>
+    </assignments>
+    <screens>
+        <name>SCREEN_Collect_Customer_Info</name>
+        <label>SCREEN: Collect Customer Info</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Initialize_Variables</targetReference>
+        </connector>
+    </screens>
+    <screens>
+        <name>SCREEN_Show_Confirmation</name>
+        <label>SCREEN: Show Confirmation</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Process_Complete</targetReference>
+        </connector>
+    </screens>
+    <subflows>
+        <name>SUBFLOW_Send_Welcome_Email</name>
+        <label>SUBFLOW: Send Welcome Email</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <flowName>Send</flowName>
+        <connector>
+            <targetReference>SCREEN_Show_Confirmation</targetReference>
+        </connector>
+    </subflows>
+    <recordUpdates>
+        <name>UPDATE_Update_Existing_Account</name>
+        <label>UPDATE: Update Existing Account</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <object></object>
+        <connector>
+            <targetReference>SUBFLOW_Send_Welcome_Email</targetReference>
+        </connector>
+    </recordUpdates>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>SCREEN_Collect_Customer_Info</targetReference>
+        </connector>
+    </start>
+</Flow>

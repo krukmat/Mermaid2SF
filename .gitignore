@@ -9,7 +9,7 @@ coverage/
 
 # Generated files
 .generated/
-output/
+/output/
 
 # Logs
 *.log

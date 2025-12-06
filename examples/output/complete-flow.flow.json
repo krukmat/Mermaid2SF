@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "flowApiName": "complete-flow",
+  "label": "complete-flow",
+  "processType": "Autolaunched",
+  "apiVersion": "60.0",
+  "startElement": "Start",
+  "elements": [
+    {
+      "id": "Initialize_Variables",
+      "apiName": "Initialize_Variables",
+      "label": "Initialize Variables",
+      "type": "Assignment",
+      "assignments": [],
+      "next": "Customer_Type"
+    },
+    {
+      "id": "Customer_Type",
+      "apiName": "Customer_Type",
+      "label": "Customer Type",
+      "type": "Decision",
+      "outcomes": [
+        {
+          "name": "New Customer",
+          "next": "CREATE_Create_New_Account",
+          "condition": "New Customer",
+          "isDefault": false
+        },
+        {
+          "name": "Default",
+          "next": "UPDATE_Update_Existing_Account",
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "SCREEN_Collect_Customer_Info",
+      "apiName": "SCREEN_Collect_Customer_Info",
+      "label": "SCREEN: Collect Customer Info",
+      "type": "Screen",
+      "components": [],
+      "next": "Initialize_Variables"
+    },
+    {
+      "id": "SCREEN_Show_Confirmation",
+      "apiName": "SCREEN_Show_Confirmation",
+      "label": "SCREEN: Show Confirmation",
+      "type": "Screen",
+      "components": [],
+      "next": "Process_Complete"
+    },
+    {
+      "id": "CREATE_Create_New_Account",
+      "apiName": "CREATE_Create_New_Account",
+      "label": "CREATE: Create New Account",
+      "type": "RecordCreate",
+      "object": "",
+      "fields": {}
+    },
+    {
+      "id": "UPDATE_Update_Existing_Account",
+      "apiName": "UPDATE_Update_Existing_Account",
+      "label": "UPDATE: Update Existing Account",
+      "type": "RecordUpdate",
+      "object": "",
+      "fields": {}
+    },
+    {
+      "id": "SUBFLOW_Send_Welcome_Email",
+      "apiName": "SUBFLOW_Send_Welcome_Email",
+      "label": "SUBFLOW: Send Welcome Email",
+      "type": "Subflow",
+      "flowName": "Send"
+    },
+    {
+      "id": "Start",
+      "type": "Start",
+      "apiName": "Start",
+      "next": "SCREEN_Collect_Customer_Info"
+    },
+    {
+      "id": "End",
+      "type": "End",
+      "apiName": "End"
+    }
+  ]
+}
