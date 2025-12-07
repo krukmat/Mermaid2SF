@@ -15,42 +15,108 @@
       --text: #e8ecff;
       --muted: #9aa5d3;
       --surface: #1c2547;
+      --pill: #223054;
     }
-    body { font-family: 'Inter', system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
-    header { padding: 1rem 1.5rem; background: var(--panel); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #223054; }
+    [data-theme='light'] {
+      --bg: #f5f7ff;
+      --panel: #ffffff;
+      --accent: #2b7fff;
+      --text: #0b1530;
+      --muted: #5c6a8a;
+      --surface: #f0f3ff;
+      --pill: #dfe6f7;
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); transition: background 180ms ease, color 180ms ease; }
+    header { padding: 1rem 1.5rem; background: var(--panel); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #22305422; position: sticky; top: 0; z-index: 5; }
     main { display: grid; grid-template-columns: 340px 1fr; min-height: 100vh; }
-    .sidebar { background: var(--panel); padding: 1.5rem; border-right: 1px solid #223054; overflow-y: auto; }
+    .hero { background: radial-gradient(circle at 20% 20%, rgba(102,224,255,0.08), transparent 35%), radial-gradient(circle at 80% 0%, rgba(111,90,255,0.12), transparent 40%), linear-gradient(135deg, var(--panel), var(--bg)); color: var(--text); padding: 3rem 1.5rem 2.5rem; border-bottom: 1px solid #22305422; }
+    .hero-grid { display: grid; grid-template-columns: 1fr 420px; gap: 2rem; align-items: center; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.7rem; border-radius: 999px; background: rgba(102,224,255,0.1); border: 1px solid rgba(102,224,255,0.25); color: var(--accent); font-weight: 700; }
+    .hero-cta { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
+    .hero-card { background: var(--surface); border: 1px solid #22305422; border-radius: 14px; padding: 1rem; position: relative; overflow: hidden; min-height: 260px; }
+    .pulse { position: absolute; width: 140px; height: 140px; border-radius: 999px; background: rgba(102,224,255,0.1); filter: blur(12px); animation: float 6s ease-in-out infinite; }
+    .pulse:nth-child(1) { top: -20px; left: -10px; animation-delay: 0.2s; }
+    .pulse:nth-child(2) { bottom: -20px; right: -20px; animation-delay: 1.4s; }
+    .pulse:nth-child(3) { top: 40%; left: 40%; animation-delay: 2.1s; }
+    .hero-diagram { position: relative; z-index: 1; display: grid; gap: 0.6rem; }
+    .chip { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.7rem; border-radius: 10px; background: rgba(102,224,255,0.08); border: 1px solid rgba(102,224,255,0.2); font-size: 0.9rem; }
+    .sidebar { background: var(--panel); padding: 1.5rem; border-right: 1px solid #22305422; overflow-y: auto; }
     .content { padding: 1.5rem; }
-    .card { background: var(--surface); border: 1px solid #223054; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; }
+    .card { background: var(--surface); border: 1px solid #22305422; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; }
     label { display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.9rem; }
-    input, textarea { width: 100%; padding: 0.6rem 0.7rem; border-radius: 8px; border: 1px solid #223054; background: #0f1531; color: var(--text); }
+    input, textarea { width: 100%; padding: 0.6rem 0.7rem; border-radius: 8px; border: 1px solid #22305422; background: #0f153133; color: var(--text); }
     textarea { min-height: 120px; }
     button { background: var(--accent); color: #04132e; border: none; border-radius: 8px; padding: 0.7rem 1rem; font-weight: 700; cursor: pointer; }
     button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
     .row { display: flex; gap: 0.5rem; align-items: center; }
     .row button { flex: 1; }
-    .canvas { background: #0f1531; border: 1px dashed #223054; border-radius: 10px; padding: 1rem; min-height: 520px; overflow: auto; position: relative; cursor: grab; }
+    .canvas { background: #0f153133; border: 1px dashed #22305455; border-radius: 10px; padding: 1rem; min-height: 520px; overflow: auto; position: relative; cursor: grab; }
     .canvas-inner { transform-origin: top left; transition: transform 120ms ease-out; min-height: 520px; }
-    .node { padding: 0.4rem 0.75rem; border-radius: 8px; margin: 0.25rem 0; display: inline-block; }
+    .node { padding: 0.4rem 0.75rem; border-radius: 8px; margin: 0.25rem 0; display: inline-flex; gap: 0.4rem; align-items: center; }
     .node.start { background: #14d88e33; border: 1px solid #14d88e; }
     .node.end { background: #ff758c33; border: 1px solid #ff758c; }
     .node.decision { background: #f5a52433; border: 1px solid #f5a524; }
     .node.default { background: #66e0ff33; border: 1px solid #66e0ff; }
     .edge { color: var(--muted); font-size: 0.85rem; }
     .list { list-style: none; padding: 0; margin: 0; }
-    .list li { background: #0f1531; border: 1px solid #223054; border-radius: 8px; padding: 0.6rem; margin-bottom: 0.4rem; display: flex; justify-content: space-between; align-items: center; cursor: grab; }
+    .list li { background: #0f153133; border: 1px solid #22305455; border-radius: 8px; padding: 0.6rem; margin-bottom: 0.4rem; display: flex; justify-content: space-between; align-items: center; cursor: grab; }
     .list li.dragging { opacity: 0.6; }
-    .pill { padding: 0.2rem 0.5rem; border-radius: 8px; background: #223054; color: var(--muted); font-size: 0.8rem; }
+    .pill { padding: 0.2rem 0.5rem; border-radius: 8px; background: var(--pill); color: var(--muted); font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem; }
+    .template-grid { display: grid; gap: 0.5rem; }
+    .template-card { border: 1px dashed #22305444; border-radius: 10px; padding: 0.6rem 0.75rem; background: #0f153122; }
+    .template-card header { display: flex; justify-content: space-between; align-items: center; padding: 0; background: transparent; border: none; }
+    .template-card small { color: var(--muted); }
+    @keyframes float { 0% { transform: translateY(0); opacity: 0.9; } 50% { transform: translateY(-10px); opacity: 1; } 100% { transform: translateY(0); opacity: 0.9; } }
+    @media (max-width: 960px) {
+      main { grid-template-columns: 1fr; }
+      .hero-grid { grid-template-columns: 1fr; }
+      header { flex-wrap: wrap; gap: 0.5rem; }
+    }
   </style>
 </head>
 <body>
   <header>
     <h2>Flow Visualizer</h2>
     <div class="row" style="gap:0.75rem;">
+      <button id="themeToggle" class="secondary" style="min-width:120px;">Toggle Theme</button>
       <button id="ping">Check Backend</button>
       <button class="secondary" id="reset">Reset</button>
     </div>
   </header>
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-badge">Flows as Code · Git/CI Ready</div>
+        <h1 style="margin:0.6rem 0 0.4rem;">Build Salesforce Flows Visually, Ship from Git</h1>
+        <p style="color: var(--muted); max-width: 640px;">
+          Drag, drop, compile. From Mermaid diagrams to deployable Flow XML with live previews, examples, and a ready-to-use CI pipeline.
+        </p>
+        <div class="hero-cta">
+          <button onclick="scrollToBuilder()">Start Building</button>
+          <button class="secondary" onclick="loadTemplate('onboarding')">Use Onboarding Template</button>
+          <button class="secondary" onclick="window.open('http://iotforce.es/flow/', '_blank')">Try Live Demo</button>
+        </div>
+        <div style="margin-top:0.75rem; display:flex; gap:0.5rem; flex-wrap: wrap;">
+          <span class="chip">Mermaid → XML/DSL/Docs</span>
+          <span class="chip">Live XML Preview</span>
+          <span class="chip">CI-ready (lint/test/build)</span>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="pulse"></div><div class="pulse"></div><div class="pulse"></div>
+        <div class="hero-diagram">
+          <div class="node start"><span>▶</span>Start</div>
+          <div class="edge">→ Screen: Collect Info</div>
+          <div class="node default"><span>📋</span>Screen</div>
+          <div class="edge">→ Decision: Route</div>
+          <div class="node decision"><span>🔀</span>Decision</div>
+          <div class="edge">Yes → Assignment / No → End</div>
+          <div class="node default"><span>✏️</span>Assignment</div>
+          <div class="node end"><span>⏹</span>End</div>
+        </div>
+      </div>
+    </div>
+  </section>
   <main>
     <section class="sidebar">
       <div class="card">
@@ -63,6 +129,10 @@
           <button data-add="GetRecords">+ GetRecords</button>
           <button data-add="End">+ End</button>
         </div>
+      </div>
+      <div class="card">
+        <strong>Templates</strong>
+        <div class="template-grid" id="templateGrid" style="margin-top:0.5rem;"></div>
       </div>
       <div class="card">
         <strong>Nodes (drag to reorder)</strong>
@@ -84,7 +154,7 @@
         <pre id="output" style="white-space:pre-wrap; background:#0f1531; padding:0.75rem; border-radius:8px; border:1px solid #223054;">Ready.</pre>
       </div>
     </section>
-    <section class="content">
+    <section class="content" id="builder">
       <div class="card">
         <h3 style="margin-top:0;">Canvas</h3>
         <div class="row" style="gap:0.5rem; margin-bottom:0.5rem; flex-wrap: wrap;">
@@ -124,6 +194,7 @@
     const form = document.getElementById('form');
     const editorCard = document.getElementById('editorCard');
     const mermaidPreview = document.getElementById('mermaidPreview');
+    const templateGrid = document.getElementById('templateGrid');
 
     let nodes = [];
     let selectedId = null;
@@ -141,6 +212,61 @@
       { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1' },
     ];
 
+    const templates = {
+      onboarding: {
+        name: 'Customer Onboarding',
+        description: 'Screen + Decision + Record create/update + Email subflow',
+        nodes: [
+          { id: 'Start_1', type: 'Start', label: 'Start', apiName: 'Start_1', next: 'Screen_1' },
+          { id: 'Screen_1', type: 'Screen', label: 'Collect Info', apiName: 'Screen_1', next: 'Decision_1' },
+          { id: 'Decision_1', type: 'Decision', label: 'Existing Customer?', apiName: 'Decision_1', yesNext: 'Update_1', noNext: 'Create_1' },
+          { id: 'Create_1', type: 'RecordCreate', label: 'Create Account', apiName: 'Create_1', next: 'Email_1' },
+          { id: 'Update_1', type: 'RecordUpdate', label: 'Update Account', apiName: 'Update_1', next: 'Email_1' },
+          { id: 'Email_1', type: 'Subflow', label: 'Send Welcome Email', apiName: 'Email_1', next: 'End_1' },
+          { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1' },
+        ],
+      },
+      lead: {
+        name: 'Lead Routing',
+        description: 'Decision + Assignment + GetRecords to route leads',
+        nodes: [
+          { id: 'Start_1', type: 'Start', label: 'Start', apiName: 'Start_1', next: 'Decision_1' },
+          { id: 'Decision_1', type: 'Decision', label: 'Qualified?', apiName: 'Decision_1', yesNext: 'Assign_1', noNext: 'End_1' },
+          { id: 'Assign_1', type: 'Assignment', label: 'Set Owner', apiName: 'Assign_1', assignments: 'Owner = Queue', next: 'Get_1' },
+          { id: 'Get_1', type: 'GetRecords', label: 'Lookup Lead', apiName: 'Get_1', next: 'End_1' },
+          { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1' },
+        ],
+      },
+      case: {
+        name: 'Case Escalation',
+        description: 'Screen + Decision + Wait/Fault connectors simplified',
+        nodes: [
+          { id: 'Start_1', type: 'Start', label: 'Start', apiName: 'Start_1', next: 'Screen_1' },
+          { id: 'Screen_1', type: 'Screen', label: 'Capture Case', apiName: 'Screen_1', next: 'Decision_1' },
+          { id: 'Decision_1', type: 'Decision', label: 'Severity?', apiName: 'Decision_1', yesNext: 'Assign_1', noNext: 'Wait_1' },
+          { id: 'Assign_1', type: 'Assignment', label: 'Escalate Owner', apiName: 'Assign_1', assignments: 'Owner = Tier2', next: 'End_1' },
+          { id: 'Wait_1', type: 'Wait', label: 'Follow-up', apiName: 'Wait_1', next: 'End_1' },
+          { id: 'End_1', type: 'End', label: 'Complete', apiName: 'End_1' },
+        ],
+      },
+    };
+
+    const iconMap = {
+      Start: '▶',
+      End: '⏹',
+      Screen: '📋',
+      Decision: '🔀',
+      Assignment: '✏️',
+      RecordCreate: '➕',
+      RecordUpdate: '🛠',
+      GetRecords: '📊',
+      Subflow: '🔁',
+      Loop: '⟳',
+      Wait: '⏳',
+      Fault: '⚠️',
+      default: '⬢',
+    };
+
     const typeDefaults = {
       Start: () => ({ type: 'Start', label: 'Start', next: '' }),
       End: () => ({ type: 'End', label: 'End' }),
@@ -152,6 +278,8 @@
 
     function init() {
       nodes = [...sampleNodes];
+      renderTemplates();
+      restoreTheme();
       renderAll();
     }
 
@@ -172,7 +300,8 @@
         const li = document.createElement('li');
         li.draggable = true;
         li.dataset.id = n.id;
-        li.innerHTML = `<div>${n.id}</div><span class="pill">${n.type}</span>`;
+        const icon = iconMap[n.type] || iconMap.default;
+        li.innerHTML = `<div style="display:flex; align-items:center; gap:0.4rem;"><span>${icon}</span>${n.id}</div><span class="pill"><span>${icon}</span>${n.type}</span>`;
         li.addEventListener('click', () => {
           selectedId = n.id;
           renderForm();
@@ -202,6 +331,49 @@
       });
     }
 
+    function renderTemplates() {
+      if (!templateGrid) return;
+      templateGrid.innerHTML = '';
+      Object.entries(templates).forEach(([key, tpl]) => {
+        const div = document.createElement('div');
+        div.className = 'template-card';
+        div.innerHTML = `
+          <header>
+            <div>
+              <strong>${tpl.name}</strong><br/>
+              <small>${tpl.description}</small>
+            </div>
+            <span class="pill">Template</span>
+          </header>
+          <div class="row" style="margin-top:0.5rem;">
+            <button data-use="${key}">Use</button>
+            <button class="secondary" data-preview="${key}">Preview</button>
+          </div>
+        `;
+        div.querySelector('[data-use]').addEventListener('click', () => loadTemplate(key));
+        div.querySelector('[data-preview]').addEventListener('click', () => {
+          nodes = [...templates[key].nodes];
+          renderAll();
+        });
+        templateGrid.appendChild(div);
+      });
+    }
+
+    function loadTemplate(key) {
+      const tpl = templates[key];
+      if (!tpl) return;
+      nodes = JSON.parse(JSON.stringify(tpl.nodes));
+      selectedId = null;
+      renderAll();
+      scrollToBuilder();
+      output.textContent = `Template loaded: ${tpl.name}`;
+    }
+
+    function scrollToBuilder() {
+      const builder = document.querySelector('main');
+      if (builder) builder.scrollIntoView({ behavior: 'smooth' });
+    }
+
     function getDragAfterElement(container, y) {
       const elements = [...container.querySelectorAll('li:not(.dragging)')];
       return elements.reduce(
@@ -226,13 +398,15 @@
         if (n.type === 'Start') cls = 'node start';
         else if (n.type === 'End') cls = 'node end';
         else if (n.type === 'Decision') cls = 'node decision';
+        const icon = iconMap[n.type] || iconMap.default;
         div.className = cls;
-        div.textContent = `${n.id}: ${n.label || n.apiName || n.type}`;
+        div.textContent = '';
+        div.innerHTML = `<span>${icon}</span><span>${n.id}: ${n.label || n.apiName || n.type}</span>`;
         canvasInner.appendChild(div);
       });
       const edgeBlock = document.createElement('div');
       edgeBlock.style.marginTop = '0.5rem';
-      nodes.forEach((n) => {
+      nodes.forEach((n, idx) => {
         if (n.type === 'Decision') {
           if (n.yesNext) {
             edgeBlock.appendChild(edgeLine(n.id, n.yesNext, '[Yes]'));
@@ -242,6 +416,8 @@
           }
         } else if (n.next) {
           edgeBlock.appendChild(edgeLine(n.id, n.next));
+        } else if (!n.next && idx < nodes.length - 1 && n.type !== 'End') {
+          edgeBlock.appendChild(edgeLine(n.id, nodes[idx + 1].id));
         }
       });
       canvasInner.appendChild(edgeBlock);
@@ -333,7 +509,7 @@
           lines.push(`  ${n.id} --> ${nodesList[idx + 1].id}`);
         }
       });
-      return lines.join('\\n');
+      return lines.join('\n');
     }
 
     function generateDsl(nodesList) {
@@ -364,7 +540,8 @@
             .map((p) => p.trim())
             .filter(Boolean)
             .map((pair) => {
-              const [field, value] = pair.split('=').map((s) => s.trim());
+              const [field, value] = pair.split('=')
+                .map((s) => s.trim());
               return { field, operator: 'EqualTo', value };
             });
           return { ...base, object: n.object || '', fields, filters, next: n.next };
@@ -488,6 +665,7 @@
     });
 
     document.getElementById('ping').addEventListener('click', async () => {
+      output.textContent = 'Pinging backend...';
       try {
         const res = await fetch(`${API_BASE}/health`);
         const data = await res.json();
@@ -503,6 +681,24 @@
       output.textContent = 'Ready.';
       renderAll();
     });
+
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+    function toggleTheme() {
+      const current = document.body.getAttribute('data-theme') || 'dark';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    }
+
+    function restoreTheme() {
+      const stored = localStorage.getItem('theme');
+      if (stored) {
+        document.body.setAttribute('data-theme', stored);
+      } else {
+        document.body.setAttribute('data-theme', 'dark');
+      }
+    }
 
     init();
   </script>
