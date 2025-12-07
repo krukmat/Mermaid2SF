@@ -93,6 +93,12 @@ Plan para transformar el frontend actual en una experiencia moderna, atractiva y
 - Auto-layout inteligente (sugiere posiciones)
 - Minimap para flows grandes
 - Grid magnético (snap to grid)
+
+Arquitectura implementada (vanilla):
+- Canvas relativo con nodos posicionados por `x/y` y arrastrables (estado local JS).
+- Conexiones renderizadas con SVG (`line + marker-end`) calculando centros de nodos.
+- Zoom/pan por transform en `canvas-inner`; drag recalcula edges.
+- Toolbox y templates cargan nodos con posiciones iniciales; mermaid/DSL se genera desde ese estado.
 ```
 
 **Ejemplo visual:**
