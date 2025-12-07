@@ -27,7 +27,7 @@
       --pill: #dfe6f7;
     }
     body { font-family: 'Inter', system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); transition: background 180ms ease, color 180ms ease; }
-    header { padding: 1rem 1.5rem; background: var(--panel); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #22305422; position: sticky; top: 0; z-index: 5; }
+    header { padding: 1rem 1.5rem; background: var(--panel); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #22305422; position: sticky; top: 0; z-index: 5; flex-wrap: wrap; gap: 0.5rem; }
     main { display: grid; grid-template-columns: 340px 1fr; min-height: 100vh; }
     .hero { background: radial-gradient(circle at 20% 20%, rgba(102,224,255,0.08), transparent 35%), radial-gradient(circle at 80% 0%, rgba(111,90,255,0.12), transparent 40%), linear-gradient(135deg, var(--panel), var(--bg)); color: var(--text); padding: 3rem 1.5rem 2.5rem; border-bottom: 1px solid #22305422; }
     .hero-grid { display: grid; grid-template-columns: 1fr 420px; gap: 2rem; align-items: center; }
@@ -68,10 +68,16 @@
     .template-card header { display: flex; justify-content: space-between; align-items: center; padding: 0; background: transparent; border: none; }
     .template-card small { color: var(--muted); }
     @keyframes float { 0% { transform: translateY(0); opacity: 0.9; } 50% { transform: translateY(-10px); opacity: 1; } 100% { transform: translateY(0); opacity: 0.9; } }
-    @media (max-width: 960px) {
+    @media (max-width: 1100px) {
       main { grid-template-columns: 1fr; }
       .hero-grid { grid-template-columns: 1fr; }
-      header { flex-wrap: wrap; gap: 0.5rem; }
+      .sidebar { order: 2; }
+      .content { order: 1; }
+    }
+    @media (max-width: 768px) {
+      .row { flex-wrap: wrap; }
+      .hero { padding: 2.5rem 1rem 2rem; }
+      header { padding: 0.75rem 1rem; }
     }
   </style>
 </head>
@@ -79,7 +85,7 @@
   <header>
     <h2>Flow Visualizer</h2>
     <div class="row" style="gap:0.75rem;">
-      <button id="themeToggle" class="secondary" style="min-width:120px;">Toggle Theme</button>
+      <button id="themeToggle" class="secondary" style="min-width:120px;" aria-pressed="false" aria-label="Toggle theme">Toggle Theme</button>
       <button id="ping">Check Backend</button>
       <button class="secondary" id="reset">Reset</button>
     </div>
@@ -347,8 +353,8 @@
             <span class="pill">Template</span>
           </header>
           <div class="row" style="margin-top:0.5rem;">
-            <button data-use="${key}">Use</button>
-            <button class="secondary" data-preview="${key}">Preview</button>
+            <button data-use="${key}" aria-label="Use template ${tpl.name}">Use</button>
+            <button class="secondary" data-preview="${key}" aria-label="Preview template ${tpl.name}">Preview</button>
           </div>
         `;
         div.querySelector('[data-use]').addEventListener('click', () => loadTemplate(key));
