@@ -11,14 +11,16 @@ Deliver a compelling first impression and reduce time-to-first-flow without back
 - Theme switcher: light/dark via CSS variables, persisted in localStorage, contrast-checked.
 - Better icons: replace pills with icon+label per type (Start, Screen, Decision, Assignment, GetRecords, Loop, Wait, End, Fault) using Lucide/Heroicons.
 
-## Development Tasks (by day)
+## Development Tasks (status)
 
-- Day 1: Wireframe landing; pick icon set; define theme tokens (CSS vars).
-- Day 2-3: Implement hero section + animation; hook CTAs to builder/scroll.
-- Day 3-4: Templates gallery (preset definitions + load action; optional preview).
-- Day 5: Theme switcher + persistence; contrast verification.
-- Day 5: Replace icons/labels in toolbox and node list; spacing/alignment polish.
-- Day 6-7: Responsive QA (desktop/tablet/mobile); accessibility (focus states, ARIA on toggles/buttons); Lighthouse sanity.
+- [x] Wireframe landing; pick icon set; define theme tokens (CSS vars).
+- [x] Hero section + animation; hook CTAs to builder/scroll/demo.
+- [x] Templates gallery (presets + preview/use).
+- [x] Theme switcher + persistence; contrast check.
+- [x] Icons/labels per node type; spacing/alignment polish.
+- [ ] Responsive QA (desktop/tablet/mobile).
+- [ ] Accessibility pass (focus-visible done; pending ARIA on toggles/buttons).
+- [ ] Lighthouse sanity check.
 
 ## Risks & Mitigations
 
