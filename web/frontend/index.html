@@ -51,6 +51,9 @@
     .canvas { background: #0f153133; border: 1px dashed #22305455; border-radius: 10px; padding: 1rem; min-height: 520px; overflow: hidden; position: relative; }
     .canvas-inner { position: relative; width: 100%; height: 100%; min-height: 520px; transform-origin: top left; transition: transform 120ms ease-out; }
     svg.edges { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+    .edge-label { fill: #9aa5d3; font-size: 12px; pointer-events: none; }
+    .edge-line { stroke: #66e0ff99; stroke-width: 2; transition: stroke 120ms ease; }
+    .edge-line.highlight { stroke: #ffd166; }
     .node { position: absolute; padding: 0.4rem 0.75rem; border-radius: 8px; display: inline-flex; gap: 0.4rem; align-items: center; cursor: grab; user-select: none; }
     .node.start { background: #14d88e33; border: 1px solid #14d88e; }
     .node.end { background: #ff758c33; border: 1px solid #ff758c; }
@@ -446,20 +449,18 @@
         const b = nodeMap.get(to);
         if (!a || !b) return;
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.classList.add('edge-line');
         line.setAttribute('x1', a.x);
         line.setAttribute('y1', a.y);
         line.setAttribute('x2', b.x);
         line.setAttribute('y2', b.y);
-        line.setAttribute('stroke', '#66e0ff99');
-        line.setAttribute('stroke-width', '2');
         line.setAttribute('marker-end', 'url(#arrow)');
         svg.appendChild(line);
         if (label) {
           const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.classList.add('edge-label');
           text.setAttribute('x', (a.x + b.x) / 2);
           text.setAttribute('y', (a.y + b.y) / 2 - 6);
-          text.setAttribute('fill', '#9aa5d3');
-          text.setAttribute('font-size', '12');
           text.textContent = label;
           svg.appendChild(text);
         }
