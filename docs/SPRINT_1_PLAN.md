@@ -19,8 +19,8 @@ Deliver a compelling first impression and reduce time-to-first-flow without back
 - [x] Theme switcher + persistence; contrast check.
 - [x] Icons/labels per node type; spacing/alignment polish.
 - [ ] Responsive QA (desktop/tablet/mobile).
-- [ ] Accessibility pass (focus-visible done; pending ARIA on toggles/buttons).
-- [ ] Lighthouse sanity check.
+- [ ] Accessibility pass (focus-visible done; pending ARIA audit).
+- [ ] Lighthouse sanity check (blocked: local server not running; needs http://localhost:4000/flow up).
 
 ## Risks & Mitigations
 
