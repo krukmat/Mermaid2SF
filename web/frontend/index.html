@@ -65,6 +65,10 @@
     .template-card { border: 1px dashed #22305444; border-radius: 10px; padding: 0.6rem 0.75rem; background: #0f153122; }
     .template-card header { display: flex; justify-content: space-between; align-items: center; padding: 0; background: transparent; border: none; }
     .template-card small { color: var(--muted); }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 20; }
+    .modal { background: var(--panel); border: 1px solid #22305455; border-radius: 12px; width: min(560px, 90vw); max-height: 80vh; overflow: auto; padding: 1rem 1.25rem; box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
+    .modal header { display: flex; justify-content: space-between; align-items: center; padding: 0; border: none; }
+    .modal .row { flex-wrap: wrap; }
     @keyframes float { 0% { transform: translateY(0); opacity: 0.9; } 50% { transform: translateY(-10px); opacity: 1; } 100% { transform: translateY(0); opacity: 0.9; } }
     @media (max-width: 1100px) {
       main { grid-template-columns: 1fr; }
@@ -200,6 +204,7 @@
     const editorCard = document.getElementById('editorCard');
     const mermaidPreview = document.getElementById('mermaidPreview');
     const templateGrid = document.getElementById('templateGrid');
+    let modalEl = null;
 
     let nodes = [];
     let selectedId = null;
@@ -534,33 +539,16 @@
       }
       editorCard.style.display = 'block';
       form.innerHTML = '';
-      form.appendChild(inputField('Label', node.label || '', (v) => (node.label = v)));
-      form.appendChild(inputField('API Name', node.apiName || '', (v) => (node.apiName = v)));
-      form.appendChild(inputField('X', node.x ?? 0, (v) => (node.x = Number(v) || 0)));
-      form.appendChild(inputField('Y', node.y ?? 0, (v) => (node.y = Number(v) || 0)));
-      if (node.type !== 'End' && node.type !== 'Decision') {
-        form.appendChild(inputField('Next', node.next || '', (v) => (node.next = v)));
-      }
-      if (node.type === 'Decision') {
-        form.appendChild(inputField('Yes Next', node.yesNext || '', (v) => (node.yesNext = v)));
-        form.appendChild(inputField('No/Default Next', node.noNext || '', (v) => (node.noNext = v)));
-      }
-      if (node.type === 'Assignment') {
-        form.appendChild(inputField('Assignments (text)', node.assignments || '', (v) => (node.assignments = v)));
-      }
-      if (node.type === 'GetRecords') {
-        form.appendChild(inputField('Object', node.object || '', (v) => (node.object = v)));
-        form.appendChild(inputField('Fields (comma)', node.fields || '', (v) => (node.fields = v)));
-        form.appendChild(inputField('Filters (key=value;)', node.filters || '', (v) => (node.filters = v)));
-      }
+      renderModal(node);
     }
 
-    function inputField(labelText, value, onChange) {
+    function inputField(labelText, value, onChange, type = 'text') {
       const wrap = document.createElement('div');
       wrap.style.marginBottom = '0.75rem';
       const lab = document.createElement('label');
       lab.textContent = labelText;
       const input = document.createElement('input');
+      input.type = type;
       input.value = value;
       input.addEventListener('input', (e) => onChange(e.target.value));
       wrap.appendChild(lab);
@@ -571,6 +559,81 @@
     function renderPreview() {
       const mermaid = generateMermaid(nodes);
       mermaidPreview.textContent = mermaid;
+    }
+
+    function renderModal(node) {
+      closeModal();
+      modalEl = document.createElement('div');
+      modalEl.className = 'modal-backdrop';
+      modalEl.innerHTML = `
+        <div class="modal" role="dialog" aria-modal="true" aria-label="Edit ${node.type} node">
+          <header>
+            <h3 style="margin:0;">Edit ${node.type}</h3>
+            <button class="secondary" id="closeModal" aria-label="Close edit dialog">✕</button>
+          </header>
+          <div id="modalBody"></div>
+          <div class="row" style="margin-top:0.5rem;">
+            <button class="secondary" id="cancelModal">Cancel</button>
+            <button id="saveModal">Save</button>
+          </div>
+        </div>
+      `;
+      modalEl.addEventListener('click', (e) => {
+        if (e.target === modalEl) closeModal();
+      });
+      document.body.appendChild(modalEl);
+      const body = modalEl.querySelector('#modalBody');
+      body.appendChild(inputField('Label', node.label || '', (v) => (node.label = v)));
+      body.appendChild(inputField('API Name', node.apiName || '', (v) => (node.apiName = v)));
+      body.appendChild(inputField('X', node.x ?? 0, (v) => (node.x = Number(v) || 0), 'number'));
+      body.appendChild(inputField('Y', node.y ?? 0, (v) => (node.y = Number(v) || 0), 'number'));
+      if (node.type !== 'End' && node.type !== 'Decision') {
+        body.appendChild(targetSelect('Next', node.next || '', (v) => (node.next = v)));
+      }
+      if (node.type === 'Decision') {
+        body.appendChild(targetSelect('Yes Next', node.yesNext || '', (v) => (node.yesNext = v)));
+        body.appendChild(targetSelect('No/Default Next', node.noNext || '', (v) => (node.noNext = v)));
+      }
+      if (node.type === 'Assignment') {
+        body.appendChild(inputField('Assignments (text)', node.assignments || '', (v) => (node.assignments = v)));
+      }
+      if (node.type === 'GetRecords') {
+        body.appendChild(inputField('Object', node.object || '', (v) => (node.object = v)));
+        body.appendChild(inputField('Fields (comma)', node.fields || '', (v) => (node.fields = v)));
+        body.appendChild(inputField('Filters (key=value;)', node.filters || '', (v) => (node.filters = v)));
+      }
+      if (node.type === 'Wait') {
+        body.appendChild(inputField('Label', node.label || '', (v) => (node.label = v)));
+      }
+      if (node.type === 'Loop') {
+        body.appendChild(inputField('Label', node.label || '', (v) => (node.label = v)));
+      }
+      modalEl.querySelector('#closeModal').addEventListener('click', closeModal);
+      modalEl.querySelector('#cancelModal').addEventListener('click', closeModal);
+      modalEl.querySelector('#saveModal').addEventListener('click', () => {
+        closeModal();
+        renderAll();
+      });
+    }
+
+    function targetSelect(labelText, value, onChange) {
+      const wrap = document.createElement('div');
+      wrap.style.marginBottom = '0.75rem';
+      const lab = document.createElement('label');
+      lab.textContent = labelText;
+      const sel = document.createElement('select');
+      sel.innerHTML = `<option value=\"\">(none)</option>` + nodes.map((n) => `<option value=\"${n.id}\" ${value === n.id ? 'selected' : ''}>${n.id}</option>`).join('');
+      sel.addEventListener('change', (e) => onChange(e.target.value));
+      wrap.appendChild(lab);
+      wrap.appendChild(sel);
+      return wrap;
+    }
+
+    function closeModal() {
+      if (modalEl && modalEl.parentNode) {
+        modalEl.parentNode.removeChild(modalEl);
+        modalEl = null;
+      }
     }
 
     function highlightXmlBlock() {
