@@ -86,6 +86,7 @@ Plan para transformar el frontend actual en una experiencia moderna, atractiva y
 **Problema actual:** Solo reordenamiento en lista lateral
 
 **Solución:**
+
 ```javascript
 - Drag & drop de nodos directamente en el canvas
 - Conexiones visuales arrastrables (como Figma/Miro)
@@ -95,6 +96,7 @@ Plan para transformar el frontend actual en una experiencia moderna, atractiva y
 ```
 
 **Ejemplo visual:**
+
 ```
 Canvas con:
 ┌─────────────────────────────────────────┐
@@ -113,6 +115,7 @@ Canvas con:
 **Problema actual:** Form básico en sidebar
 
 **Solución:**
+
 - Modal overlay al hacer doble click en nodo
 - Editor visual para cada tipo de nodo
 - Preview en tiempo real del efecto
@@ -120,6 +123,7 @@ Canvas con:
 - Validación inline con mensajes claros
 
 **Ejemplo:**
+
 ```
 ╔══════════════════════════════════════╗
 ║  Edit Decision Node                  ║
@@ -140,6 +144,7 @@ Canvas con:
 #### 2.3: **Smart Templates Gallery**
 
 **Nueva sección:**
+
 ```
 Templates:
 ┌──────────────┬──────────────┬──────────────┐
@@ -152,6 +157,7 @@ Templates:
 ```
 
 Templates predefinidos:
+
 - Customer Onboarding Flow
 - Lead Assignment & Routing
 - Case Escalation Flow
@@ -199,6 +205,7 @@ Step 5: Compile & Download
 ```
 
 **Features:**
+
 - Tooltips contextuales
 - Highlight de elementos relevantes
 - Progreso visual (1/5, 2/5...)
@@ -224,12 +231,14 @@ Step 5: Compile & Download
 ### 4.2: **Theme System**
 
 **Temas disponibles:**
+
 - 🌑 Dark (default, actual)
 - ☀️ Light
 - 🎨 Salesforce Blue
 - 🌈 High Contrast
 
 **Toggle en header:**
+
 ```
 [🌙 Dark] [☀️ Light] [💙 SF] [🌈 HC]
 ```
@@ -237,12 +246,14 @@ Step 5: Compile & Download
 ### 4.3: **Icons & Illustrations**
 
 **Reemplazar pills con icons:**
+
 ```
 Actual: [Start] → Pill "Start"
 Nuevo:  [▶️ Start] → Icon + label
 ```
 
 **Icon set para cada tipo:**
+
 - Start: ▶️ Play icon
 - End: ⏹️ Stop icon
 - Decision: 🔀 Branch icon
@@ -255,6 +266,7 @@ Nuevo:  [▶️ Start] → Icon + label
 ### 4.4: **Error States & Empty States**
 
 **Empty Canvas:**
+
 ```
 ┌─────────────────────────────────────┐
 │                                     │
@@ -270,6 +282,7 @@ Nuevo:  [▶️ Start] → Icon + label
 ```
 
 **Validation Errors:**
+
 ```
 ❌ Start node must connect to another element
 ❌ Decision "Route" has no outcomes defined
@@ -345,6 +358,7 @@ Tabs:
 ### 6.2: **Responsive Design**
 
 **Mobile Layout:**
+
 ```
 ┌──────────────────┐
 │  Header          │
@@ -360,6 +374,7 @@ Tabs:
 ```
 
 **Tablet Layout:**
+
 ```
 ┌─────────┬─────────────┐
 │ Toolbox │   Canvas    │
@@ -373,6 +388,7 @@ Tabs:
 ## 🛠️ Stack Tecnológico Recomendado
 
 ### Opción A: **Vanilla JS + Web Components** (Más simple)
+
 ```javascript
 Pros:
 - Sin build step
@@ -402,6 +418,7 @@ Contras:
 ```
 
 ### Opción C: **Vue 3 + Vite** (Balance)
+
 ```javascript
 Pros:
 - Más simple que React
@@ -415,6 +432,7 @@ Contras:
 ```
 
 **Mi recomendación:** **Opción B (React + Vite)** por las siguientes razones:
+
 1. React Flow es perfecto para el canvas interactivo
 2. shadcn/ui ofrece componentes modernos listos
 3. Ecosystem grande para features futuras
@@ -425,6 +443,7 @@ Contras:
 ## 📦 Libraries Recomendadas
 
 ### UI Components
+
 ```bash
 npm install @radix-ui/react-dialog
 npm install @radix-ui/react-dropdown-menu
@@ -433,6 +452,7 @@ npm install lucide-react  # Icons
 ```
 
 ### Canvas/Diagramming
+
 ```bash
 npm install reactflow  # Drag & drop canvas
 # O alternativa:
@@ -440,16 +460,19 @@ npm install @xyflow/react
 ```
 
 ### Animations
+
 ```bash
 npm install framer-motion
 ```
 
 ### Code Highlighting
+
 ```bash
 npm install prism-react-renderer
 ```
 
 ### State Management
+
 ```bash
 npm install zustand  # Simple, no boilerplate
 ```
@@ -469,6 +492,7 @@ npm install zustand  # Simple, no boilerplate
 - **Migration path**: Nueva app React en `web/app/`, mantener `web/frontend/` como fallback hasta migración completa.
 
 ## 🧪 Testing y Calidad
+
 - **Unit**: utils de DSL y parsers (Jest/Vitest).
 - **Component**: React Testing Library para NodeEditor, TemplateGallery, XMLPreview.
 - **E2E ligero**: Playwright para flujos clave (abrir app, cargar template, compilar, descargar).
@@ -477,6 +501,7 @@ npm install zustand  # Simple, no boilerplate
 - **CI**: `npm run lint`, `npm run test`, `npm run build`, `npm run preview:e2e` (headless) en GitHub Actions.
 
 ## 🖧 Integración y Deploy
+
 - **Dev server**: `npm install` → `npm run dev` (Vite). Proxiar `/api` a `localhost:4000` en `vite.config.ts`.
 - **Build**: `npm run build` → `dist/` listo para servir en Nginx/Apache/S3; `npm run preview` para validar.
 - **Producción (Digital Ocean - iotforce.es)**:
@@ -499,14 +524,15 @@ npm install zustand  # Simple, no boilerplate
     server: {
       proxy: {
         '/api': 'http://localhost:4000',
-        '/health': 'http://localhost:4000'
-      }
-    }
-  })
+        '/health': 'http://localhost:4000',
+      },
+    },
+  });
   ```
 - **Observabilidad** (opcional): consola con nivel `debug/info/error`, hook global `window.onerror` → log server; Sentry si se habilita.
 
 ## ♿ Mejoras adicionales al planteo original
+
 - **Keyboard shortcuts**: `Cmd/Ctrl+S` guardar, `Cmd/Ctrl+Z/Y` undo/redo, `Del` borrar nodo, `Cmd/Ctrl+D` duplicar.
 - **Autosave + snapshot**: cada 30s o cambio significativo; mostrar toast "Saved".
 - **Error banners**: si `/api/compile` falla, mostrar mensaje con trace y opción "Retry".
@@ -517,6 +543,7 @@ npm install zustand  # Simple, no boilerplate
 ## 🔒 Seguridad y Mejores Prácticas
 
 ### Seguridad del Frontend
+
 - **Input sanitization**: Validar y sanitizar todo input del usuario antes de enviar a `/api/compile`
 - **XSS prevention**: Usar `textContent` en lugar de `innerHTML` para contenido dinámico
 - **CSP headers**: Configurar Content Security Policy en servidor
@@ -524,6 +551,7 @@ npm install zustand  # Simple, no boilerplate
 - **File upload**: Si se implementa upload de Mermaid, validar extensión y tamaño (<5MB)
 
 ### Performance
+
 - **Code splitting**: Lazy load de componentes pesados (tutorial, templates, XML preview)
 - **Image optimization**: Comprimir assets, usar WebP donde sea posible
 - **Bundle analysis**: `npm run build -- --analyze` para identificar dependencias pesadas
@@ -531,6 +559,7 @@ npm install zustand  # Simple, no boilerplate
 - **Virtual scrolling**: Para listas de nodos/templates grandes
 
 ### Accesibilidad (a11y)
+
 - **Semantic HTML**: Usar `<button>`, `<nav>`, `<main>`, `<article>` correctamente
 - **ARIA labels**: Todos los botones/icons tienen aria-label descriptivo
 - **Focus management**: Trap focus en modales, restaurar focus al cerrar
@@ -539,6 +568,7 @@ npm install zustand  # Simple, no boilerplate
 - **Color contrast**: WCAG AA mínimo (4.5:1 para texto normal)
 
 ### Developer Experience
+
 - **TypeScript strict**: Habilitar `strict: true` en tsconfig.json
 - **ESLint**: Configurar reglas para React hooks, a11y, performance
 - **Prettier**: Auto-format on save
@@ -603,6 +633,7 @@ web/
 ```
 
 **Notas de migración:**
+
 - Iniciar con `npm create vite@latest web/app -- --template react-ts`
 - Configurar `base: '/flow/'` en vite.config.ts
 - Mantener `web/frontend/` funcionando durante migración gradual
@@ -613,30 +644,55 @@ web/
 ## 📅 Timeline Estimado
 
 ### Sprint 1 (1 semana): Landing + Basic Improvements
+
 - [ ] Hero landing page con animación
 - [ ] Templates gallery
 - [ ] Theme switcher
 - [ ] Better icons
 
+#### Plan de ejecución (Sprint 1)
+
+- **Objetivo**: Mejorar primera impresión y reducir time-to-first-flow sin tocar backend.
+- **Alcance**:
+  - Hero landing: encabezado/subtítulo, CTAs (“Try Live Demo”, “Start Building”), animación ligera (CSS/JS) mostrando un flow armándose, fondo con gradiente; responsive y accesible.
+  - Templates gallery: al menos 3 presets (Onboarding, Lead Routing, Case Escalation) con “Preview” y “Use this” que cargan el template en el estado/canvas.
+  - Theme switcher: toggle light/dark (CSS variables), persistencia en localStorage, contraste asegurado.
+  - Better icons: reemplazar pills por íconos + labels (Lucide/Heroicons) mapeados por tipo (Start, Screen, Decision, Assignment, GetRecords, Loop, Wait, End, Fault).
+- **Tareas de desarrollo**:
+  1. Wireframe y layout del landing + definir set de íconos y tokens de tema (día 1).
+  2. Implementar hero section + animación (CSS transform/opacity; evitar canvas pesado) y CTAs que lleven al builder (día 2-3).
+  3. Construir templates gallery: presets hardcodeados + acciones de carga al canvas/estado; opción de previsualización (día 3-4).
+  4. Theme switcher: CSS variables, toggle en header, persistencia en localStorage, verificación de contraste (día 5).
+  5. Reemplazo de íconos y labels en toolbox/lista de nodos, ajustes de espaciado y alineación (día 5).
+  6. QA/responsive (desktop/tablet/móvil), accesibilidad (focus visible, ARIA en toggles/botones), Lighthouse sanity check (día 6-7).
+- **Riesgos / mitigación**:
+  - Performance: animaciones solo con CSS/transform, sin librerías pesadas.
+  - Accesibilidad: contrast ratio y focus states verificados en ambos temas.
+  - Responsive: testear breakpoints principales antes de cerrar el sprint.
+
 ### Sprint 2 (1 semana): Interactive Builder
+
 - [ ] React Flow integration
 - [ ] Drag & drop canvas real
 - [ ] Visual connections
 - [ ] Node editor modal
 
 ### Sprint 3 (1 semana): Onboarding & UX
+
 - [ ] Interactive tutorial
 - [ ] Empty states
 - [ ] Error handling
 - [ ] Loading states
 
 ### Sprint 4 (1 semana): Advanced Features
+
 - [ ] Multi-file tabs
 - [ ] Import/Export hub
 - [ ] Version history
 - [ ] Keyboard shortcuts
 
 ### Sprint 5 (3 días): Mobile & Polish
+
 - [ ] Responsive design
 - [ ] Mobile layout
 - [ ] Performance optimization
@@ -649,6 +705,7 @@ web/
 ## 🎨 Mockups Visuales (Propuestos)
 
 ### Landing Page
+
 ```
 ╔════════════════════════════════════════════════════════════╗
 ║                    Flow Visualizer                         ║
@@ -677,6 +734,7 @@ web/
 ```
 
 ### Builder Interface (Mejorado)
+
 ```
 ╔════════════════════════════════════════════════════════════╗
 ║ Flow Visualizer | Untitled Flow*  [Save] [Export] [Share] ║
@@ -714,6 +772,7 @@ web/
 **Mejoras que se pueden hacer YA sin React:**
 
 1. **Template Selector** (2 horas)
+
 ```javascript
 const templates = {
   onboarding: [...],
@@ -724,23 +783,27 @@ const templates = {
 ```
 
 2. **Better Icons** (1 hora)
+
 ```html
 <script src="https://unpkg.com/lucide@latest"></script>
 // Reemplazar pills con icons
 ```
 
 3. **Theme Toggle** (2 horas)
+
 ```javascript
 // Light/Dark theme switch
 document.body.classList.toggle('light-theme');
 ```
 
 4. **Save/Load Flow** (2 horas)
+
 ```javascript
 // Download JSON / Upload JSON
 ```
 
 5. **Empty States** (1 hora)
+
 ```html
 <!-- Mensaje cuando canvas está vacío -->
 ```
@@ -752,18 +815,21 @@ document.body.classList.toggle('light-theme');
 ## ✅ Success Metrics
 
 ### Engagement
+
 - **First-time users:** >10 usuarios en primera semana
 - **Flow compilation:** Al menos 1 flow compilado por visitante
 - **Return rate:** >20% de usuarios regresan
 - **Tutorial completion:** >50% completa el onboarding
 
 ### Quality
+
 - **Zero crashes:** No errores fatales
 - **Load time:** <2 segundos initial load
 - **Mobile responsive:** Funciona en 95% de devices
 - **Template usage:** >30% usan templates predefinidos
 
 ### Technical
+
 - **Lighthouse Score:** >90 en performance
 - **Bundle size:** <500KB total
 - **First Contentful Paint:** <1.5s
@@ -776,6 +842,7 @@ document.body.classList.toggle('light-theme');
 ### Approach A: Full Modern Rebuild (Recomendado)
 
 Implementar todas las fases con React + Vite:
+
 - Semana 1-2: Hero landing + Modern builder
 - Semana 3: Onboarding + UX improvements
 - Semana 4: Advanced features (multi-file, import/export, version history)
@@ -786,6 +853,7 @@ Implementar todas las fases con React + Vite:
 ### Approach B: Incremental Improvements
 
 Mantener vanilla JS y agregar features gradualmente:
+
 - Fase 1: Quick wins (templates, icons, themes) - 3 días
 - Fase 2: Canvas improvements - 1 semana
 - Fase 3: Advanced features - 1 semana
@@ -796,6 +864,7 @@ Mantener vanilla JS y agregar features gradualmente:
 ### Approach C: Hybrid (Balance)
 
 Migrar a React Flow para canvas, mantener resto simple:
+
 - Fase 1: Setup React + Vite - 2 días
 - Fase 2: Migrate canvas to React Flow - 3 días
 - Fase 3: Add templates + themes - 2 días
@@ -808,12 +877,14 @@ Migrar a React Flow para canvas, mantener resto simple:
 ## 🎯 Recomendación Final
 
 **Approach A (Full Modern Rebuild)** es la mejor inversión a largo plazo:
+
 - Experiencia profesional que impresiona
 - Fácil de extender con nuevas features
 - Stack moderno facilita colaboración
 - Atrae más usuarios y contribuidores
 
 **Prioridad de implementación:**
+
 1. Hero landing + Templates (impacto inmediato)
 2. React Flow canvas (mejor UX)
 3. Onboarding tutorial (retención)
