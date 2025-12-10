@@ -716,8 +716,10 @@
       historyModal.classList.remove('hidden');
       historyModal.setAttribute('aria-hidden', 'false');
       renderHistoryList();
-      historyStatusEl?.classList?.remove('history-status');
-      historyStatusEl?.textContent = 'Snapshots capture nodes, pan, scale, and serialized DSL/XML.';
+      if (historyStatusEl) {
+        historyStatusEl.classList.remove('history-status');
+        historyStatusEl.textContent = 'Snapshots capture nodes, pan, scale, and serialized DSL/XML.';
+      }
     }
 
     function closeHistoryModal() {
