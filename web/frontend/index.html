@@ -1326,10 +1326,7 @@
       if (renderPending) return;
       renderPending = true;
       requestAnimationFrame(() => {
-        renderList();
-        renderCanvas();
-        renderPreview();
-        renderForm();
+        renderAll({ skipForm: true });
         renderPending = false;
       });
     }
@@ -1547,11 +1544,14 @@
       showCanvasOnInteraction();
     }
 
-    function renderAll() {
+    function renderAll(options = {}) {
+      const { skipForm = false } = options;
       renderList();
       renderCanvas();
       renderPreview();
-      renderForm();
+      if (!skipForm) {
+        renderForm();
+      }
     }
 
     function applyTransform() {
@@ -2124,7 +2124,7 @@
         node.x = Number(xField.input.value) || 0;
         node.y = Number(yField.input.value) || 0;
         closeModal();
-        renderAll();
+        renderAll({ skipForm: true });
         markCurrentFlowDirty();
       });
     }
