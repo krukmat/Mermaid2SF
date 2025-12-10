@@ -632,12 +632,6 @@
       }
     }
 
-    function updateImportStatus(message, tone = 'info') {
-      if (!importStatusEl) return;
-      importStatusEl.textContent = message;
-      importStatusEl.className = `import-status ${tone}`;
-    }
-
     function loadStoredHistory(flowId) {
       if (!flowId) return [];
       const stored = localStorage.getItem(`flow-history-${flowId}`);
