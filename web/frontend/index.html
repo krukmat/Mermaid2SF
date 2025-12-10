@@ -68,6 +68,7 @@
     .row { display: flex; gap: 0.5rem; align-items: center; }
     .row button { flex: 1; }
     .canvas { background: #0f153133; border: 1px dashed #22305455; border-radius: 10px; padding: 1rem; min-height: 520px; overflow: hidden; position: relative; }
+    .canvas-hidden { display: none; }
     .canvas-inner { position: relative; width: 100%; height: 100%; min-height: 520px; transform-origin: top left; transition: transform 120ms ease-out; }
     svg.edges { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
     .edge-label { fill: #9aa5d3; font-size: 12px; pointer-events: none; }
@@ -461,6 +462,9 @@
     const emptyStartTutorialBtn = document.getElementById('emptyStartTutorial');
     const emptyLoadTemplateBtn = document.getElementById('emptyLoadTemplate');
     const emptyDismissBtn = document.getElementById('emptyDismiss');
+    const CANVAS_INACTIVITY_MS = 30000;
+    let inactivityTimer = null;
+    let canvasHiddenByTimer = false;
     const loadingBackdrop = document.getElementById('loadingBackdrop');
     const loadingMessage = document.getElementById('loadingMessage');
     const statusDetails = document.getElementById('statusDetails');
@@ -1330,9 +1334,43 @@
 
     function updateEmptyState() {
       if (!emptyOverlay) return;
-      const shouldHide = nodes.length > 0 || emptyOverlay.dataset.dismissed === 'true';
+      const dismissed = emptyOverlay.dataset.dismissed === 'true';
+      const shouldHide = nodes.length > 0 || dismissed;
       emptyOverlay.hidden = shouldHide;
       emptyOverlay.classList.toggle('hidden', shouldHide);
+    }
+
+    function clearCanvasTimer() {
+      if (!inactivityTimer) return;
+      clearTimeout(inactivityTimer);
+      inactivityTimer = null;
+    }
+
+    function hideCanvasForTimeout() {
+      if (!canvas) return;
+      if (canvas.classList.contains('canvas-hidden')) return;
+      canvas.classList.add('canvas-hidden');
+      canvasHiddenByTimer = true;
+      showBanner({
+        type: 'warning',
+        title: 'Canvas hidden',
+        message: 'Start the tutorial or load a template to bring it back.',
+        duration: 5000,
+      });
+    }
+
+    function scheduleCanvasTimeout() {
+      clearCanvasTimer();
+      inactivityTimer = window.setTimeout(hideCanvasForTimeout, CANVAS_INACTIVITY_MS);
+    }
+
+    function showCanvasOnInteraction() {
+      if (!canvas) return;
+      if (canvasHiddenByTimer) {
+        canvas.classList.remove('canvas-hidden');
+        canvasHiddenByTimer = false;
+      }
+      scheduleCanvasTimeout();
     }
 
     function setIssueState(level, entries = []) {
@@ -1535,6 +1573,7 @@
       highlightAdvancedNodes('clear');
       updateEmptyState();
       setLoadingState(false, '');
+      showCanvasOnInteraction();
     }
 
     function renderAll() {
@@ -1623,7 +1662,8 @@
               renderAll();
               markCurrentFlowDirty();
               setButtonLoading(btn, false);
-              setLoadingState(false);
+      setLoadingState(false);
+      showCanvasOnInteraction();
               setPreviewHint(`Previewing ${tpl.name}. Use the compile action to turn it into XML.`, 'info');
               showBanner({
                 type: 'info',
@@ -2416,12 +2456,19 @@
     advancedButtons.forEach((btn) => {
       btn.addEventListener('click', () => highlightAdvancedNodes(btn.dataset.advancedTarget));
     });
-    emptyStartTutorialBtn?.addEventListener('click', () => openTutorial(0));
-    emptyLoadTemplateBtn?.addEventListener('click', () => loadTemplate('onboarding'));
+    emptyStartTutorialBtn?.addEventListener('click', () => {
+      showCanvasOnInteraction();
+      openTutorial(0);
+    });
+    emptyLoadTemplateBtn?.addEventListener('click', () => {
+      showCanvasOnInteraction();
+      loadTemplate('onboarding');
+    });
     emptyDismissBtn?.addEventListener('click', () => {
       if (!emptyOverlay) return;
       emptyOverlay.dataset.dismissed = 'true';
       updateEmptyState();
+      showCanvasOnInteraction();
       showBanner({
         type: 'info',
         title: 'Canvas visible',
