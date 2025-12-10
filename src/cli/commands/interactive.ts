@@ -11,6 +11,8 @@ import { FlowXmlGenerator } from '../../generators/flow-xml-generator';
 import { DocsGenerator } from '../../generators/docs-generator';
 import { FlowDSL, FlowElement } from '../../types/flow-dsl';
 import { logger } from '../../utils/logger';
+import { validateDsl } from '../../validation/flow-rules';
+import { logFlowValidationResult } from '../utils/flow-validation';
 
 export const interactiveCommand = new Command('interactive')
   .description('Run an interactive wizard to compile or create flows')
@@ -54,8 +56,9 @@ async function compileFlowInteractive(rl: any) {
     throw new Error(`Input file not found: ${mermaidFile}`);
   }
 
-  const { dsl, validation } = buildAndValidateFromMermaid(mermaidFile);
+  const { dsl, validation, flowValidation } = buildAndValidateFromMermaid(mermaidFile);
   printValidation(validation);
+  logFlowValidationResult(flowValidation, 'Visual validation');
   printPreview(dsl);
 
   const generateOutputs = await promptYesNo(rl, 'Generate outputs (XML/DSL/Docs)?', false);
@@ -109,13 +112,14 @@ async function createFlowWizard(rl: any) {
   fs.writeFileSync(savePath, mermaid, 'utf-8');
   logger.info(`Saved Mermaid diagram to ${savePath}`);
 
-  const { dsl, validation } = buildAndValidateFromMermaid(
+  const { dsl, validation, flowValidation } = buildAndValidateFromMermaid(
     savePath,
     flowApiName,
     label,
     processType,
   );
   printValidation(validation);
+  logFlowValidationResult(flowValidation, 'Visual validation');
   printPreview(dsl);
 
   const generateOutputs = await promptYesNo(rl, 'Generate outputs (XML/DSL/Docs)?', true);
@@ -206,7 +210,8 @@ function buildAndValidateFromMermaid(
   }
 
   const validation = validator.validate(dsl);
-  return { dsl, validation };
+  const flowValidation = validateDsl(dsl);
+  return { dsl, validation, flowValidation };
 }
 
 function printValidation(validation: any) {

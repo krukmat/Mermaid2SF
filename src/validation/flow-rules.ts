@@ -1,16 +1,4 @@
-export type ElementType =
-  | 'Start'
-  | 'End'
-  | 'Assignment'
-  | 'Decision'
-  | 'Screen'
-  | 'RecordCreate'
-  | 'RecordUpdate'
-  | 'Subflow'
-  | 'Loop'
-  | 'Wait'
-  | 'GetRecords'
-  | 'Fault';
+import { ElementType, FlowDSL, FlowElement, DecisionElement } from '../types/flow-dsl';
 
 export interface FlowNode extends BaseNode {
   yesNext?: string;
@@ -21,6 +9,7 @@ export interface FlowNode extends BaseNode {
   waitDuration?: string;
   faultSource?: string;
   faultMessage?: string;
+  outcomes?: DecisionOutcomeNode[];
 }
 
 export interface BaseNode {
@@ -29,6 +18,12 @@ export interface BaseNode {
   apiName?: string;
   label?: string;
   next?: string;
+}
+
+export interface DecisionOutcomeNode {
+  name?: string;
+  next?: string;
+  isDefault?: boolean;
 }
 
 export type ValidationSeverity = 'error' | 'warning';
@@ -69,6 +64,20 @@ function createMessage(
   nodes: string[] = [],
 ): FlowValidationMessage {
   return { code, severity, message, nodes };
+}
+
+function normalizeDecisionOutcomes(node: FlowNode): DecisionOutcomeNode[] {
+  const outcomes: DecisionOutcomeNode[] = [];
+  if (Array.isArray(node.outcomes)) {
+    outcomes.push(...node.outcomes);
+  }
+  if (node.yesNext) {
+    outcomes.push({ name: 'Yes', next: node.yesNext });
+  }
+  if (node.noNext) {
+    outcomes.push({ name: 'No', next: node.noNext, isDefault: true });
+  }
+  return outcomes;
 }
 
 export function validateFlow(nodes: FlowNode[]): FlowValidationResult {
@@ -135,7 +144,7 @@ export function validateFlow(nodes: FlowNode[]): FlowValidationResult {
   const registerTarget = (node: FlowNode, prop: string, targetId?: string) => {
     if (!targetId) return;
     if (!registry.has(targetId)) {
-      (errors as FlowValidationMessage[]).push(
+      errors.push(
         createMessage(
           'missing-target',
           'error',
@@ -161,28 +170,42 @@ export function validateFlow(nodes: FlowNode[]): FlowValidationResult {
     }
 
     if (node.type === 'Decision') {
-      const hasYes = Boolean(node.yesNext);
-      const hasNo = Boolean(node.noNext);
-      if (!hasYes && !hasNo) {
+      const outcomes = normalizeDecisionOutcomes(node);
+      const outcomesWithNext = outcomes.filter((outcome) => Boolean(outcome.next));
+      const defaultOutcomes = outcomesWithNext.filter((outcome) => outcome.isDefault);
+      if (outcomesWithNext.length === 0) {
         errors.push(
           createMessage(
             'missing-decision-paths',
             'error',
-            `Decision ${node.id} requires at least one outcome (yesNext/noNext).`,
+            `Decision ${node.id} requires at least one outcome.`,
             [node.id],
           ),
         );
       }
-      if (!hasNo) {
+      if (defaultOutcomes.length === 0) {
         errors.push(
           createMessage(
             'missing-default-outcome',
             'error',
-            `Decision ${node.id} must declare a default outcome (noNext).`,
+            `Decision ${node.id} must declare a default outcome.`,
             [node.id],
           ),
         );
       }
+      if (defaultOutcomes.length > 1) {
+        errors.push(
+          createMessage(
+            'multiple-default-outcomes',
+            'error',
+            `Decision ${node.id} has ${defaultOutcomes.length} default outcomes, expected 1.`,
+            [node.id],
+          ),
+        );
+      }
+      outcomesWithNext.forEach((outcome) => {
+        registerTarget(node, `outcome:${outcome.name || 'next'}`, outcome.next);
+      });
     }
 
     if (node.type === 'Loop' && !node.loopCondition) {
@@ -240,6 +263,7 @@ export function validateFlow(nodes: FlowNode[]): FlowValidationResult {
     const queue: string[] = [startNode.id];
     while (queue.length) {
       const current = queue.shift()!;
+      if (reachable.has(current)) continue;
       reachable.add(current);
       const neighbors = adjacency.get(current);
       if (!neighbors) continue;
@@ -271,4 +295,33 @@ export function validateFlow(nodes: FlowNode[]): FlowValidationResult {
     isValid: errors.length === 0,
   };
   return result;
+}
+
+function mapElementToNode(element: FlowElement): FlowNode {
+  const node: FlowNode = {
+    id: element.id,
+    type: element.type,
+    apiName: element.apiName,
+    label: element.label,
+  };
+  if ('next' in element && element.next) {
+    node.next = element.next;
+  }
+  if (element.type === 'Decision') {
+    const decision = element as DecisionElement;
+    node.outcomes = decision.outcomes.map((outcome) => ({
+      name: outcome.name,
+      next: outcome.next,
+      isDefault: outcome.isDefault,
+    }));
+  }
+  return node;
+}
+
+export function convertDslToFlowNodes(dsl: FlowDSL): FlowNode[] {
+  return dsl.elements.map(mapElementToNode);
+}
+
+export function validateDsl(dsl: FlowDSL): FlowValidationResult {
+  return validateFlow(convertDslToFlowNodes(dsl));
 }

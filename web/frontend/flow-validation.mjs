@@ -15,6 +15,19 @@ var numericIdRegEx = /^[A-Za-z_][A-Za-z0-9_]*$/;
 function createMessage(code, severity, message, nodes = []) {
   return { code, severity, message, nodes };
 }
+function normalizeDecisionOutcomes(node) {
+  const outcomes = [];
+  if (Array.isArray(node.outcomes)) {
+    outcomes.push(...node.outcomes);
+  }
+  if (node.yesNext) {
+    outcomes.push({ name: "Yes", next: node.yesNext });
+  }
+  if (node.noNext) {
+    outcomes.push({ name: "No", next: node.noNext, isDefault: true });
+  }
+  return outcomes;
+}
 function validateFlow(nodes) {
   const errors = [];
   const warnings = [];
@@ -98,28 +111,42 @@ function validateFlow(nodes) {
       );
     }
     if (node.type === "Decision") {
-      const hasYes = Boolean(node.yesNext);
-      const hasNo = Boolean(node.noNext);
-      if (!hasYes && !hasNo) {
+      const outcomes = normalizeDecisionOutcomes(node);
+      const outcomesWithNext = outcomes.filter((outcome) => Boolean(outcome.next));
+      const defaultOutcomes = outcomesWithNext.filter((outcome) => outcome.isDefault);
+      if (outcomesWithNext.length === 0) {
         errors.push(
           createMessage(
             "missing-decision-paths",
             "error",
-            `Decision ${node.id} requires at least one outcome (yesNext/noNext).`,
+            `Decision ${node.id} requires at least one outcome.`,
             [node.id]
           )
         );
       }
-      if (!hasNo) {
+      if (defaultOutcomes.length === 0) {
         errors.push(
           createMessage(
             "missing-default-outcome",
             "error",
-            `Decision ${node.id} must declare a default outcome (noNext).`,
+            `Decision ${node.id} must declare a default outcome.`,
             [node.id]
           )
         );
       }
+      if (defaultOutcomes.length > 1) {
+        errors.push(
+          createMessage(
+            "multiple-default-outcomes",
+            "error",
+            `Decision ${node.id} has ${defaultOutcomes.length} default outcomes, expected 1.`,
+            [node.id]
+          )
+        );
+      }
+      outcomesWithNext.forEach((outcome) => {
+        registerTarget(node, `outcome:${outcome.name || "next"}`, outcome.next);
+      });
     }
     if (node.type === "Loop" && !node.loopCondition) {
       warnings.push(
@@ -171,6 +198,7 @@ function validateFlow(nodes) {
     const queue = [startNode.id];
     while (queue.length) {
       const current = queue.shift();
+      if (reachable.has(current)) continue;
       reachable.add(current);
       const neighbors = adjacency.get(current);
       if (!neighbors) continue;
@@ -202,6 +230,34 @@ function validateFlow(nodes) {
   };
   return result;
 }
+function mapElementToNode(element) {
+  const node = {
+    id: element.id,
+    type: element.type,
+    apiName: element.apiName,
+    label: element.label
+  };
+  if ("next" in element && element.next) {
+    node.next = element.next;
+  }
+  if (element.type === "Decision") {
+    const decision = element;
+    node.outcomes = decision.outcomes.map((outcome) => ({
+      name: outcome.name,
+      next: outcome.next,
+      isDefault: outcome.isDefault
+    }));
+  }
+  return node;
+}
+function convertDslToFlowNodes(dsl) {
+  return dsl.elements.map(mapElementToNode);
+}
+function validateDsl(dsl) {
+  return validateFlow(convertDslToFlowNodes(dsl));
+}
 export {
+  convertDslToFlowNodes,
+  validateDsl,
   validateFlow
 };
