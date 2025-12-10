@@ -292,6 +292,7 @@
             <div class="row" style="gap:0.5rem; margin-top:0.5rem;">
               <button id="emptyStartTutorial" type="button">Start tutorial</button>
               <button id="emptyLoadTemplate" type="button">Load template</button>
+              <button id="emptyDismiss" type="button" class="secondary">Dismiss</button>
             </div>
           </div>
         </div>
@@ -459,6 +460,7 @@
     const emptyOverlay = document.getElementById('emptyOverlay');
     const emptyStartTutorialBtn = document.getElementById('emptyStartTutorial');
     const emptyLoadTemplateBtn = document.getElementById('emptyLoadTemplate');
+    const emptyDismissBtn = document.getElementById('emptyDismiss');
     const loadingBackdrop = document.getElementById('loadingBackdrop');
     const loadingMessage = document.getElementById('loadingMessage');
     const statusDetails = document.getElementById('statusDetails');
@@ -1328,7 +1330,7 @@
 
     function updateEmptyState() {
       if (!emptyOverlay) return;
-      const shouldHide = nodes.length > 0;
+      const shouldHide = nodes.length > 0 || emptyOverlay.dataset.dismissed === 'true';
       emptyOverlay.hidden = shouldHide;
       emptyOverlay.classList.toggle('hidden', shouldHide);
     }
@@ -2416,6 +2418,17 @@
     });
     emptyStartTutorialBtn?.addEventListener('click', () => openTutorial(0));
     emptyLoadTemplateBtn?.addEventListener('click', () => loadTemplate('onboarding'));
+    emptyDismissBtn?.addEventListener('click', () => {
+      if (!emptyOverlay) return;
+      emptyOverlay.dataset.dismissed = 'true';
+      updateEmptyState();
+      showBanner({
+        type: 'info',
+        title: 'Canvas visible',
+        message: 'You can reopen the helper by refreshing the page.',
+        duration: 4000,
+      });
+    });
     tutorialTrigger?.addEventListener('click', () => openTutorial(0));
     tutorialPrev?.addEventListener('click', () => navigateTutorial(-1));
     tutorialNext?.addEventListener('click', () => {
