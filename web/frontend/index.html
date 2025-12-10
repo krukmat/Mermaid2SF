@@ -67,7 +67,8 @@
     button[aria-busy='true']::after { content: ''; position: absolute; right: 0.75rem; top: 50%; width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; transform: translateY(-50%); animation: spin 0.65s linear infinite; }
     .row { display: flex; gap: 0.5rem; align-items: center; }
     .row button { flex: 1; }
-    .canvas { background: #0f153133; border: 1px dashed #22305455; border-radius: 10px; padding: 1rem; min-height: 520px; overflow: hidden; position: relative; }
+    .canvas { background: #0f153133; border: 1px dashed #22305455; border-radius: 10px; padding: 1rem; min-height: 520px; overflow: hidden; position: relative; transition: border-color 120ms ease, background 120ms ease; }
+    .canvas.drop-ready { border: 1px solid rgba(102, 224, 255, 0.75); background: #0f153155; }
     .canvas-inner { position: relative; width: 100%; height: 100%; min-height: 520px; transform-origin: top left; transition: transform 120ms ease-out; }
     .canvas-inner svg.edges { z-index: 0; }
     svg.edges { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
@@ -1281,6 +1282,22 @@
       nodes = newNodes;
     }
 
+    function addNodeFromToolbox(type, position) {
+      if (!type) return;
+      const base = typeDefaults[type] ? typeDefaults[type]() : { type, label: type };
+      const count = nodes.filter((n) => n.type === type).length + 1;
+      const id = `${type}_${count}`;
+      const fallbackX = 320;
+      const fallbackY = 80 + nodes.length * 140;
+      const resolvedX = position?.x != null ? snapToGrid(position.x) : fallbackX;
+      const resolvedY = position?.y != null ? snapToGrid(position.y) : fallbackY;
+      const node = { ...base, id, apiName: id, x: resolvedX, y: resolvedY };
+      nodes.push(node);
+      selectedId = id;
+      renderAll();
+      markCurrentFlowDirty();
+    }
+
     function loadFlow(id) {
       if (!flowBuffers.has(id)) return;
       if (id === activeFlowId) return;
@@ -1513,6 +1530,8 @@
       Wait: () => ({ type: 'Wait', label: 'Wait', next: '', waitFor: '', waitDuration: '' }),
       Fault: () => ({ type: 'Fault', label: 'Fault', next: '', faultSource: '', faultMessage: '' }),
     };
+    const TOOLBOX_DRAG_TYPE = 'application/x-flow-tool';
+    let draggingToolboxType = null;
 
     function init() {
       const defaultFlow = createFlow('Default Flow', sampleNodes);
@@ -1876,6 +1895,44 @@
       renderPreview();
     }
 
+    function isToolboxDragEvent(event) {
+      if (draggingToolboxType) return true;
+      if (!event.dataTransfer || !event.dataTransfer.types) return false;
+      return Array.from(event.dataTransfer.types).includes(TOOLBOX_DRAG_TYPE);
+    }
+
+    function handleCanvasDragOver(event) {
+      if (!isToolboxDragEvent(event) || !canvasInner) return;
+      event.preventDefault();
+      canvas?.classList.add('drop-ready');
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = 'copy';
+      }
+    }
+
+    function handleCanvasDrop(event) {
+      if (!isToolboxDragEvent(event) || !canvasInner) return;
+      event.preventDefault();
+      const rect = canvasInner.getBoundingClientRect();
+      const type =
+        draggingToolboxType ||
+        event.dataTransfer?.getData(TOOLBOX_DRAG_TYPE) ||
+        event.dataTransfer?.getData('text/plain');
+      draggingToolboxType = null;
+      canvas?.classList.remove('drop-ready');
+      if (!type) return;
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      addNodeFromToolbox(type, { x, y });
+    }
+
+    function handleCanvasDragLeave(event) {
+      if (!isToolboxDragEvent(event)) return;
+      const nextTarget = event.relatedTarget;
+      if (!canvas || (nextTarget && canvas.contains(nextTarget))) return;
+      canvas.classList.remove('drop-ready');
+    }
+
     function setScale(next) {
       scale = Math.min(2, Math.max(0.4, next));
       applyTransform();
@@ -2219,14 +2276,20 @@
     }
 
     document.querySelectorAll('[data-add]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const type = btn.dataset.add;
-        const base = typeDefaults[type] ? typeDefaults[type]() : { type, label: type };
-        const id = `${type}_${nodes.filter((n) => n.type === type).length + 1}`;
-        nodes.push({ id, apiName: id, x: 100 + nodes.length * 60, y: 100 + (nodes.length % 3) * 80, ...base });
-        selectedId = id;
-        renderAll();
-        markCurrentFlowDirty();
+      const type = btn.dataset.add;
+      btn.setAttribute('draggable', 'true');
+      btn.addEventListener('click', () => addNodeFromToolbox(type));
+      btn.addEventListener('dragstart', (event) => {
+        draggingToolboxType = type;
+        if (event.dataTransfer) {
+          event.dataTransfer.setData(TOOLBOX_DRAG_TYPE, type);
+          event.dataTransfer.setData('text/plain', type);
+          event.dataTransfer.effectAllowed = 'copy';
+        }
+      });
+      btn.addEventListener('dragend', () => {
+        draggingToolboxType = null;
+        canvas?.classList.remove('drop-ready');
       });
     });
     importDropzone?.addEventListener('click', () => importFileInput?.click());
@@ -2455,6 +2518,10 @@
       panY = 0;
       applyTransform();
     });
+
+    canvasInner?.addEventListener('dragover', handleCanvasDragOver);
+    canvasInner?.addEventListener('drop', handleCanvasDrop);
+    canvasInner?.addEventListener('dragleave', handleCanvasDragLeave);
 
     canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
