@@ -854,6 +854,7 @@
       const index = nodes.findIndex((n) => n.id === selectedId);
       if (index === -1) return;
       nodes.splice(index, 1);
+      ensureTerminalNodes('delete');
       selectedId = null;
       renderAll();
       markCurrentFlowDirty();
@@ -1233,6 +1234,48 @@
       markFlowDirty(id, false);
     }
 
+    function nextNodeId(type, targetNodes = nodes) {
+      const list = Array.isArray(targetNodes) ? targetNodes : nodes;
+      const count = list.filter((n) => n.type === type).length + 1;
+      return `${type}_${count}`;
+    }
+
+    function buildNode(type, targetNodes = nodes, overrides = {}) {
+      const list = Array.isArray(targetNodes) ? targetNodes : nodes;
+      const base = typeDefaults[type] ? typeDefaults[type]() : { type, label: type };
+      const id = overrides.id || nextNodeId(type, list);
+      const apiName = overrides.apiName || id;
+      return { ...base, id, apiName, ...overrides };
+    }
+
+    function ensureTerminalNodes(reason = 'auto', targetNodes = nodes, options = {}) {
+      const list = Array.isArray(targetNodes) ? targetNodes : nodes;
+      if (!Array.isArray(list) || list.length === undefined) return [];
+      const notify = options.notify ?? list === nodes;
+      const addedTypes = [];
+      if (!list.some((n) => n.type === 'Start')) {
+        const startNode = buildNode('Start', list, { x: DEFAULT_NODE_X, y: DEFAULT_NODE_Y, next: '' });
+        list.push(startNode);
+        addedTypes.push('Start');
+      }
+      if (!list.some((n) => n.type === 'End')) {
+        const maxY = list.reduce((acc, node) => (typeof node.y === 'number' ? Math.max(acc, node.y) : acc), DEFAULT_NODE_Y);
+        const endNode = buildNode('End', list, { x: DEFAULT_NODE_X, y: maxY + END_VERTICAL_OFFSET });
+        list.push(endNode);
+        addedTypes.push('End');
+      }
+      if (notify && addedTypes.length) {
+        markCurrentFlowDirty();
+        showBanner({
+          type: 'warning',
+          title: 'Flow corrected',
+          message: `Added required ${addedTypes.join(' & ')} node${addedTypes.length > 1 ? 's' : ''}.`,
+          duration: 4500,
+        });
+      }
+      return addedTypes;
+    }
+
     function renderFlowTabs() {
       if (!flowTabs) return;
       flowTabs.innerHTML = '';
@@ -1258,6 +1301,7 @@
       const label = name || `Flow ${flowCounter++}`;
       const id = `flow-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const nodeCopy = nodesSnapshot.map((n) => ({ ...n }));
+      ensureTerminalNodes('flow-init', nodeCopy, { notify: false });
       const flow = {
         id,
         name: label,
@@ -1275,6 +1319,8 @@
     }
 
     function replaceActiveFlowNodes(newNodes) {
+      if (!Array.isArray(newNodes)) return;
+      ensureTerminalNodes('replace', newNodes, { notify: false });
       const flow = flowBuffers.get(activeFlowId);
       if (flow) {
         flow.nodes = newNodes;
@@ -1284,16 +1330,13 @@
 
     function addNodeFromToolbox(type, position) {
       if (!type) return;
-      const base = typeDefaults[type] ? typeDefaults[type]() : { type, label: type };
-      const count = nodes.filter((n) => n.type === type).length + 1;
-      const id = `${type}_${count}`;
-      const fallbackX = 320;
-      const fallbackY = 80 + nodes.length * 140;
+      const fallbackX = DEFAULT_NODE_X;
+      const fallbackY = DEFAULT_NODE_Y + nodes.length * 140;
       const resolvedX = position?.x != null ? snapToGrid(position.x) : fallbackX;
       const resolvedY = position?.y != null ? snapToGrid(position.y) : fallbackY;
-      const node = { ...base, id, apiName: id, x: resolvedX, y: resolvedY };
+      const node = buildNode(type, nodes, { x: resolvedX, y: resolvedY });
       nodes.push(node);
-      selectedId = id;
+      selectedId = node.id;
       renderAll();
       markCurrentFlowDirty();
     }
@@ -1306,6 +1349,7 @@
       const flow = flowBuffers.get(id);
       flow.history = flow.history || loadStoredHistory(id);
       nodes = flow.nodes;
+      ensureTerminalNodes('load-flow');
       panX = flow.panX;
       panY = flow.panY;
       scale = flow.scale;
@@ -1529,6 +1573,9 @@
     };
     const TOOLBOX_DRAG_TYPE = 'application/x-flow-tool';
     let draggingToolboxType = null;
+    const DEFAULT_NODE_X = 320;
+    const DEFAULT_NODE_Y = 20;
+    const END_VERTICAL_OFFSET = 180;
 
     function init() {
       const defaultFlow = createFlow('Default Flow', sampleNodes);
