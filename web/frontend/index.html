@@ -75,7 +75,7 @@
     .edge-line { stroke: #66e0ff; stroke-opacity: 1; stroke-width: 2; transition: stroke 120ms ease; }
     .edge-line.highlight { stroke: #ffd166; stroke-width: 3; }
     .node { position: absolute; padding: 0.4rem 0.75rem; border-radius: 8px; display: inline-flex; gap: 0.4rem; align-items: center; cursor: grab; user-select: none; }
-    .canvas-inner .node { position: relative; z-index: 1; }
+    .canvas-inner .node { z-index: 1; }
     .node .node-tooltip { position: absolute; top: 100%; left: 50%; transform: translate(-50%, 8px); background: var(--panel); border: 1px solid #22305422; border-radius: 6px; padding: 0.35rem 0.5rem; font-size: 0.75rem; color: var(--text); opacity: 0; pointer-events: none; transition: opacity 0.15s ease, transform 0.15s ease; white-space: nowrap; z-index: 10; box-shadow: 0 6px 14px rgba(0,0,0,0.25); }
     .node:hover .node-tooltip { opacity: 1; transform: translate(-50%, 12px); }
     .modal-field { margin-bottom: 0.75rem; }
@@ -1735,7 +1735,7 @@
       marker.setAttribute('orient', 'auto-start-reverse');
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
-      path.setAttribute('fill', '#66e0ff99');
+      path.setAttribute('fill', '#66e0ff');
       marker.appendChild(path);
       defs.appendChild(marker);
       svg.prepend(defs);
