@@ -1777,11 +1777,13 @@
       });
     }
 
-    function scrollToBuilder() {
-      const builder = document.querySelector('main');
-      if (builder) builder.scrollIntoView({ behavior: 'smooth' });
-    }
+  function scrollToBuilder() {
+    const builder = document.querySelector('main');
+    if (builder) builder.scrollIntoView({ behavior: 'smooth' });
+  }
 
+  window.scrollToBuilder = scrollToBuilder;
+  window.loadTemplate = loadTemplate;
     function getDragAfterElement(container, y) {
       const elements = [...container.querySelectorAll('li:not(.dragging)')];
       return elements.reduce(
