@@ -1720,7 +1720,8 @@
       const rect = canvasInner.getBoundingClientRect();
       const nodeMap = new Map();
       canvasInner.querySelectorAll('.node').forEach((el) => {
-        const id = el.textContent.split(':')[0].trim();
+        const id = el.dataset.nodeId;
+        if (!id) return;
         const box = el.getBoundingClientRect();
         nodeMap.set(id, {
           x: box.left - rect.left + box.width / 2,
