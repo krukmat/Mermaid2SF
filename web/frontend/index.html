@@ -311,6 +311,14 @@
 
     function renderList() {
       list.innerHTML = '';
+      if (nodes.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'canvas-empty';
+        empty.innerHTML = `<div class="node default" style="position:relative; margin-bottom:0.5rem;">Start by adding a node</div><p style="color:var(--muted);">Use the toolbox to add Start, Screen, Decision, or use a template.</p>`;
+        empty.setAttribute('role', 'status');
+        empty.setAttribute('aria-live', 'polite');
+        canvasInner.appendChild(empty);
+      }
       nodes.forEach((n) => {
         const li = document.createElement('li');
         li.draggable = true;
@@ -558,6 +566,14 @@
     }
 
     function renderPreview() {
+      if (nodes.length === 0) {
+        mermaidPreview.textContent = 'No diagram yet. Add nodes to see a Mermaid preview.';
+        return;
+      }
+      if (nodes.length === 0) {
+        mermaidPreview.textContent = 'No diagram yet. Add nodes to see a Mermaid preview.';
+        return;
+      }
       const mermaid = generateMermaid(nodes);
       mermaidPreview.textContent = mermaid;
     }
@@ -780,6 +796,11 @@
     });
 
     document.getElementById('compileXml').addEventListener('click', async () => {
+      if (nodes.length === 0) {
+        xmlPreview.textContent = 'Add nodes before compiling.';
+        output.textContent = 'Cannot compile empty canvas.';
+        return;
+      }
       const mermaid = generateMermaid(nodes);
       mermaidPreview.textContent = mermaid;
       try {
