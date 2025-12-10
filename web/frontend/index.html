@@ -1321,6 +1321,10 @@
       // helper retained for compatibility; overlay is removed
     }
 
+    function showCanvasOnInteraction() {
+      // legacy helper to ensure canvas visibility; overlay was removed so nothing to do
+    }
+
     function setIssueState(level, entries = []) {
       if (!statusDetails || !statusDetailsSummary || !statusDetailsList) return;
       statusDetails.dataset.level = level;
