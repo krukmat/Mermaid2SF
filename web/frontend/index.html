@@ -1328,7 +1328,9 @@
 
     function updateEmptyState() {
       if (!emptyOverlay) return;
-      emptyOverlay.hidden = nodes.length > 0;
+      const shouldHide = nodes.length > 0;
+      emptyOverlay.hidden = shouldHide;
+      emptyOverlay.classList.toggle('hidden', shouldHide);
     }
 
     function setIssueState(level, entries = []) {
