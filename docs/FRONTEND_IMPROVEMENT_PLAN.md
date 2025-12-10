@@ -651,10 +651,10 @@ web/
 
 ### Sprint 1 (1 semana): Landing + Basic Improvements
 
-- [ ] Hero landing page con animación
-- [ ] Templates gallery
-- [ ] Theme switcher
-- [ ] Better icons
+- [x] Hero landing page con animación
+- [x] Templates gallery
+- [x] Theme switcher
+- [x] Better icons
 
 #### Plan de ejecución (Sprint 1)
 
@@ -685,9 +685,17 @@ web/
 
 ### Sprint 3 (1 semana): Onboarding & UX
 
-- [ ] Empty states
-- [ ] Error handling
-- [ ] Loading states
+- [x] Empty states
+- [x] Error handling
+- [x] Loading states
+- [x] Advanced nodes (Loop, Wait, Fault) now available in the vanilla builder, complete with templates and DSL output that matches the backend compiler expectations.
+- [x] Web visualizer polish: hero copy, responsive tweaks, status banners, and advanced-node guidance completed. Manual QA (desktop/tablet/mobile), AXE/accessibility checks, and Lighthouse sanity (Perf ≥80, Accessibility ≥90, Best Practices ≥90) all pass; notes captured in `docs/WEB_VISUALIZER_POLISH_PLAN.md`.
+
+### Remaining initiatives
+
+- **Sprint 2 (Interactive Builder)** – React Flow integration, fully interactive drag/drop canvas, visual connectors, and modal node editor still outstanding.
+- **Sprint 4 (Advanced Features)** – Multi-file tabs, import/export hub, version history, and keyboard shortcuts will follow once the interactive builder stabilizes.
+- **Sprint 5 (Polish / Mobile)** – Responsive design, mobile layout, and extra performance/final polish rounds remain slated for the final sprint.
 
 ### Sprint 4 (1 semana): Advanced Features
 

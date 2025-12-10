@@ -91,6 +91,8 @@ npm run cli -- compile --input my-flow.mmd --out-flow ./flows
 - ✅ **Deterministic Output**: Same input always produces identical output (Git-friendly)
 - ✅ **Performance Checked**: 50+ node flows parse/validate/generate in <3s locally
 - ✅ **Hosted Frontend Ready**: Static UI can be served from `web/server/index.js` (open `/flow/` if you proxy WordPress on `/`)
+- ✅ **Version history**: Save snapshots per flow and restore/compare states through the history modal; the most recent 10 entries stay in localStorage.
+- ✅ **Keyboard shortcuts**: Ctrl/Cmd+S compiles, Ctrl/Cmd+T starts the tutorial, Delete removes nodes, arrows nudge, and a shortcut guide can be toggled on/off for accessibility.
 
 ---
 
@@ -104,11 +106,15 @@ The **Web Visualizer** provides a complete drag-and-drop interface for building 
 - **Toolbox**: Quick buttons to add Start, Screen, Assignment, Decision, GetRecords, End elements
 - **Canvas**: Drag-and-drop visual flow builder with auto-layout
 - **Nodes Panel**: Manage all flow elements with type labels
+- **Advanced Retry/Delay Patterns**: Add Loop, Wait, and Fault nodes to model retries or error handling paths and watch the live preview update instantly
 - **Live Preview**:
   - Mermaid diagram preview (real-time as you build)
   - XML preview with syntax highlighting
+- **Guided Feedback**: Inline XML status messages plus floating banners for backend health, validation errors, and compile warnings (no more guessing what failed)
 - **Export**: Download flows as Mermaid or DSL JSON
 - **Compile & Preview XML**: Generate and preview Salesforce Flow XML instantly
+- **Version history & snapshots**: Save snapshots, compare/restore flows, and view dirty indicators inside the history modal backed by localStorage.
+- **Keyboard shortcuts**: Cmd/Ctrl+S compiles, Cmd/Ctrl+Y opens history, Delete removes nodes, arrows nudge, and the guide card lets you toggle combos on/off.
 
 ### Try it now:
 🌐 **[Open Web Visualizer](http://iotforce.es/flow/)** (Live Demo)
@@ -119,6 +125,11 @@ npm run build
 node web/server/index.js
 # Open http://localhost:4000/flow/
 ```
+
+### 🌐 Web Visualizer Deployment
+
+The hosted demo runs on a DigitalOcean droplet using Node 18, `pm2`, and Apache as a reverse proxy. Follow `DEPLOY_STEPS.md` for the exact commands, systemd service, and proxy configuration that keep `/flow/`, `/api/compile`, and `/health` available.  
+![Web Visualizer Frontend](docs/images/web-visualizer.png)
 
 ---
 
@@ -157,6 +168,22 @@ mermaid-flow-compile lint --input flows/
 # Strict mode (warnings as errors)
 mermaid-flow-compile lint --input my-flow.mmd --strict
 ```
+
+## 📋 Automatic Test Case Generation
+
+Use `mermaid-flow-compile test-plan` to derive path coverage, sample variable data, and placeholder scripts any time you change a Flow DSL or Mermaid source.
+
+```bash
+mermaid-flow-compile test-plan \
+  --input output/dsl/complete-flow.flow.json \
+  --out artifacts/test-plan \
+  --format json
+```
+
+- `--input`: accepts `.mmd`, `.json`, `.yaml`, or `.yml`.
+- `--out`: writes `<flowApiName>.test-plan.json` plus one script per path (Apex class names) and a checksum.
+- `--format json|text`: choose CLI summary format.
+- Use `--skip-scripts` to only print the summary, or `--skip-validation` if the DSL is already trusted.
 
 ### Analyze a Flow
 

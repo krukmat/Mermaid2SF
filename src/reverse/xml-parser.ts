@@ -6,8 +6,7 @@ import { DEFAULT_API_VERSION } from '../types/flow-dsl';
  * Parse a Salesforce Flow XML file into a DSL-like structure.
  * Note: this is a simplified parser based on regex/string searches; not a full XML parser.
  */
-export function parseFlowXml(filePath: string): FlowDSL {
-  const text = fs.readFileSync(filePath, 'utf-8');
+export function parseFlowXmlText(text: string, flowName?: string): FlowDSL {
   const elements: FlowElement[] = [];
 
   const apiVersion = extractValue(text, /<apiVersion>(.*?)<\/apiVersion>/);
@@ -59,13 +58,19 @@ export function parseFlowXml(filePath: string): FlowDSL {
 
   return {
     version: 1,
-    flowApiName: filePath.split('/').pop()?.replace('.flow-meta.xml', '') || 'Flow',
+    flowApiName: flowName || 'Flow',
     label,
     processType,
     apiVersion: apiVersion || DEFAULT_API_VERSION,
     startElement: 'Start',
     elements,
   };
+}
+
+export function parseFlowXml(filePath: string): FlowDSL {
+  const text = fs.readFileSync(filePath, 'utf-8');
+  const inferredName = filePath.split('/').pop()?.replace('.flow-meta.xml', '') || 'Flow';
+  return parseFlowXmlText(text, inferredName);
 }
 
 function extractValue(text: string, regex: RegExp): string | undefined {
