@@ -72,7 +72,7 @@
     .canvas-inner svg.edges { z-index: 0; }
     svg.edges { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
     .edge-label { fill: #9aa5d3; font-size: 12px; pointer-events: none; }
-    .edge-line { stroke: #66e0ff; stroke-opacity: 1; stroke-width: 2; transition: stroke 120ms ease; }
+    .edge-line { stroke: #66e0ff; stroke-opacity: 0.9; stroke-width: 1.6; transition: stroke 120ms ease; }
     .edge-line.highlight { stroke: #ffd166; stroke-width: 3; }
     .node { position: absolute; padding: 0.4rem 0.75rem; border-radius: 8px; display: inline-flex; gap: 0.4rem; align-items: center; cursor: grab; user-select: none; }
     .canvas-inner .node { z-index: 1; }
@@ -1427,11 +1427,11 @@
     }
 
     const sampleNodes = [
-      { id: 'Start_1', type: 'Start', label: 'Demo Start', apiName: 'Start_1', next: 'Screen_1', x: 80, y: 60 },
-      { id: 'Screen_1', type: 'Screen', label: 'Collect Data', apiName: 'Screen_1', next: 'Decision_1', x: 320, y: 60 },
-      { id: 'Decision_1', type: 'Decision', label: 'Route', apiName: 'Decision_1', yesNext: 'Assign_1', noNext: 'End_1', x: 560, y: 60 },
-      { id: 'Assign_1', type: 'Assignment', label: 'Set Flag', apiName: 'Assign_1', next: 'End_1', assignments: 'v_Flag = true', x: 800, y: 40 },
-      { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1', x: 800, y: 160 },
+      { id: 'Start_1', type: 'Start', label: 'Demo Start', apiName: 'Start_1', next: 'Screen_1', x: 320, y: 20 },
+      { id: 'Screen_1', type: 'Screen', label: 'Collect Data', apiName: 'Screen_1', next: 'Decision_1', x: 320, y: 190 },
+      { id: 'Decision_1', type: 'Decision', label: 'Route', apiName: 'Decision_1', yesNext: 'Assign_1', noNext: 'End_1', x: 320, y: 360 },
+      { id: 'Assign_1', type: 'Assignment', label: 'Set Flag', apiName: 'Assign_1', next: 'End_1', assignments: 'v_Flag = true', x: 500, y: 520 },
+      { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1', x: 320, y: 700 },
     ];
 
     const templates = {
@@ -1439,49 +1439,49 @@
         name: 'Customer Onboarding',
         description: 'Screen + Decision + Record create/update + Email subflow',
         nodes: [
-          { id: 'Start_1', type: 'Start', label: 'Start', apiName: 'Start_1', next: 'Screen_1', x: 60, y: 80 },
-          { id: 'Screen_1', type: 'Screen', label: 'Collect Info', apiName: 'Screen_1', next: 'Decision_1', x: 260, y: 80 },
-          { id: 'Decision_1', type: 'Decision', label: 'Existing Customer?', apiName: 'Decision_1', yesNext: 'Update_1', noNext: 'Create_1', x: 480, y: 80 },
-          { id: 'Create_1', type: 'RecordCreate', label: 'Create Account', apiName: 'Create_1', next: 'Email_1', x: 700, y: 20 },
-          { id: 'Update_1', type: 'RecordUpdate', label: 'Update Account', apiName: 'Update_1', next: 'Email_1', x: 700, y: 140 },
-          { id: 'Email_1', type: 'Subflow', label: 'Send Welcome Email', apiName: 'Email_1', next: 'End_1', x: 920, y: 80 },
-          { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1', x: 1120, y: 80 },
+          { id: 'Start_1', type: 'Start', label: 'Start', apiName: 'Start_1', next: 'Screen_1', x: 320, y: 20 },
+          { id: 'Screen_1', type: 'Screen', label: 'Collect Info', apiName: 'Screen_1', next: 'Decision_1', x: 320, y: 200 },
+          { id: 'Decision_1', type: 'Decision', label: 'Existing Customer?', apiName: 'Decision_1', yesNext: 'Update_1', noNext: 'Create_1', x: 320, y: 380 },
+          { id: 'Create_1', type: 'RecordCreate', label: 'Create Account', apiName: 'Create_1', next: 'Email_1', x: 160, y: 540 },
+          { id: 'Update_1', type: 'RecordUpdate', label: 'Update Account', apiName: 'Update_1', next: 'Email_1', x: 480, y: 540 },
+          { id: 'Email_1', type: 'Subflow', label: 'Send Welcome Email', apiName: 'Email_1', next: 'End_1', x: 320, y: 700 },
+          { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1', x: 320, y: 880 },
         ],
       },
       lead: {
         name: 'Lead Routing',
         description: 'Decision + Assignment + GetRecords to route leads',
         nodes: [
-          { id: 'Start_1', type: 'Start', label: 'Start', apiName: 'Start_1', next: 'Decision_1', x: 60, y: 80 },
-          { id: 'Decision_1', type: 'Decision', label: 'Qualified?', apiName: 'Decision_1', yesNext: 'Assign_1', noNext: 'End_1', x: 260, y: 80 },
-          { id: 'Assign_1', type: 'Assignment', label: 'Set Owner', apiName: 'Assign_1', assignments: 'Owner = Queue', next: 'Get_1', x: 500, y: 30 },
-          { id: 'Get_1', type: 'GetRecords', label: 'Lookup Lead', apiName: 'Get_1', next: 'End_1', x: 740, y: 80 },
-          { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1', x: 980, y: 80 },
+          { id: 'Start_1', type: 'Start', label: 'Start', apiName: 'Start_1', next: 'Decision_1', x: 320, y: 20 },
+          { id: 'Decision_1', type: 'Decision', label: 'Qualified?', apiName: 'Decision_1', yesNext: 'Assign_1', noNext: 'End_1', x: 320, y: 200 },
+          { id: 'Assign_1', type: 'Assignment', label: 'Set Owner', apiName: 'Assign_1', assignments: 'Owner = Queue', next: 'Get_1', x: 320, y: 380 },
+          { id: 'Get_1', type: 'GetRecords', label: 'Lookup Lead', apiName: 'Get_1', next: 'End_1', x: 320, y: 560 },
+          { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1', x: 320, y: 740 },
         ],
       },
       case: {
         name: 'Case Escalation',
         description: 'Screen + Decision + Wait/Fault connectors simplified',
         nodes: [
-          { id: 'Start_1', type: 'Start', label: 'Start', apiName: 'Start_1', next: 'Screen_1', x: 60, y: 80 },
-          { id: 'Screen_1', type: 'Screen', label: 'Capture Case', apiName: 'Screen_1', next: 'Decision_1', x: 260, y: 80 },
-          { id: 'Decision_1', type: 'Decision', label: 'Severity?', apiName: 'Decision_1', yesNext: 'Assign_1', noNext: 'Wait_1', x: 480, y: 80 },
-          { id: 'Assign_1', type: 'Assignment', label: 'Escalate Owner', apiName: 'Assign_1', assignments: 'Owner = Tier2', next: 'End_1', x: 700, y: 20 },
-          { id: 'Wait_1', type: 'Wait', label: 'Follow-up', apiName: 'Wait_1', next: 'End_1', x: 700, y: 140 },
-          { id: 'End_1', type: 'End', label: 'Complete', apiName: 'End_1', x: 920, y: 80 },
+          { id: 'Start_1', type: 'Start', label: 'Start', apiName: 'Start_1', next: 'Screen_1', x: 320, y: 20 },
+          { id: 'Screen_1', type: 'Screen', label: 'Capture Case', apiName: 'Screen_1', next: 'Decision_1', x: 320, y: 200 },
+          { id: 'Decision_1', type: 'Decision', label: 'Severity?', apiName: 'Decision_1', yesNext: 'Assign_1', noNext: 'Wait_1', x: 320, y: 380 },
+          { id: 'Assign_1', type: 'Assignment', label: 'Escalate Owner', apiName: 'Assign_1', assignments: 'Owner = Tier2', next: 'End_1', x: 480, y: 540 },
+          { id: 'Wait_1', type: 'Wait', label: 'Follow-up', apiName: 'Wait_1', next: 'End_1', x: 160, y: 540 },
+          { id: 'End_1', type: 'End', label: 'Complete', apiName: 'End_1', x: 320, y: 720 },
         ],
       },
       resilience: {
         name: 'Resilient Loop Path',
         description: 'Loop + Fault handling with wait checks',
         nodes: [
-          { id: 'Start_1', type: 'Start', label: 'Start', apiName: 'Start_1', next: 'Screen_1', x: 60, y: 60 },
-          { id: 'Screen_1', type: 'Screen', label: 'Check System', apiName: 'Screen_1', next: 'Loop_1', x: 260, y: 60 },
-          { id: 'Loop_1', type: 'Loop', label: 'Retry Loop', apiName: 'Loop_1', next: 'Decision_1', loopCondition: 'Retry < 3', iterationCount: '3', x: 460, y: 60 },
-          { id: 'Decision_1', type: 'Decision', label: 'Success?', apiName: 'Decision_1', yesNext: 'End_1', noNext: 'Wait_1', x: 660, y: 60 },
-          { id: 'Wait_1', type: 'Wait', label: 'Delay', apiName: 'Wait_1', next: 'Fault_1', waitFor: 'External signal', waitDuration: '00:01:00', x: 660, y: 200 },
-          { id: 'Fault_1', type: 'Fault', label: 'Catch Error', apiName: 'Fault_1', next: 'End_1', faultSource: 'API', faultMessage: 'Retry required', x: 460, y: 200 },
-          { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1', x: 920, y: 80 },
+          { id: 'Start_1', type: 'Start', label: 'Start', apiName: 'Start_1', next: 'Screen_1', x: 320, y: 20 },
+          { id: 'Screen_1', type: 'Screen', label: 'Check System', apiName: 'Screen_1', next: 'Loop_1', x: 320, y: 200 },
+          { id: 'Loop_1', type: 'Loop', label: 'Retry Loop', apiName: 'Loop_1', next: 'Decision_1', loopCondition: 'Retry < 3', iterationCount: '3', x: 320, y: 380 },
+          { id: 'Decision_1', type: 'Decision', label: 'Success?', apiName: 'Decision_1', yesNext: 'End_1', noNext: 'Wait_1', x: 320, y: 560 },
+          { id: 'Wait_1', type: 'Wait', label: 'Delay', apiName: 'Wait_1', next: 'Fault_1', waitFor: 'External signal', waitDuration: '00:01:00', x: 480, y: 730 },
+          { id: 'Fault_1', type: 'Fault', label: 'Catch Error', apiName: 'Fault_1', next: 'End_1', faultSource: 'API', faultMessage: 'Retry required', x: 160, y: 730 },
+          { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1', x: 320, y: 900 },
         ],
       },
     };
