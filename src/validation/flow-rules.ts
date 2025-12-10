@@ -1,4 +1,16 @@
-import { ElementType } from '../types/flow-dsl';
+export type ElementType =
+  | 'Start'
+  | 'End'
+  | 'Assignment'
+  | 'Decision'
+  | 'Screen'
+  | 'RecordCreate'
+  | 'RecordUpdate'
+  | 'Subflow'
+  | 'Loop'
+  | 'Wait'
+  | 'GetRecords'
+  | 'Fault';
 
 export interface FlowNode extends BaseNode {
   yesNext?: string;
