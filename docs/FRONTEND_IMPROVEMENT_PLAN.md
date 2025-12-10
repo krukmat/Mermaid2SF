@@ -685,7 +685,6 @@ web/
 
 ### Sprint 3 (1 semana): Onboarding & UX
 
-- [ ] Interactive tutorial
 - [ ] Empty states
 - [ ] Error handling
 - [ ] Loading states

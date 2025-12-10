@@ -38,3 +38,4 @@
 - New features must be documented in `README.md`. Remove non-README generated docs when closing work to avoid clutter.
 - For every phase or sprint that requires planning, create a dedicated doc named after the sprint/phase; when the project/branch is closed, those planning docs must be deleted (keep only README).
 - At the start of any new development project, create and work on a dedicated branch.
+- Always pair development work with a documented plan that lists the tasks needed for the objective. Follow software engineering principles such as DRY, TDD, KISS, and optimize token usage. Avoid mocks unless external dependencies cannot be handled by unit tests.
