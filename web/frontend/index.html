@@ -1235,6 +1235,7 @@
 
     function markCurrentFlowDirty() {
       markFlowDirty(activeFlowId, true);
+      validateActiveFlow();
     }
 
     function markFlowClean(id = activeFlowId) {

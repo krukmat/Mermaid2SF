@@ -5,7 +5,7 @@ This document captures the Salesforce Flow constraints the visual builder and CL
 ## Mandatory Flow Structure
 
 - **Single entry point** – Exactly one `Start` element in every flow (Salesforce rejects multiple start nodes).
-- **At least one terminal** – Minimum one `End` element. Auto-added today, but validation must still verify.
+- **Single terminal** – Exactly one `End` element. Auto-added today, but validation must still verify and prevent duplicates.
 - **Reachability** – Every node (apart from Start) must have at least one inbound connector; Start must have none. Nodes that are never referenced become unreachable metadata and should error.
 - **Unique API names** – `node.apiName` must be unique and match `^[A-Za-z_][A-Za-z0-9_]*$`.
 
