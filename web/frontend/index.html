@@ -149,7 +149,7 @@
     .tutorial-card { background: var(--panel); border: 1px solid #22305455; border-radius: 16px; padding: 1.25rem; max-width: 380px; text-align: center; margin-left: auto; margin-right: auto; }
     .tutorial-progress { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.15rem; }
     .tutorial-actions { display: flex; justify-content: space-between; gap: 0.5rem; margin-top: 1rem; }
-    .tutorial-highlight { position: absolute; border: 2px solid #66e0ff; border-radius: 12px; pointer-events: none; box-shadow: 0 8px 24px rgba(102, 224, 255, 0.35); transition: transform 0.15s ease; }
+    .tutorial-highlight { position: fixed; border: 2px solid #66e0ff; border-radius: 12px; pointer-events: none; box-shadow: 0 8px 24px rgba(102, 224, 255, 0.35); transition: all 0.3s ease; z-index: 39; }
     .import-modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.75); z-index: 45; }
     .import-modal.hidden { display: none; }
     .import-panel { background: var(--panel); border: 1px solid #22305455; border-radius: 16px; padding: 1.25rem; width: min(560px, 90vw); max-height: 90vh; overflow: auto; color: var(--text); }
@@ -1678,14 +1678,15 @@
       // TASK: Tutorial auto-scroll to highlighted element
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-      requestAnimationFrame(() => {
+      // Wait for scroll to complete before calculating position
+      setTimeout(() => {
         const rect = target.getBoundingClientRect();
         tutorialHighlight.hidden = false;
         tutorialHighlight.style.width = `${rect.width + 18}px`;
         tutorialHighlight.style.height = `${rect.height + 18}px`;
-        tutorialHighlight.style.left = `${rect.left - 9 + window.scrollX}px`;
-        tutorialHighlight.style.top = `${rect.top - 9 + window.scrollY}px`;
-      });
+        tutorialHighlight.style.left = `${rect.left - 9}px`;
+        tutorialHighlight.style.top = `${rect.top - 9}px`;
+      }, 400);
     }
 
     function openTutorial(startAt = 0) {
