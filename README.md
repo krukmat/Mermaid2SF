@@ -100,7 +100,7 @@ npm run cli -- compile --input my-flow.mmd --out-flow ./flows
 
 The **Web Visualizer** provides a complete drag-and-drop interface for building and editing Salesforce Flows visually without touching code:
 
-![Web Visualizer - Diagram Builder Interface](docs/assets/web-visualizer-viewport.png)
+![Web Visualizer - Diagram Builder Interface](docs/assets/web-visualizer-full.png)
 
 ### What You See:
 
