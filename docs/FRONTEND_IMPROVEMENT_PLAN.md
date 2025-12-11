@@ -689,7 +689,7 @@ web/
 - [x] Error handling
 - [x] Loading states
 - [x] Advanced nodes (Loop, Wait, Fault) now available in the vanilla builder, complete with templates and DSL output that matches the backend compiler expectations.
-- [x] Web visualizer polish: hero copy, responsive tweaks, status banners, and advanced-node guidance completed. Manual QA (desktop/tablet/mobile), AXE/accessibility checks, and Lighthouse sanity (Perf ≥80, Accessibility ≥90, Best Practices ≥90) all pass; notes captured in `docs/WEB_VISUALIZER_POLISH_PLAN.md`.
+- [x] Web visualizer polish: hero copy, responsive tweaks, status banners, and advanced-node guidance completed. Manual QA (desktop/tablet/mobile), AXE/accessibility checks, and Lighthouse sanity (Perf ≥80, Accessibility ≥90, Best Practices ≥90) all pass; notes captured in the Web Visualizer polish notes (now archived).
 
 ### Remaining initiatives
 
