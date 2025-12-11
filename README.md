@@ -104,35 +104,51 @@ The **Web Visualizer** provides a complete drag-and-drop interface for building 
 
 ### What You See:
 
-- **Left Sidebar**: Toolbox with quick-add buttons (Start, Screen, Assignment, Decision, GetRecords, Loop, Wait, Fault, End)
-- **Central Canvas**: Visual flow builder where you drag nodes and connect them with edges
-- **Right Panel**: Live preview of the flow structure showing element types and connections
+- **Left Sidebar**: Toolbox with quick-add buttons for all flow element types (Start, Screen, Assignment, Decision, GetRecords, Loop, Wait, Fault, End)
+- **Central Canvas**: Visual drag-and-drop flow builder with automatic edge rendering and connectors
+- **Top Header**: Undo/Redo buttons, theme toggle (dark/light modes), and tutorial launcher
 - **Bottom Cards**: Mermaid preview, XML output with syntax highlighting, validation status, and version history
 
 ### Key Capabilities:
 
-- ✨ **Drag-and-Drop Toolbox**: Add flow elements by clicking buttons or dragging to canvas
-- 🔗 **Visual Connectors**: Automatically drawn edges between nodes with labels (Yes/No for decisions)
-- 📋 **Live Mermaid Preview**: See your diagram rendered in real-time as Mermaid syntax
-- 🚀 **XML Compilation**: Click "Compile & Preview XML" to generate deployable Salesforce Flow XML
-- 🧪 **Validation UX**: Validation issues show as cards with error codes, remedies, and auto-fix buttons; hovering a card highlights the affected nodes, and the badge/summary update automatically.
-- ✏️ **Inline editing & context menu**: Double-click a node to edit key metadata inline, use the right-click menu to edit/duplicate/delete nodes, and keep the editor accessible via keyboard (`Esc` closes it or menu).
-- 🧾 **Flow naming & exports**: The Flow Name input remembers the last value each session; it prefixes downloaded Mermaid/DSL/XML files so exports are ready for version control.
-- 🎯 **Type-Aware Elements**:
-  - **Start/End** nodes (green/red) mark flow boundaries
-  - **Screen** nodes (blue) for user interaction
-  - **Decision** nodes (orange) for conditional routing
-  - **Assignment** nodes (cyan) for variable updates
-  - **GetRecords / Loop / Wait / Fault** for advanced patterns
-- ✅ **Live Validation**: Real-time error/warning messages as you build (missing Start, unreachable nodes, etc.)
-- 💾 **Version History**: Save snapshots of your flow and restore previous versions (localStorage-backed)
+**Core Editing:**
+
+- ✨ **Drag-and-Drop Toolbox**: Add elements by dragging to canvas or quick-click buttons
+- 🔗 **Visual Connectors**: Auto-drawn edges with decision labels (Yes/No for conditions)
+- 📋 **Live Mermaid Preview**: Real-time Mermaid diagram rendering as you build
+- 🎯 **Type-Aware Elements**: Color-coded nodes (green Start, red End, blue Screen, orange Decision, cyan Assignment)
+
+**Validation & Feedback:**
+
+- 🧪 **Validation UX**: Error/warning cards with remedies and auto-fix buttons; hover to highlight affected nodes
+- ✅ **Live Validation**: Real-time messages for structural issues (missing Start, unreachable nodes)
+- 📊 **Status Banners**: Floating notifications for compile events, warnings, and backend health
+
+**Productivity Features:**
+
+- ⏪ **Undo/Redo**: Full edit history (up to 20 snapshots) with `Ctrl/Cmd+Z` / `Ctrl/Cmd+Shift+Z` and header buttons
+- 💾 **Version History**: Save snapshots and restore previous versions (localStorage-backed)
+- ✏️ **Inline Editing**: Double-click nodes to edit inline; right-click context menu for edit/duplicate/delete
+- 🧾 **Smart Export**: Flow name input prefixes downloads (Mermaid/DSL/XML) for version control
+
+**Accessibility & Learning:**
+
+- 🎓 **Interactive Tutorial**: Guided onboarding with `Ctrl/Cmd+T` or header button
+- 🔍 **Advanced Node Cues**: Highlight Loop/Wait/Fault nodes to understand retry/delay patterns
+- 🌓 **Theme Toggle**: Dark and light modes for comfortable editing
 - ⌨️ **Keyboard Shortcuts**:
   - `Ctrl/Cmd+S` - Compile
-  - `Ctrl/Cmd+Y` - Open history
-  - `Delete` - Remove selected node
-  - Arrow keys - Nudge node position
-- 📥 **Import/Export**: Load Mermaid, DSL JSON, or Flow XML; download in any format
-- ⏪ **Undo/Redo history**: Every canvas edit is tracked (up to 20 snapshots). Use the new header buttons or `Ctrl/Cmd+Z` / `Ctrl/Cmd+Shift+Z` to revert/restore changes, and observe the tooltip for the next available action.
+  - `Ctrl/Cmd+Z` / `Ctrl/Cmd+Shift+Z` - Undo/Redo
+  - `Ctrl/Cmd+T` - Tutorial
+  - `Delete` - Remove node
+  - Arrow keys - Nudge position
+
+**Frontend Improvements (Recent Refactor):**
+
+- 🚀 **Modular Component Architecture**: Extracted validation UI, export manager, and state management into reusable modules for maintainability
+- 📱 **Responsive Layout**: Improved media queries ensure usable canvas on tablets and mobile (sidebar collapses appropriately)
+- 🎨 **Enhanced Theming**: Light/dark mode with CSS variables for consistent styling across 300+ UI elements
+- 🧪 **Comprehensive Testing**: 6 test suites (vitest + jsdom) covering export, state, validation, and editor modules
 
 ### Try it now:
 
