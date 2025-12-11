@@ -1714,7 +1714,7 @@
     function positionTutorialCard() {
       if (!tutorialCard || !tutorialHighlight || tutorialHighlight.hidden) return;
 
-      // TASK: Position tutorial card above highlighted element when possible
+      // TASK: Position tutorial card avoiding the highlighted element
       const highlightRect = tutorialHighlight.getBoundingClientRect();
       const cardWidth = 380;
       const cardHeight = 180;
@@ -1722,35 +1722,51 @@
       const viewportHeight = window.innerHeight;
       const viewportWidth = window.innerWidth;
 
-      let top = padding + 80; // Default: below header
+      let top = padding + 80;
       let left = padding;
 
       const highlightCenterX = highlightRect.left + highlightRect.width / 2;
+      const highlightCenterY = highlightRect.top + highlightRect.height / 2;
       const highlightTop = highlightRect.top;
       const highlightBottom = highlightRect.bottom;
+      const highlightLeft = highlightRect.left;
+      const highlightRight = highlightRect.right;
+      const highlightWidth = highlightRect.width;
+      const highlightHeight = highlightRect.height;
 
-      // Try to position card above the highlight
-      const spaceAbove = highlightTop - 80; // Space above highlight (minus header)
+      // Calculate available space in each direction
+      const spaceAbove = highlightTop - 80;
       const spaceBelow = viewportHeight - highlightBottom;
+      const spaceLeft = highlightLeft;
+      const spaceRight = viewportWidth - highlightRight;
 
-      if (spaceAbove >= cardHeight + padding) {
-        // Position above highlight, centered horizontally
+      // Determine best position based on available space
+      const canFitAbove = spaceAbove >= cardHeight + padding;
+      const canFitBelow = spaceBelow >= cardHeight + padding;
+      const canFitLeft = spaceLeft >= cardWidth + padding;
+      const canFitRight = spaceRight >= cardWidth + padding;
+
+      // Strategy: prefer positions that don't interfere with the highlight
+      if (canFitAbove && highlightWidth < viewportWidth * 0.8) {
+        // Position above highlight, centered horizontally if possible
         top = highlightTop - cardHeight - padding;
         left = Math.max(padding, Math.min(highlightCenterX - cardWidth / 2, viewportWidth - cardWidth - padding));
-      } else if (spaceBelow >= cardHeight + padding) {
-        // Position below highlight, centered horizontally
+      } else if (canFitBelow && highlightWidth < viewportWidth * 0.8) {
+        // Position below highlight, centered horizontally if possible
         top = highlightBottom + padding;
         left = Math.max(padding, Math.min(highlightCenterX - cardWidth / 2, viewportWidth - cardWidth - padding));
+      } else if (canFitRight) {
+        // Position to the right of highlight
+        top = Math.max(padding + 80, Math.min(highlightCenterY - cardHeight / 2, viewportHeight - cardHeight - padding));
+        left = highlightRight + padding;
+      } else if (canFitLeft) {
+        // Position to the left of highlight
+        top = Math.max(padding + 80, Math.min(highlightCenterY - cardHeight / 2, viewportHeight - cardHeight - padding));
+        left = highlightLeft - cardWidth - padding;
       } else {
-        // Not enough vertical space, use side positioning
-        if (highlightCenterX < viewportWidth / 2) {
-          // Highlight on left, position card on right
-          left = viewportWidth - cardWidth - padding;
-        } else {
-          // Highlight on right, position card on left
-          left = padding;
-        }
+        // Fallback: position in top-right corner
         top = padding + 80;
+        left = viewportWidth - cardWidth - padding;
       }
 
       tutorialCard.style.top = `${top}px`;
