@@ -31,3 +31,13 @@ Thumbs.db
 .env
 .env.local
 .github/workflows/ci.yml.old
+test-card-logic.js
+.gitignore
+test-card-position.js
+.gitignore
+test-final-positioning.js
+test-highlight-debug.js
+test-interactive-tutorial 2.js
+.gitignore
+test-interactive-tutorial.js
+test-first-steps.js
