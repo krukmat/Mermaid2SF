@@ -18,6 +18,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:web": "vitest run",
+    "test:web:watch": "vitest",
     "openapi:validate": "swagger-cli validate docs/openapi.yaml",
     "ci": "npm run lint && npm run format:check && npm test && npm run build",
     "compile-examples": "node scripts/compile-examples.js",
@@ -34,21 +36,25 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.10.1",
     "@typescript-eslint/eslint-plugin": "^8.48.1",
     "@typescript-eslint/parser": "^8.48.1",
+    "codecov": "^3.8.3",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
-    "jest": "^30.2.0",
-    "prettier": "^3.7.4",
-    "ts-jest": "^29.4.6",
-    "typescript": "^5.9.3",
-    "swagger-cli": "^4.0.4",
     "husky": "^8.0.0",
+    "jest": "^30.2.0",
     "lint-staged": "^14.0.0",
-    "codecov": "^3.8.3"
+    "playwright": "^1.57.0",
+    "prettier": "^3.7.4",
+    "swagger-cli": "^4.0.4",
+    "ts-jest": "^29.4.6",
+    "vitest": "^1.5.8",
+    "jsdom": "^22.0.3",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "ajv": "^8.17.1",
@@ -57,7 +63,7 @@
     "winston": "^3.18.3"
   },
   "lint-staged": {
-    "*.{ts,js,json,md}": [
+    "*.{ts,js,md}": [
       "prettier --write",
       "eslint"
     ]

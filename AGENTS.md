@@ -42,3 +42,7 @@
 - At the start of any new development project, create and work on a dedicated branch.
 - Always pair development work with a documented plan that lists the tasks needed for the objective; cuando algún rol solicite un plan, genera un artefacto Markdown (e.g., en `docs/planning/`) además del resumen en chat.
 - Follow software engineering principles such as DRY, TDD, KISS, and optimize token usage. Prefer referencing existentes outputs/docs en vez de repetir texto extenso y evita mocks salvo dependencias externas imposibles de testear.
+- Al cerrar un proyecto:
+- 1.  Genera y completa el Pull Request correspondiente (incluye resúmenes/tests).
+- 2.  Al aprobarse, elimina el branch local y, si procede, el remoto.
+- 3.  Cambia de nuevo a `master` o `main` en el entorno antes de continuar.
