@@ -1,5 +1,16 @@
 // TASK 2.4: Generate documentation from Flow DSL
-import { FlowDSL, FlowElement } from '../types/flow-dsl';
+import {
+  AssignmentElement,
+  DecisionElement,
+  ElementType,
+  FlowDSL,
+  FlowElement,
+  GetRecordsElement,
+  LoopElement,
+  RecordCreateElement,
+  RecordUpdateElement,
+  WaitElement,
+} from '../types/flow-dsl';
 
 export interface DocsOptions {
   /** Include Mermaid diagram */
@@ -90,9 +101,10 @@ export class DocsGenerator {
     lines.push('flowchart TD');
 
     // Generate nodes
-    for (const element of dsl.elements) {
+    const orderedElements = this.orderElements(dsl);
+    for (const element of orderedElements) {
       const nodeId = element.id;
-      const label = this.escapeLabel(element.label || element.apiName || element.id);
+      const label = this.buildMermaidLabel(element);
 
       switch (element.type) {
         case 'Start':
@@ -119,11 +131,23 @@ export class DocsGenerator {
         case 'Subflow':
           lines.push(`    ${nodeId}[[${label}]]`);
           break;
+        case 'Loop':
+          lines.push(`    ${nodeId}[${label}]`);
+          break;
+        case 'Wait':
+          lines.push(`    ${nodeId}[${label}]`);
+          break;
+        case 'GetRecords':
+          lines.push(`    ${nodeId}[${label}]`);
+          break;
+        case 'Fault':
+          lines.push(`    ${nodeId}[${label}]`);
+          break;
       }
     }
 
     // Generate edges
-    for (const element of dsl.elements) {
+    for (const element of orderedElements) {
       if ('next' in element && element.next) {
         lines.push(`    ${element.id} --> ${element.next}`);
       }
@@ -136,6 +160,12 @@ export class DocsGenerator {
       }
     }
 
+    const styleDefs = this.generateStyleDefinitions(orderedElements);
+    if (styleDefs.length > 0) {
+      lines.push('');
+      lines.push(...styleDefs);
+    }
+
     return lines.join('\n');
   }
 
@@ -144,6 +174,199 @@ export class DocsGenerator {
    * @param element - Flow element
    * @returns Markdown section
    */
+  private orderElements(dsl: FlowDSL): FlowElement[] {
+    const map = new Map<string, FlowElement>(dsl.elements.map((el) => [el.id, el]));
+    const ordered: FlowElement[] = [];
+    const visited = new Set<string>();
+    const queue: string[] = [];
+
+    if (dsl.startElement) {
+      queue.push(dsl.startElement);
+    }
+
+    while (queue.length > 0) {
+      const currentId = queue.shift();
+      if (!currentId || visited.has(currentId)) {
+        continue;
+      }
+
+      const element = map.get(currentId);
+      if (!element) {
+        continue;
+      }
+
+      ordered.push(element);
+      visited.add(currentId);
+
+      for (const next of this.collectAdjacencies(element)) {
+        if (!visited.has(next) && !queue.includes(next)) {
+          queue.push(next);
+        }
+      }
+    }
+
+    // Append any remaining elements deterministically
+    dsl.elements
+      .filter((element) => !visited.has(element.id))
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .forEach((element) => ordered.push(element));
+
+    return ordered;
+  }
+
+  private collectAdjacencies(element: FlowElement): string[] {
+    const neighbors = new Set<string>();
+    if ('next' in element && element.next) {
+      neighbors.add(element.next);
+    }
+    if (element.type === 'Decision') {
+      for (const outcome of element.outcomes) {
+        neighbors.add(outcome.next);
+      }
+    }
+    return Array.from(neighbors);
+  }
+
+  private buildMermaidLabel(element: FlowElement): string {
+    const base = element.label || element.apiName || element.id;
+    const meta = this.buildMermaidMetadata(element);
+    if (meta.length === 0) {
+      return this.escapeLabel(base);
+    }
+    return this.escapeLabel(`${base}\n${meta.join('\n')}`);
+  }
+
+  private buildMermaidMetadata(element: FlowElement): string[] {
+    const details: string[] = [];
+    switch (element.type) {
+      case 'Assignment':
+        if ((element as AssignmentElement).assignments.length > 0) {
+          const assignments = (element as AssignmentElement).assignments
+            .map((assignment) => `${assignment.variable}=${assignment.value}`)
+            .join(', ');
+          details.push(`assignments: ${assignments}`);
+        }
+        break;
+      case 'Decision':
+        details.push(`outcomes: ${(element as DecisionElement).outcomes.length}`);
+        break;
+      case 'RecordCreate':
+        {
+          const rc = element as RecordCreateElement;
+          details.push(`object: ${rc.object || 'RecordCreate'}`);
+          const fields = Object.entries(rc.fields || {})
+            .map(([field, value]) => `${field}=${value}`)
+            .join('; ');
+          if (fields) {
+            details.push(`fields: ${fields}`);
+          }
+        }
+        break;
+      case 'RecordUpdate':
+        {
+          const ru = element as RecordUpdateElement;
+          details.push(`object: ${ru.object || 'RecordUpdate'}`);
+          const fields = Object.entries(ru.fields || {})
+            .map(([field, value]) => `${field}=${value}`)
+            .join('; ');
+          if (fields) {
+            details.push(`updates: ${fields}`);
+          }
+          if (ru.filters && ru.filters.length > 0) {
+            const filters = ru.filters
+              .map((filter) => `${filter.field}${filter.operator}${filter.value}`)
+              .join('; ');
+            details.push(`filters: ${filters}`);
+          }
+        }
+        break;
+      case 'Subflow':
+        details.push(`flow: ${(element as any).flowName || 'Subflow'}`);
+        break;
+      case 'Loop':
+        details.push(`collection: ${(element as LoopElement).collection || 'Loop'}`);
+        break;
+      case 'Wait':
+        {
+          const wait = element as WaitElement;
+          if (wait.waitType) {
+            details.push(`wait: ${wait.waitType}`);
+          }
+          if (wait.condition) {
+            details.push(`condition: ${wait.condition}`);
+          }
+          if (wait.durationValue) {
+            details.push(`duration: ${wait.durationValue}${wait.durationUnit || ''}`);
+          }
+          if (wait.eventName) {
+            details.push(`event: ${wait.eventName}`);
+          }
+        }
+        break;
+      case 'GetRecords':
+        {
+          const lookup = element as GetRecordsElement;
+          details.push(`object: ${lookup.object || 'Lookup'}`);
+          if (lookup.filters && lookup.filters.length > 0) {
+            const filters = lookup.filters
+              .map((filter) => `${filter.field}${filter.operator}${filter.value}`)
+              .join('; ');
+            details.push(`filters: ${filters}`);
+          }
+        }
+        break;
+      case 'Fault':
+        details.push('fault handler');
+        break;
+    }
+    return details;
+  }
+
+  private generateStyleDefinitions(elements: FlowElement[]): string[] {
+    const lines: string[] = [];
+    const classMap: Record<ElementType, string> = {
+      Start: 'start',
+      End: 'end',
+      Assignment: 'assignment',
+      Decision: 'decision',
+      Screen: 'screen',
+      RecordCreate: 'recordCreate',
+      RecordUpdate: 'recordUpdate',
+      Subflow: 'subflow',
+      Loop: 'loop',
+      Wait: 'wait',
+      GetRecords: 'getRecords',
+      Fault: 'fault',
+    };
+
+    const classDefs = [
+      'classDef start fill:#e8f5ff,stroke:#66e0ff,stroke-width:2;',
+      'classDef end fill:#ffe6e6,stroke:#ff758c,stroke-width:2;',
+      'classDef decision fill:#fff5e0,stroke:#f5a524,stroke-width:2;',
+      'classDef assignment fill:#f1ffed,stroke:#14d88e,stroke-width:2;',
+      'classDef screen fill:#eef4ff,stroke:#2b7fff,stroke-width:2;',
+      'classDef recordCreate fill:#e6f4ff,stroke:#1e88e5,stroke-width:2;',
+      'classDef recordUpdate fill:#fff4e5,stroke:#f57c00,stroke-width:2;',
+      'classDef subflow fill:#f0f0f0,stroke:#8e57ff,stroke-width:2;',
+      'classDef loop fill:#f6f6ff,stroke:#4b0082,stroke-width:2;',
+      'classDef wait fill:#eaf7ff,stroke:#00acc1,stroke-width:2;',
+      'classDef getRecords fill:#f5f5ff,stroke:#3949ab,stroke-width:2;',
+      'classDef fault fill:#ffe0e0,stroke:#d50000,stroke-width:2;',
+    ];
+
+    lines.push(...classDefs);
+
+    elements.forEach((element) => {
+      const className = classMap[element.type];
+      if (!className) {
+        return;
+      }
+      lines.push(`    class ${element.id} ${className};`);
+    });
+
+    return lines;
+  }
+
   private generateElementDetails(element: FlowElement): string {
     const sections: string[] = [];
     const apiName = element.apiName || element.id;

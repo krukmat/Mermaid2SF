@@ -3,10 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Flow Visualizer</title>
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css"
-  />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" />
   <style>
     :root {
       --bg: #0b1021;
@@ -15,42 +12,234 @@
       --text: #e8ecff;
       --muted: #9aa5d3;
       --surface: #1c2547;
+      --pill: #223054;
     }
-    body { font-family: 'Inter', system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
-    header { padding: 1rem 1.5rem; background: var(--panel); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #223054; }
+    [data-theme='light'] {
+      --bg: #f5f7ff;
+      --panel: #ffffff;
+      --accent: #2b7fff;
+      --text: #0b1530;
+      --muted: #5c6a8a;
+      --surface: #f0f3ff;
+      --pill: #dfe6f7;
+    }
+    .status-stack { position: fixed; top: 78px; right: 1rem; display: flex; flex-direction: column; gap: 0.5rem; z-index: 15; width: min(320px, 90vw); }
+    .status-banner { border-radius: 10px; padding: 0.85rem 1rem; border: 1px solid #22305455; background: #182047ee; color: var(--text); box-shadow: 0 20px 40px rgba(5, 6, 18, 0.35); display: flex; justify-content: space-between; gap: 0.75rem; align-items: flex-start; }
+    .status-banner strong { display: block; font-size: 0.95rem; margin-bottom: 0.15rem; }
+    .status-banner p { margin: 0; color: var(--muted); font-size: 0.85rem; }
+    .status-banner button { background: transparent; border: none; color: inherit; cursor: pointer; font-size: 1rem; padding: 0; min-width: 24px; }
+    .status-banner.success { border-color: #37e29d55; background: #133228ee; }
+    .status-banner.info { border-color: #3a8dff55; background: #122649ee; }
+    .status-banner.warning { border-color: #f5a52455; background: #332710ee; }
+    .status-banner.error { border-color: #ff6b6b55; background: #401a26ee; }
+    .inline-status { font-size: 0.9rem; margin: 0.35rem 0 0; color: var(--muted); padding-left: 0.2rem; }
+    .inline-status.success { color: #37e29d; }
+    .inline-status.info { color: #66e0ff; }
+    .inline-status.warning { color: #f5a524; }
+    .inline-status.error { color: #ff6b6b; }
+    body { font-family: 'Inter', system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); transition: background 180ms ease, color 180ms ease; }
+    header { padding: 1rem 1.5rem; background: var(--panel); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #22305422; position: sticky; top: 0; z-index: 5; flex-wrap: wrap; gap: 0.5rem; }
     main { display: grid; grid-template-columns: 340px 1fr; min-height: 100vh; }
-    .sidebar { background: var(--panel); padding: 1.5rem; border-right: 1px solid #223054; overflow-y: auto; }
+    .hero { background: radial-gradient(circle at 20% 20%, rgba(102,224,255,0.08), transparent 35%), radial-gradient(circle at 80% 0%, rgba(111,90,255,0.12), transparent 40%), linear-gradient(135deg, var(--panel), var(--bg)); color: var(--text); padding: 3rem 1.5rem 2.5rem; border-bottom: 1px solid #22305422; }
+    .hero-grid { display: grid; grid-template-columns: 1fr 420px; gap: 2rem; align-items: center; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.7rem; border-radius: 999px; background: rgba(102,224,255,0.1); border: 1px solid rgba(102,224,255,0.25); color: var(--accent); font-weight: 700; }
+    .hero-cta { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
+    .hero-note { margin-top: 1rem; border-radius: 10px; border: 1px solid rgba(102,224,255,0.35); padding: 0.8rem 1rem; background: rgba(7,10,24,0.85); font-size: 0.95rem; line-height: 1.5; }
+    .hero-card { background: var(--surface); border: 1px solid #22305422; border-radius: 14px; padding: 1rem; position: relative; overflow: hidden; min-height: 260px; }
+    .pulse { position: absolute; width: 140px; height: 140px; border-radius: 999px; background: rgba(102,224,255,0.1); filter: blur(12px); animation: float 6s ease-in-out infinite; }
+    .pulse:nth-child(1) { top: -20px; left: -10px; animation-delay: 0.2s; }
+    .pulse:nth-child(2) { bottom: -20px; right: -20px; animation-delay: 1.4s; }
+    .pulse:nth-child(3) { top: 40%; left: 40%; animation-delay: 2.1s; }
+    .hero-diagram { position: relative; z-index: 1; display: grid; gap: 0.6rem; }
+    .chip { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.7rem; border-radius: 10px; background: rgba(102,224,255,0.08); border: 1px solid rgba(102,224,255,0.2); font-size: 0.9rem; }
+    .sidebar { background: var(--panel); padding: 1.5rem; border-right: 1px solid #22305422; overflow-y: auto; }
     .content { padding: 1.5rem; }
-    .card { background: var(--surface); border: 1px solid #223054; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; }
+    .card { background: var(--surface); border: 1px solid #22305422; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; }
+    .tip-card { background: rgba(102,224,255,0.06); border-color: rgba(102,224,255,0.45); }
+    .tip-card small { display: block; margin-top: 0.25rem; color: var(--muted); font-size: 0.8rem; }
     label { display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.9rem; }
-    input, textarea { width: 100%; padding: 0.6rem 0.7rem; border-radius: 8px; border: 1px solid #223054; background: #0f1531; color: var(--text); }
+    input, textarea { width: 100%; padding: 0.6rem 0.7rem; border-radius: 8px; border: 1px solid #22305422; background: #0f153133; color: var(--text); }
     textarea { min-height: 120px; }
     button { background: var(--accent); color: #04132e; border: none; border-radius: 8px; padding: 0.7rem 1rem; font-weight: 700; cursor: pointer; }
+    button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+    button[aria-busy='true'] { position: relative; opacity: 0.7; pointer-events: none; }
+    button[aria-busy='true']::after { content: ''; position: absolute; right: 0.75rem; top: 50%; width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; transform: translateY(-50%); animation: spin 0.65s linear infinite; }
     .row { display: flex; gap: 0.5rem; align-items: center; }
     .row button { flex: 1; }
-    .canvas { background: #0f1531; border: 1px dashed #223054; border-radius: 10px; padding: 1rem; min-height: 520px; overflow: auto; position: relative; cursor: grab; }
-    .canvas-inner { transform-origin: top left; transition: transform 120ms ease-out; min-height: 520px; }
-    .node { padding: 0.4rem 0.75rem; border-radius: 8px; margin: 0.25rem 0; display: inline-block; }
+    .canvas { background: #0f153133; border: 1px dashed #22305455; border-radius: 10px; padding: 1rem; min-height: 520px; overflow: hidden; position: relative; transition: border-color 120ms ease, background 120ms ease; }
+    .canvas.drop-ready { border: 1px solid rgba(102, 224, 255, 0.75); background: #0f153155; }
+    .canvas-inner { position: relative; width: 100%; height: 100%; min-height: 520px; transform-origin: top left; transition: transform 120ms ease-out; }
+    .canvas-inner svg.edges { z-index: 0; }
+    svg.edges { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+    .edge-label { fill: #9aa5d3; font-size: 12px; pointer-events: none; }
+    .edge-line { stroke: #66e0ff; stroke-opacity: 0.9; stroke-width: 1.6; transition: stroke 120ms ease; }
+    .edge-line.highlight { stroke: #ffd166; stroke-width: 3; }
+    .node { position: absolute; padding: 0.4rem 0.75rem; border-radius: 8px; display: inline-flex; gap: 0.4rem; align-items: center; cursor: grab; user-select: none; }
+    .canvas-inner .node { z-index: 1; }
+    .node-invalid { box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.45); }
+    .node .node-tooltip { position: absolute; top: 100%; left: 50%; transform: translate(-50%, 8px); background: var(--panel); border: 1px solid #22305422; border-radius: 6px; padding: 0.35rem 0.5rem; font-size: 0.75rem; color: var(--text); opacity: 0; pointer-events: none; transition: opacity 0.15s ease, transform 0.15s ease; white-space: nowrap; z-index: 10; box-shadow: 0 6px 14px rgba(0,0,0,0.25); }
+    .node:hover .node-tooltip { opacity: 1; transform: translate(-50%, 12px); }
+    .modal-field { margin-bottom: 0.75rem; }
+    .field-helper { display: block; font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
+    .field-error { display: none; font-size: 0.7rem; color: #ff6b6b; margin-top: 0.25rem; }
+    .context-help { font-size: 0.85rem; color: #66e0ff; margin-bottom: 0.4rem; }
     .node.start { background: #14d88e33; border: 1px solid #14d88e; }
     .node.end { background: #ff758c33; border: 1px solid #ff758c; }
     .node.decision { background: #f5a52433; border: 1px solid #f5a524; }
     .node.default { background: #66e0ff33; border: 1px solid #66e0ff; }
     .edge { color: var(--muted); font-size: 0.85rem; }
     .list { list-style: none; padding: 0; margin: 0; }
-    .list li { background: #0f1531; border: 1px solid #223054; border-radius: 8px; padding: 0.6rem; margin-bottom: 0.4rem; display: flex; justify-content: space-between; align-items: center; cursor: grab; }
+    .list li { background: #0f153133; border: 1px solid #22305455; border-radius: 8px; padding: 0.6rem; margin-bottom: 0.4rem; display: flex; justify-content: space-between; align-items: center; cursor: grab; }
     .list li.dragging { opacity: 0.6; }
-    .pill { padding: 0.2rem 0.5rem; border-radius: 8px; background: #223054; color: var(--muted); font-size: 0.8rem; }
+    .pill { padding: 0.2rem 0.5rem; border-radius: 8px; background: var(--pill); color: var(--muted); font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem; }
+    .template-grid { display: grid; gap: 0.5rem; }
+    .template-card { border: 1px dashed #22305444; border-radius: 10px; padding: 0.6rem 0.75rem; background: #0f153122; }
+    .template-card header { display: flex; justify-content: space-between; align-items: center; padding: 0; background: transparent; border: none; }
+    .template-card small { color: var(--muted); }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 20; }
+    .modal { background: var(--panel); border: 1px solid #22305455; border-radius: 12px; width: min(560px, 90vw); max-height: 80vh; overflow: auto; padding: 1rem 1.25rem; box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
+    .modal header { display: flex; justify-content: space-between; align-items: center; padding: 0; border: none; }
+    .modal .row { flex-wrap: wrap; }
+    .flow-tabs-wrapper { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .flow-tabs { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+    .flow-tab { border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.05); color: var(--text); border-radius: 8px; padding: 0.35rem 0.65rem; cursor: pointer; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.35rem; }
+    .flow-tab.active { border-color: #66e0ff; background: rgba(102, 224, 255, 0.15); }
+    .flow-tab .flow-indicator { width: 6px; height: 6px; border-radius: 50%; background: #66e0ff; margin-left: 0.2rem; }
+    .canvas-empty { position: absolute; inset: 40px; border-radius: 10px; border: 2px dashed rgba(255, 255, 255, 0.3); background: rgba(2, 7, 25, 0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 0.5rem; padding: 1.2rem; backdrop-filter: blur(2px); }
+    .canvas-empty h4 { margin: 0; font-size: 1.1rem; }
+    .canvas-empty button { border: 1px solid rgba(102, 224, 255, 0.4); background: transparent; color: var(--text); border-radius: 8px; padding: 0.45rem 0.9rem; cursor: pointer; }
+    .validation-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.35rem 0.65rem; border-radius: 999px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08rem; border: 1px solid transparent; }
+    .validation-badge[data-severity='error'] { background: rgba(255, 107, 107, 0.15); border-color: rgba(255, 107, 107, 0.35); color: #ff6b6b; }
+    .validation-badge[data-severity='warning'] { background: rgba(245, 166, 36, 0.12); border-color: rgba(245, 166, 36, 0.35); color: #f5a524; }
+    .validation-badge.hidden { display: none; }
+    .validation-error-card { border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(7, 10, 24, 0.8); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35); transition: transform 120ms ease, border 120ms ease; }
+    .validation-error-card.error { border-color: rgba(255, 107, 107, 0.4); }
+    .validation-error-card.warning { border-color: rgba(245, 166, 36, 0.4); }
+    .validation-error-card .error-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; }
+    .validation-error-card .error-code { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; padding: 0.15rem 0.6rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.2); }
+    .validation-error-card .error-message { margin: 0.35rem 0; color: var(--muted); font-size: 0.9rem; }
+    .validation-error-card .error-remedy { font-size: 0.85rem; color: var(--accent); margin: 0.2rem 0 0.5rem; }
+    .validation-error-card .auto-fix-btn { border: 1px dashed rgba(102, 224, 255, 0.6); background: transparent; color: var(--accent); padding: 0.35rem 0.9rem; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    .validation-error-card .auto-fix-btn:hover { border-color: #66e0ff; }
+    .node-highlighted { box-shadow: 0 0 0 3px rgba(102, 224, 255, 0.45); }
+    .status-details-card { position: relative; }
+    .status-details-card[data-level='error'] { border-color: #ff6b6b; }
+    .status-details-card[data-level='warning'] { border-color: #f5a524; }
+    .status-details-card[data-level='success'] { border-color: #37e29d; }
+    .status-details-card[data-level='info'] { border-color: #3a8dff; }
+    .status-list { list-style: none; padding-left: 0; margin: 0.5rem 0 0; }
+    .status-list li { font-size: 0.85rem; padding: 0.35rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+    .advanced-card .row { flex-wrap: wrap; gap: 0.5rem; }
+    .advanced-card button { font-size: 0.8rem; padding: 0.45rem 0.75rem; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.05); color: var(--text); cursor: pointer; }
+    .advanced-card button.active { border-color: #66e0ff; background: rgba(102, 224, 255, 0.1); }
+    .node.advanced-highlight { box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.85); }
+    .loading-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.65); display: flex; align-items: center; justify-content: center; z-index: 30; gap: 0.75rem; color: #fff; font-size: 0.9rem; flex-direction: column; }
+    .loading-backdrop.hidden { display: none; }
+    .loading-spinner { width: 48px; height: 48px; border: 4px solid rgba(255, 255, 255, 0.2); border-top-color: #66e0ff; border-radius: 50%; animation: spin 0.9s linear infinite; }
+    .inline-editor-form label { font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 0.15rem; margin-top: 0.6rem; }
+    .inline-editor-form input,
+    .inline-editor-form textarea { background: transparent; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; padding: 0.4rem 0.6rem; color: var(--text); width: 100%; }
+    .inline-editor-form textarea { resize: vertical; }
+    .node-context-menu { position: fixed; background: var(--panel); border: 1px solid #22305455; border-radius: 10px; box-shadow: 0 14px 30px rgba(0,0,0,0.55); display: flex; flex-direction: column; gap: 0.25rem; padding: 0.35rem; z-index: 100; }
+    .node-context-menu button { border: none; background: transparent; color: var(--text); padding: 0.4rem 1.2rem; text-align: left; font-size: 0.9rem; border-radius: 8px; cursor: pointer; }
+    .node-context-menu button:hover { background: rgba(102, 224, 255, 0.1); }
+    .tutorial-overlay { position: fixed; inset: 0; background: rgba(1, 6, 18, 0.6); z-index: 40; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; padding: 1rem; }
+    .tutorial-overlay.hidden { display: none; }
+    .tutorial-card { background: var(--panel); border: 1px solid #22305455; border-radius: 16px; padding: 1.25rem; max-width: 420px; text-align: center; }
+    .tutorial-progress { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.15rem; }
+    .tutorial-actions { display: flex; justify-content: space-between; gap: 0.5rem; margin-top: 1rem; }
+    .tutorial-highlight { position: absolute; border: 2px solid #66e0ff; border-radius: 12px; pointer-events: none; box-shadow: 0 8px 24px rgba(102, 224, 255, 0.35); transition: transform 0.15s ease; }
+    .import-modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.75); z-index: 45; }
+    .import-modal.hidden { display: none; }
+    .import-panel { background: var(--panel); border: 1px solid #22305455; border-radius: 16px; padding: 1.25rem; width: min(560px, 90vw); max-height: 90vh; overflow: auto; color: var(--text); }
+    .import-panel header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .import-dropzone { border: 2px dashed rgba(102, 224, 255, 0.4); border-radius: 12px; padding: 1rem; text-align: center; cursor: pointer; transition: border 0.2s ease; }
+    .import-dropzone.hover { border-color: rgba(255, 255, 255, 0.9); }
+    .import-panel textarea { width: 100%; min-height: 120px; background: #0b1226; border-radius: 10px; border: 1px solid #22305455; color: var(--text); padding: 0.75rem; }
+    .import-export-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+    .import-status { margin-top: 0.5rem; font-size: 0.85rem; color: var(--muted); }
+    .import-status.success { color: #37e29d; }
+    .import-status.warning { color: #f5a524; }
+    .import-status.error { color: #ff6b6b; }
+    .history-card { border: 1px solid #22305455; border-radius: 10px; padding: 1rem; background: rgba(7, 10, 24, 0.8); margin-bottom: 1rem; }
+    .history-card strong { display: block; margin-bottom: 0.25rem; }
+    .history-card .row { gap: 0.5rem; }
+    .history-modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.65); z-index: 50; }
+    .history-modal.hidden { display: none; }
+    .history-panel { background: var(--panel); border: 1px solid #22305455; border-radius: 16px; padding: 1.25rem; width: min(620px, 90vw); max-height: 90vh; overflow: auto; }
+    .history-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+    .history-entry { display: flex; justify-content: space-between; align-items: center; padding: 0.65rem; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.02); }
+    .history-entry small { color: var(--muted); display: block; margin-top: 0.1rem; }
+    .history-actions { display: flex; gap: 0.35rem; }
+    .history-actions button { padding: 0.3rem 0.65rem; font-size: 0.78rem; }
+    .history-status { margin-top: 0.5rem; font-size: 0.85rem; color: var(--muted); }
+    @keyframes float { 0% { transform: translateY(0); opacity: 0.9; } 50% { transform: translateY(-10px); opacity: 1; } 100% { transform: translateY(0); opacity: 0.9; } }
+    @keyframes spin { 0% { transform: translateY(-50%) rotate(0deg); } 100% { transform: translateY(-50%) rotate(360deg); } }
+    @media (max-width: 1100px) {
+      main { grid-template-columns: 1fr; }
+      .hero-grid { grid-template-columns: 1fr; }
+      .sidebar { order: 2; }
+      .content { order: 1; }
+    }
+    @media (max-width: 768px) {
+      .row { flex-wrap: wrap; }
+      .hero { padding: 2.5rem 1rem 2rem; }
+      header { padding: 0.75rem 1rem; }
+      .status-stack { position: fixed; bottom: 0.75rem; top: auto; right: 0.75rem; left: 0.75rem; width: auto; }
+    }
   </style>
 </head>
 <body>
   <header>
     <h2>Flow Visualizer</h2>
     <div class="row" style="gap:0.75rem;">
+      <button id="undoBtn" class="secondary" disabled aria-label="Undo last change" title="Nothing to undo">↺ Undo</button>
+      <button id="redoBtn" class="secondary" disabled aria-label="Redo last undone change" title="Nothing to redo">↻ Redo</button>
+      <button id="themeToggle" class="secondary" style="min-width:120px;" aria-pressed="false" aria-label="Toggle theme">Toggle Theme</button>
       <button id="ping">Check Backend</button>
       <button class="secondary" id="reset">Reset</button>
+      <button id="startTutorial" class="secondary" style="min-width:140px;" aria-label="Start onboarding tutorial">Start Tutorial</button>
     </div>
   </header>
+  <div id="statusStack" class="status-stack" aria-live="polite" aria-atomic="true"></div>
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-badge">Flows as Code · Git/CI Ready</div>
+        <h1 style="margin:0.6rem 0 0.4rem;">Build Salesforce Flows Visually, Ship from Git</h1>
+        <p style="color: var(--muted); max-width: 640px;">
+          Drag, drop, compile. From Mermaid diagrams to deployable Flow XML with live previews, examples, and a ready-to-use CI pipeline.
+        </p>
+        <div class="hero-cta">
+          <button onclick="scrollToBuilder()">Start Building</button>
+          <button class="secondary" onclick="loadTemplate('onboarding')">Use Onboarding Template</button>
+          <button class="secondary" onclick="window.open('http://iotforce.es/flow/', '_blank')">Try Live Demo</button>
+        </div>
+        <div class="hero-note">
+          Build in the browser and ship via CLI. Every compile shown here is backed by the same Mermaid → DSL → Flow XML pipeline that runs in CI, so you always know the metadata that will deploy.
+        </div>
+        <div style="margin-top:0.75rem; display:flex; gap:0.5rem; flex-wrap: wrap;">
+          <span class="chip">Mermaid → XML/DSL/Docs</span>
+          <span class="chip">Live XML Preview</span>
+          <span class="chip">CI-ready (lint/test/build)</span>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="pulse"></div><div class="pulse"></div><div class="pulse"></div>
+        <div class="hero-diagram">
+          <div class="node start" style="position:relative;">▶ Start</div>
+          <div class="edge">→ Screen: Collect Info</div>
+          <div class="node default" style="position:relative;">📋 Screen</div>
+          <div class="edge">→ Decision: Route</div>
+          <div class="node decision" style="position:relative;">🔀 Decision</div>
+          <div class="edge">Yes → Assignment / No → End</div>
+          <div class="node default" style="position:relative;">✏️ Assignment</div>
+          <div class="node end" style="position:relative;">⏹ End</div>
+        </div>
+      </div>
+    </div>
+  </section>
   <main>
     <section class="sidebar">
       <div class="card">
@@ -61,8 +250,36 @@
           <button data-add="Assignment">+ Assignment</button>
           <button data-add="Decision">+ Decision</button>
           <button data-add="GetRecords">+ GetRecords</button>
+          <button data-add="Loop">+ Loop</button>
+          <button data-add="Wait">+ Wait</button>
+          <button data-add="Fault">+ Fault</button>
           <button data-add="End">+ End</button>
         </div>
+      </div>
+      <div class="card">
+        <strong>Templates</strong>
+        <div class="template-grid" id="templateGrid" style="margin-top:0.5rem;"></div>
+      </div>
+      <div class="card tip-card">
+        <strong>Advanced nodes guide</strong>
+        <small>Loop = retries (condition &amp; iterations), Wait = delays/signal gating, Fault = capture errors with metadata.</small>
+        <small>Use the status banner to monitor compile/validation events that involve these nodes.</small>
+      </div>
+      <div class="card advanced-card">
+        <strong>Advanced nodes cues</strong>
+        <p id="advancedHelper" class="inline-status info" role="status" aria-live="polite">
+          Click a pill to highlight Loop, Wait, or Fault nodes in the canvas.
+        </p>
+        <div class="row">
+          <button type="button" data-advanced-target="Loop">Loop</button>
+          <button type="button" data-advanced-target="Wait">Wait</button>
+          <button type="button" data-advanced-target="Fault">Fault</button>
+          <button type="button" data-advanced-target="clear">Clear</button>
+        </div>
+      </div>
+      <div class="flow-tabs-wrapper">
+        <div class="flow-tabs" id="flowTabs"></div>
+        <button id="newFlow" class="secondary" type="button">+ New Flow</button>
       </div>
       <div class="card">
         <strong>Nodes (drag to reorder)</strong>
@@ -74,9 +291,14 @@
       </div>
       <div class="card">
         <strong>Export</strong>
+        <div class="modal-field" style="margin-top:0.5rem;">
+          <label for="flowNameInput">Flow Name</label>
+          <input id="flowNameInput" type="text" placeholder="MyFlow" />
+        </div>
         <div class="row" style="margin-top:0.5rem;">
           <button id="exportMermaid">Mermaid</button>
           <button class="secondary" id="exportDsl">DSL JSON</button>
+          <button class="secondary" id="openImportExport">Import/Export</button>
         </div>
       </div>
       <div class="card">
@@ -84,7 +306,7 @@
         <pre id="output" style="white-space:pre-wrap; background:#0f1531; padding:0.75rem; border-radius:8px; border:1px solid #223054;">Ready.</pre>
       </div>
     </section>
-    <section class="content">
+    <section class="content" id="builder">
       <div class="card">
         <h3 style="margin-top:0;">Canvas</h3>
         <div class="row" style="gap:0.5rem; margin-bottom:0.5rem; flex-wrap: wrap;">
@@ -93,28 +315,133 @@
           <button class="secondary" id="zoomIn" style="min-width:72px;">+</button>
           <button id="resetView" style="min-width:120px;">Reset</button>
         </div>
-        <div class="canvas" id="canvas">
-          <div class="canvas-inner" id="canvasInner"></div>
-        </div>
+          <div class="canvas" id="canvas">
+            <div class="canvas-inner" id="canvasInner"></div>
+          </div>
       </div>
       <div class="card">
         <h3 style="margin-top:0;">Mermaid Preview</h3>
         <pre id="mermaidPreview" style="background:#0f1531; padding:1rem; border-radius:8px; border:1px solid #223054; white-space:pre-wrap;"></pre>
+        <div id="previewHint" class="inline-status info" role="status" aria-live="polite">
+          Tip: Drag templates or add Start/Screen nodes to kick off the flow. Loop/Wait/Fault nodes surface their metadata in the Mermaid output.
+        </div>
       </div>
       <div class="card">
         <h3 style="margin-top:0;">XML Preview</h3>
-        <div class="row" style="margin-bottom:0.5rem;">
+        <div class="row" style="gap:0.5rem; margin-bottom:0.5rem; align-items:center;">
+          <span id="validationBadge" class="pill validation-badge hidden" data-severity="info">Validation OK</span>
           <button id="compileXml">Compile &amp; Preview XML</button>
           <button class="secondary" id="downloadXml">Download XML</button>
         </div>
+        <div id="xmlStatus" class="inline-status info" role="status" aria-live="polite">Not compiled yet.</div>
         <pre id="xmlPreview" class="language-xml" style="background:#0f1531; padding:1rem; border-radius:8px; border:1px solid #223054; white-space:pre-wrap; max-height:260px; overflow:auto;">Not compiled yet.</pre>
+      </div>
+      <div class="card status-details-card" id="statusDetails" data-level="info">
+        <strong>Status &amp; Issues</strong>
+        <p id="statusDetailsSummary" class="inline-status info">No active issues.</p>
+        <ul id="statusDetailsList" class="status-list"></ul>
+        <p id="validationSummary" class="inline-status info" role="status" aria-live="polite">Validation checks will run whenever you edit the canvas.</p>
+        <ul id="validationList" class="status-list validation-list"></ul>
+      </div>
+      <div class="card history-card">
+        <strong>Version history</strong>
+        <p id="historySummary" class="inline-status info">No snapshots yet.</p>
+        <div class="row">
+          <button id="captureHistory" type="button">Save snapshot</button>
+          <button id="openHistory" type="button" class="secondary">Open history</button>
+        </div>
+      </div>
+      <div class="card">
+        <strong>Keyboard shortcuts</strong>
+        <p id="shortcutsSummary" class="inline-status info">Quick combos keep you in flow. Toggle them off if needed.</p>
+        <ul class="list" id="shortcutSummaryList" aria-live="polite"></ul>
+        <div class="row" style="margin-top:0.5rem;">
+          <button id="toggleShortcuts" type="button">Shortcuts: On</button>
+          <button id="showShortcutsGuide" type="button" class="secondary">Show guide</button>
+        </div>
       </div>
     </section>
   </main>
+  <div id="loadingBackdrop" class="loading-backdrop hidden" aria-live="polite">
+    <div class="loading-spinner" aria-hidden="true"></div>
+    <p id="loadingMessage">Loading...</p>
+  </div>
+  <div id="tutorialOverlay" class="tutorial-overlay hidden" aria-hidden="true">
+    <div class="tutorial-card" role="dialog" aria-modal="true">
+      <p class="tutorial-progress"><span id="tutorialProgress">1/5</span></p>
+      <h3 id="tutorialTitle">Welcome</h3>
+      <p id="tutorialDescription">Discover how to build and compile flows from the canvas.</p>
+      <div class="tutorial-actions">
+        <button id="tutorialPrev" type="button" class="secondary">Previous</button>
+        <button id="tutorialNext" type="button">Next</button>
+      </div>
+      <button id="tutorialSkip" type="button" class="secondary" style="margin-top:0.5rem;">Skip tutorial</button>
+    </div>
+      <div id="tutorialHighlight" class="tutorial-highlight"></div>
+    </div>
+
+  <div id="importExportModal" class="import-modal hidden" aria-hidden="true">
+    <div class="import-panel" role="dialog" aria-modal="true">
+      <header>
+        <h3>Import / Export hub</h3>
+        <button id="closeImportExport" class="secondary" type="button" aria-label="Close import export modal">Close</button>
+      </header>
+      <section>
+        <strong>Import</strong>
+        <p class="import-status" id="importStatus">Drop a Mermaid (.mmd), DSL (.json/.dsl), or Flow XML (.flow-meta.xml) file.</p>
+        <div id="importDropzone" class="import-dropzone" role="button" tabindex="0">
+          Drop file here or click to browse
+          <input id="importFile" type="file" accept=".mmd,.json,.dsl,.xml,.flow-meta.xml" style="display:none;" />
+        </div>
+        <textarea id="importTextarea" placeholder="Paste Mermaid, DSL JSON, or Flow XML and click Load"></textarea>
+        <div class="import-export-row">
+          <button id="loadMermaidFromText" type="button">Load Mermaid text</button>
+          <button id="loadDslFromText" type="button">Load DSL JSON</button>
+          <button id="loadXmlFromText" type="button">Load Flow XML</button>
+        </div>
+      </section>
+      <section style="margin-top:1rem;">
+        <strong>Export</strong>
+        <div class="import-export-row">
+          <button id="downloadMermaid" type="button">Download Mermaid</button>
+          <button id="downloadDsl" type="button">Download DSL</button>
+          <button id="exportDownloadXml" type="button">Download Flow XML</button>
+          <button id="downloadSvg" type="button">Download SVG snapshot</button>
+          <button id="downloadPng" type="button">Download PNG snapshot</button>
+        </div>
+      </section>
+    </div>
+  </div>
+  <div id="historyModal" class="history-modal hidden" aria-hidden="true">
+    <div class="history-panel" role="dialog" aria-modal="true">
+      <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+        <strong>Flow history</strong>
+        <button id="closeHistory" class="secondary" type="button" aria-label="Close history modal">Close</button>
+      </header>
+      <p id="historyStatus" class="history-status">Snapshots capture nodes, pan, scale, and serialized DSL/XML.</p>
+      <ul id="historyList" class="history-list"></ul>
+    </div>
+  </div>
+  <div id="shortcutsModal" class="history-modal hidden" aria-hidden="true">
+    <div class="history-panel" role="dialog" aria-modal="true">
+      <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+        <strong>Shortcut guide</strong>
+        <button id="closeShortcutsPanel" class="secondary" type="button" aria-label="Close shortcut guide">Close</button>
+      </header>
+      <p id="shortcutsStatus" class="history-status">Shortcuts accelerate compile, history, and templates.</p>
+      <ul id="shortcutList" class="history-list"></ul>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
-  <script>
+  <script type="module">
+    import { validateFlow } from './flow-validation.mjs';
+    import { collectConnections, cloneNodes } from './modules/canvas-renderer.mjs';
+    import { StateManager } from './modules/state-manager.mjs';
+    import { formatValidationError, renderValidationCards } from './modules/validation-ui.js';
+    import { NodeEditor, createContextMenu, removeContextMenu } from './modules/node-editor.js';
+    import { ExportManager } from './modules/export-manager.js';
     const API_BASE = (window.location && window.location.origin) || 'http://localhost:4000';
 
     const output = document.getElementById('output');
@@ -124,22 +451,1362 @@
     const form = document.getElementById('form');
     const editorCard = document.getElementById('editorCard');
     const mermaidPreview = document.getElementById('mermaidPreview');
+    const previewHintEl = document.getElementById('previewHint');
+    const templateGrid = document.getElementById('templateGrid');
+    const compileButton = document.getElementById('compileXml');
+    const validationBadge = document.getElementById('validationBadge');
+    const validationList = document.getElementById('validationList');
+    const validationSummary = document.getElementById('validationSummary');
+    const downloadButton = document.getElementById('downloadXml');
+    const importExportModal = document.getElementById('importExportModal');
+    const importDropzone = document.getElementById('importDropzone');
+    const importFileInput = document.getElementById('importFile');
+    const importTextarea = document.getElementById('importTextarea');
+    const importStatusEl = document.getElementById('importStatus');
+    const loadMermaidFromText = document.getElementById('loadMermaidFromText');
+    const loadDslFromText = document.getElementById('loadDslFromText');
+    const loadXmlFromText = document.getElementById('loadXmlFromText');
+    const openImportExportBtn = document.getElementById('openImportExport');
+    const closeImportExportBtn = document.getElementById('closeImportExport');
+    const downloadMermaidHub = document.getElementById('downloadMermaid');
+    const downloadDslHub = document.getElementById('downloadDsl');
+    const downloadXmlHub = document.getElementById('exportDownloadXml');
+    const downloadSvgHub = document.getElementById('downloadSvg');
+    const downloadPngHub = document.getElementById('downloadPng');
+    const pingButton = document.getElementById('ping');
+    const statusStack = document.getElementById('statusStack');
+    const xmlStatus = document.getElementById('xmlStatus');
+    const historySummaryEl = document.getElementById('historySummary');
+    const historyModal = document.getElementById('historyModal');
+    const historyList = document.getElementById('historyList');
+    const historyStatusEl = document.getElementById('historyStatus');
+    const openHistoryBtn = document.getElementById('openHistory');
+    const historyCloseBtn = document.getElementById('closeHistory');
+    const captureHistoryBtn = document.getElementById('captureHistory');
+    const shortcutsSummaryEl = document.getElementById('shortcutsSummary');
+    const shortcutSummaryList = document.getElementById('shortcutSummaryList');
+    const toggleShortcutsBtn = document.getElementById('toggleShortcuts');
+    const showShortcutsGuideBtn = document.getElementById('showShortcutsGuide');
+    const shortcutsModal = document.getElementById('shortcutsModal');
+    const shortcutList = document.getElementById('shortcutList');
+    const closeShortcutsPanelBtn = document.getElementById('closeShortcutsPanel');
+    const shortcutsStatusEl = document.getElementById('shortcutsStatus');
+    const loadingBackdrop = document.getElementById('loadingBackdrop');
+    const loadingMessage = document.getElementById('loadingMessage');
+    const statusDetails = document.getElementById('statusDetails');
+    const statusDetailsList = document.getElementById('statusDetailsList');
+    const statusDetailsSummary = document.getElementById('statusDetailsSummary');
+    const advancedHelper = document.getElementById('advancedHelper');
+    const advancedButtons = document.querySelectorAll('[data-advanced-target]');
+    const tutorialTrigger = document.getElementById('startTutorial');
+    const tutorialOverlay = document.getElementById('tutorialOverlay');
+    const tutorialHighlight = document.getElementById('tutorialHighlight');
+    const tutorialTitle = document.getElementById('tutorialTitle');
+    const tutorialDescription = document.getElementById('tutorialDescription');
+    const tutorialProgress = document.getElementById('tutorialProgress');
+    const tutorialPrev = document.getElementById('tutorialPrev');
+    const tutorialNext = document.getElementById('tutorialNext');
+    const tutorialSkip = document.getElementById('tutorialSkip');
+    const flowTabs = document.getElementById('flowTabs');
+    const newFlowBtn = document.getElementById('newFlow');
+    let modalEl = null;
+    const undoBtn = document.getElementById('undoBtn');
+    const redoBtn = document.getElementById('redoBtn');
+    const stateManager = new StateManager(20);
+    const nodeEditor = new NodeEditor(editorCard, form, (updated) => {
+      const index = nodes.findIndex((n) => n.id === updated.id);
+      if (index === -1) return;
+      nodes[index] = { ...nodes[index], ...updated };
+      selectedId = updated.id;
+      renderAll();
+      markCurrentFlowDirty(`Edit ${updated.type}`);
+      showBanner({ type: 'info', title: 'Node updated', message: `${updated.type} "${updated.label || updated.id}" saved.` });
+    });
+    const flowNameInput = document.getElementById('flowNameInput');
+    const exportManager = new ExportManager({ defaultName: 'Flow' });
+    if (flowNameInput) {
+      flowNameInput.value = exportManager.getBaseName();
+      flowNameInput.addEventListener('input', (event) => {
+        exportManager.setFilename(event.target.value);
+      });
+    }
 
     let nodes = [];
+    let validationResult = { errors: [], warnings: [], all: [], isValid: true };
     let selectedId = null;
     let scale = 1;
     let panX = 0;
     let panY = 0;
     let isPanning = false;
     let panStart = { x: 0, y: 0 };
+    let draggingNode = null;
+    let dragOffset = { x: 0, y: 0 };
+    let bannerCounter = 0;
+    let renderPending = false;
+    let edgeSvg = null;
+    let hoverHighlightId = null;
+    let latestXml = '';
+    let latestMermaid = '';
+    let latestDslData = null;
+    const flowBuffers = new Map();
+    let activeFlowId = null;
+    let flowCounter = 1;
+    let activeAdvancedType = null;
+    let tutorialActive = false;
+    let tutorialStep = 0;
+   const tutorialSteps = [
+      {
+        title: 'Welcome aboard',
+        description: 'Flow Visualizer turns Mermaid diagrams into deployable Flow XML. The canvas, preview, and status cards all stay in sync.',
+        selector: '.hero',
+      },
+      {
+        title: 'Add your first node',
+        description: 'Use the Start button in the toolbox to drop the initial node, then drag it on the grid to position it.',
+        selector: '[data-add="Start"]',
+      },
+      {
+        title: 'Advanced nodes',
+        description: 'Loop, Wait, and Fault nodes appear in the sidebar tip card. Highlight them to understand how they behave.',
+        selector: '.tip-card',
+      },
+      {
+        title: 'Compile & preview',
+        description: 'Hit Compile & Preview XML to send the diagram to the backend and watch the status banners update.',
+        selector: '#compileXml',
+      },
+      {
+        title: 'Monitor issues',
+        description: 'The Status & Issues card lists compile errors and warnings; use it to fix problems before downloading.',
+        selector: '#statusDetails',
+      },
+    ];
+    const SHORTCUTS_STORAGE_KEY = 'flow-shortcuts-enabled';
+    const shortcutDefinitions = [
+      { combo: 'Ctrl/Cmd+S', description: 'Compile the active flow' },
+      { combo: 'Ctrl/Cmd+T', description: 'Start the onboarding tutorial' },
+      { combo: 'Ctrl/Cmd+L', description: 'Load the onboarding template' },
+      { combo: 'Ctrl/Cmd+P', description: 'Refresh the Mermaid preview' },
+      { combo: 'Ctrl/Cmd+Z', description: 'Restore the latest snapshot' },
+      { combo: 'Ctrl/Cmd+Y', description: 'Open the history modal' },
+      { combo: 'Delete', description: 'Remove the selected node' },
+      { combo: 'Arrow keys', description: 'Nudge the selected node by 10px' },
+    ];
+    let shortcutsEnabled = true;
+    const storedShortcuts = localStorage.getItem(SHORTCUTS_STORAGE_KEY);
+    if (storedShortcuts !== null) {
+      shortcutsEnabled = storedShortcuts === 'true';
+    }
+    const SHORTCUT_NUDGE_STEP = 10;
+
+    function showBanner({ type = 'info', title = '', message = '', duration = 7000, sticky = false } = {}) {
+      if (!statusStack) return;
+      const banner = document.createElement('div');
+      banner.className = `status-banner ${type}`;
+      banner.dataset.bannerId = `banner-${++bannerCounter}`;
+      const textWrap = document.createElement('div');
+      if (title) {
+        const strong = document.createElement('strong');
+        strong.textContent = title;
+        textWrap.appendChild(strong);
+      }
+      if (message) {
+        const para = document.createElement('p');
+        para.textContent = message;
+        textWrap.appendChild(para);
+      }
+      if (!title && !message) {
+        const para = document.createElement('p');
+        para.textContent = 'Update available.';
+        textWrap.appendChild(para);
+      }
+      banner.appendChild(textWrap);
+      const close = document.createElement('button');
+      close.setAttribute('aria-label', 'Dismiss notification');
+      close.innerHTML = '&times;';
+      close.addEventListener('click', () => removeBanner(banner));
+      banner.appendChild(close);
+      banner.setAttribute('role', type === 'error' || type === 'warning' ? 'alert' : 'status');
+      statusStack.appendChild(banner);
+      if (!sticky) {
+        setTimeout(() => removeBanner(banner), duration);
+      }
+      return banner.dataset.bannerId;
+    }
+
+    function removeBanner(el) {
+      if (el && el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    }
+
+    stateManager.subscribe(({ canUndo, canRedo, undoDescription, redoDescription }) => {
+      if (undoBtn) {
+        undoBtn.disabled = !canUndo;
+        undoBtn.title = canUndo ? `Undo: ${undoDescription || 'previous change'}` : 'Nothing to undo';
+      }
+      if (redoBtn) {
+        redoBtn.disabled = !canRedo;
+        redoBtn.title = redoDescription ? `Redo: ${redoDescription}` : 'Nothing to redo';
+      }
+    });
+
+    function setXmlStatus(message, tone = 'info') {
+      if (!xmlStatus) return;
+      xmlStatus.textContent = message;
+      xmlStatus.className = `inline-status ${tone}`;
+    }
+
+    function setPreviewHint(message, tone = 'info') {
+      if (!previewHintEl) return;
+      previewHintEl.textContent = message;
+      previewHintEl.className = `inline-status ${tone}`;
+    }
+
+    function setButtonLoading(button, isLoading, loadingLabel) {
+      if (!button) return;
+      if (isLoading) {
+        if (!button.dataset.originalText) {
+          button.dataset.originalText = button.textContent;
+        }
+        if (loadingLabel) {
+          button.textContent = loadingLabel;
+        }
+        button.setAttribute('aria-busy', 'true');
+        button.disabled = true;
+      } else {
+        if (button.dataset.originalText) {
+          button.textContent = button.dataset.originalText;
+        }
+        button.removeAttribute('aria-busy');
+        button.disabled = false;
+      }
+    }
+
+    function setLoadingState(active, message = 'Processing...') {
+      if (!loadingBackdrop) return;
+      loadingBackdrop.classList.toggle('hidden', !active);
+      if (message && loadingMessage) {
+        loadingMessage.textContent = message;
+      }
+    }
+
+    function loadStoredHistory(flowId) {
+      if (!flowId) return [];
+      const stored = localStorage.getItem(`flow-history-${flowId}`);
+      if (!stored) return [];
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return [];
+      }
+    }
+
+    function persistFlowHistory(flow) {
+      if (!flow) return;
+      localStorage.setItem(`flow-history-${flow.id}`, JSON.stringify(flow.history || []));
+    }
+
+    function getActiveFlow() {
+      return flowBuffers.get(activeFlowId);
+    }
+
+    function updateHistorySummary(flow = getActiveFlow()) {
+      if (!historySummaryEl) return;
+      const latest = flow?.history?.[0];
+      if (!latest) {
+        historySummaryEl.textContent = 'No snapshots yet.';
+        historySummaryEl.className = 'inline-status info';
+        return;
+      }
+      const when = new Date(latest.timestamp).toLocaleTimeString();
+      historySummaryEl.textContent = `Last snapshot: ${latest.label} at ${when} (${latest.nodesCount} nodes)`;
+      historySummaryEl.className = 'inline-status success';
+    }
+
+    function renderHistoryList() {
+      if (!historyList) return;
+      const flow = getActiveFlow();
+      historyList.innerHTML = '';
+      if (!flow || !flow.history || flow.history.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'history-entry';
+        li.textContent = 'No snapshots saved yet.';
+        historyList.appendChild(li);
+        return;
+      }
+      flow.history.forEach((entry, index) => {
+        const li = document.createElement('li');
+        li.className = 'history-entry';
+        const label = document.createElement('div');
+        const strong = document.createElement('strong');
+        strong.textContent = entry.label;
+        const small = document.createElement('small');
+        small.textContent = new Date(entry.timestamp).toLocaleString();
+        const meta = document.createElement('p');
+        meta.style.margin = '0.3rem 0 0';
+        meta.textContent = `Nodes: ${entry.nodesCount}${entry.reason ? ` · ${entry.reason}` : ''}`;
+        label.appendChild(strong);
+        label.appendChild(small);
+        label.appendChild(meta);
+        const actions = document.createElement('div');
+        actions.className = 'history-actions';
+        const restoreBtn = document.createElement('button');
+        restoreBtn.type = 'button';
+        restoreBtn.textContent = 'Restore';
+        restoreBtn.dataset.index = index;
+        restoreBtn.dataset.action = 'restore';
+        const compareBtn = document.createElement('button');
+        compareBtn.type = 'button';
+        compareBtn.textContent = 'Compare';
+        compareBtn.dataset.index = index;
+        compareBtn.dataset.action = 'compare';
+        actions.appendChild(restoreBtn);
+        actions.appendChild(compareBtn);
+        li.appendChild(label);
+        li.appendChild(actions);
+        historyList.appendChild(li);
+      });
+    }
+
+    function openHistoryModal() {
+      if (!historyModal) return;
+      historyModal.classList.remove('hidden');
+      historyModal.setAttribute('aria-hidden', 'false');
+      renderHistoryList();
+      if (historyStatusEl) {
+        historyStatusEl.classList.remove('history-status');
+        historyStatusEl.textContent = 'Snapshots capture nodes, pan, scale, and serialized DSL/XML.';
+      }
+    }
+
+    function closeHistoryModal() {
+      if (!historyModal) return;
+      historyModal.classList.add('hidden');
+      historyModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function restoreLatestSnapshot() {
+      const flow = getActiveFlow();
+      const latest = flow?.history?.[0];
+      if (!latest) {
+        showBanner({ type: 'info', title: 'No snapshots', message: 'Save a snapshot to restore it later.' });
+        return;
+      }
+      restoreSnapshot(latest);
+    }
+
+    function saveSnapshot(reason = 'Manual snapshot') {
+      if (!activeFlowId) return;
+      const flow = getActiveFlow();
+      if (!flow) return;
+      const snapshotDsl = generateDsl(nodes);
+      const entry = {
+        id: `${flow.id}-snapshot-${Date.now()}`,
+        label: reason,
+        timestamp: Date.now(),
+        nodes: cloneNodes(nodes),
+        panX,
+        panY,
+        scale,
+        selectedId,
+        nodesCount: nodes.length,
+        dsl: snapshotDsl,
+        xml: latestXml,
+        mermaid: latestMermaid,
+        reason,
+      };
+      flow.history = [entry, ...(flow.history || [])].slice(0, 10);
+      persistFlowHistory(flow);
+      updateHistorySummary(flow);
+      renderHistoryList();
+      markFlowClean();
+      historyStatusEl?.classList?.remove('history-status');
+    }
+
+    function restoreSnapshot(entry) {
+      if (!entry) return;
+      replaceActiveFlowNodes(cloneNodes(entry.nodes));
+      panX = entry.panX ?? panX;
+      panY = entry.panY ?? panY;
+      scale = entry.scale ?? scale;
+      selectedId = entry.selectedId || null;
+      renderAll();
+      markFlowClean();
+      historyStatusEl.textContent = `Restored snapshot "${entry.label}".`;
+      historyStatusEl.className = 'history-status';
+      updateEmptyState();
+    }
+
+    function compareSnapshot(entry) {
+      if (!entry) return;
+      const delta = nodes.length - entry.nodesCount;
+      const sign = delta > 0 ? '+' : '';
+      historyStatusEl.textContent = `Current vs snapshot "${entry.label}": nodes delta ${sign}${delta}.`;
+      historyStatusEl.className = 'history-status';
+    }
+
+    function renderShortcutLists() {
+      if (shortcutSummaryList) {
+        shortcutSummaryList.innerHTML = '';
+        shortcutDefinitions.slice(0, 4).forEach((item) => {
+          const li = document.createElement('li');
+          li.className = 'history-entry';
+          const strong = document.createElement('strong');
+          strong.textContent = item.combo;
+          const small = document.createElement('small');
+          small.textContent = item.description;
+          li.appendChild(strong);
+          li.appendChild(small);
+          shortcutSummaryList.appendChild(li);
+        });
+      }
+      if (shortcutList) {
+        shortcutList.innerHTML = '';
+        shortcutDefinitions.forEach((item) => {
+          const li = document.createElement('li');
+          li.className = 'history-entry';
+          const strong = document.createElement('strong');
+          strong.textContent = item.combo;
+          const small = document.createElement('small');
+          small.textContent = item.description;
+          li.appendChild(strong);
+          li.appendChild(small);
+          shortcutList.appendChild(li);
+        });
+      }
+    }
+
+    function refreshShortcutSummaryText() {
+      if (!shortcutsSummaryEl) return;
+      shortcutsSummaryEl.textContent = shortcutsEnabled
+        ? 'Shortcuts accelerate compile, history, templates, and previews.'
+        : 'Shortcuts paused. Toggle them to continue using combos.';
+    }
+
+    function updateShortcutToggleState() {
+      if (toggleShortcutsBtn) {
+        toggleShortcutsBtn.textContent = `Shortcuts: ${shortcutsEnabled ? 'On' : 'Off'}`;
+        toggleShortcutsBtn.setAttribute('aria-pressed', shortcutsEnabled.toString());
+      }
+      if (shortcutsStatusEl) {
+        shortcutsStatusEl.textContent = `Shortcuts are ${shortcutsEnabled ? 'enabled' : 'disabled'}.`;
+      }
+      refreshShortcutSummaryText();
+    }
+
+    function setShortcutsState(enabled) {
+      shortcutsEnabled = enabled;
+      localStorage.setItem(SHORTCUTS_STORAGE_KEY, enabled.toString());
+      updateShortcutToggleState();
+    }
+
+    function openShortcutsPanel() {
+      if (!shortcutsModal) return;
+      renderShortcutLists();
+      shortcutsModal.classList.remove('hidden');
+      shortcutsModal.setAttribute('aria-hidden', 'false');
+      updateShortcutToggleState();
+    }
+
+    function closeShortcutsPanel() {
+      if (!shortcutsModal) return;
+      shortcutsModal.classList.add('hidden');
+      shortcutsModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function deleteSelectedNode() {
+      if (!selectedId) return;
+      const index = nodes.findIndex((n) => n.id === selectedId);
+      if (index === -1) return;
+      nodes.splice(index, 1);
+      ensureTerminalNodes('delete');
+      selectedId = null;
+      renderAll();
+      markCurrentFlowDirty();
+      updateEmptyState();
+      showBanner({
+        type: 'info',
+        title: 'Node removed',
+        message: 'Use the history panel to restore the last snapshot.',
+        duration: 4000,
+      });
+    }
+
+    function nudgeSelectedNode(direction) {
+      const node = nodes.find((n) => n.id === selectedId);
+      if (!node) return;
+      let dx = 0;
+      let dy = 0;
+      if (direction === 'arrowleft') dx = -SHORTCUT_NUDGE_STEP;
+      if (direction === 'arrowright') dx = SHORTCUT_NUDGE_STEP;
+      if (direction === 'arrowup') dy = -SHORTCUT_NUDGE_STEP;
+      if (direction === 'arrowdown') dy = SHORTCUT_NUDGE_STEP;
+      if (dx === 0 && dy === 0) return;
+      node.x = (node.x || 0) + dx;
+      node.y = (node.y || 0) + dy;
+      renderAll();
+      markCurrentFlowDirty();
+      setPreviewHint('Node nudged via keyboard.', 'info');
+    }
+
+    function handleGlobalShortcuts(event) {
+      if (event.defaultPrevented || !shortcutsEnabled) return;
+      const target = event.target;
+      const isInput =
+        target instanceof HTMLElement &&
+        (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable);
+      if (isInput) return;
+      const key = event.key.toLowerCase();
+      const isMeta = event.metaKey || event.ctrlKey;
+      if (isMeta && key === 's') {
+        event.preventDefault();
+        compileButton?.click();
+        return;
+      }
+      if (isMeta && key === 't') {
+        event.preventDefault();
+        openTutorial(0);
+        return;
+      }
+      if (isMeta && key === 'l') {
+        event.preventDefault();
+        loadTemplate('onboarding');
+        setPreviewHint('Onboarding template loaded via shortcut.', 'success');
+        return;
+      }
+      if (isMeta && key === 'p') {
+        event.preventDefault();
+        renderPreview();
+        setPreviewHint('Mermaid preview refreshed via shortcut.', 'success');
+        return;
+      }
+      if (isMeta && key === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) {
+          performRedo();
+        } else {
+          performUndo();
+        }
+        return;
+      }
+      if (isMeta && key === 'y') {
+        event.preventDefault();
+        openHistoryModal();
+        return;
+      }
+      if (key === 'delete' || key === 'backspace') {
+        if (selectedId) {
+          event.preventDefault();
+          deleteSelectedNode();
+        }
+        return;
+      }
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
+        event.preventDefault();
+        nudgeSelectedNode(key);
+        return;
+      }
+    }
+
+    function updateImportStatus(message, tone = 'info') {
+      if (!importStatusEl) return;
+      importStatusEl.textContent = message;
+      importStatusEl.className = `import-status ${tone}`;
+    }
+
+    async function importMermaidText(text) {
+      updateImportStatus('Compiling Mermaid to DSL...');
+      try {
+        const res = await fetch(`${API_BASE}/api/compile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mermaidText: text }),
+        });
+        const data = await safeJson(res);
+        if (!res.ok || !data.dsl) {
+          throw new Error(data?.error || 'Compiler rejected the Mermaid input.');
+        }
+        loadFlowDsl(data.dsl);
+        updateImportStatus('Mermaid loaded into the canvas.', 'success');
+      } catch (err) {
+        updateImportStatus(`Import failed: ${err.message}`, 'error');
+      }
+    }
+
+    async function importDslText(text) {
+      try {
+        const parsed = JSON.parse(text);
+        loadFlowDsl(parsed);
+        updateImportStatus('DSL loaded into the current flow.', 'success');
+      } catch (err) {
+        updateImportStatus(`Failed to parse DSL: ${err.message}`, 'error');
+      }
+    }
+
+    async function importXmlText(text) {
+      updateImportStatus('Parsing Flow XML...');
+      try {
+        const res = await fetch(`${API_BASE}/api/decompile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ flowXml: text }),
+        });
+        const data = await safeJson(res);
+        if (!res.ok || !data.dsl) {
+          throw new Error(data?.error || 'Could not parse Flow XML.');
+        }
+        loadFlowDsl(data.dsl);
+        updateImportStatus('Flow XML imported into the canvas.', 'success');
+      } catch (err) {
+        updateImportStatus(`Flow XML import failed: ${err.message}`, 'error');
+      }
+    }
+
+    function flowDslToNodes(dsl) {
+      if (!dsl || !Array.isArray(dsl.elements)) return [];
+      const perRow = 4;
+      const stepX = 220;
+      const stepY = 120;
+      return dsl.elements.map((elem, idx) => {
+        const base = {
+          id: elem.apiName || elem.id || `elem-${idx}`,
+          apiName: elem.apiName || elem.id || `element_${idx}`,
+          label: elem.label || elem.apiName || elem.type,
+          type: elem.type,
+          x: 80 + (idx % perRow) * stepX,
+          y: 80 + Math.floor(idx / perRow) * stepY,
+        };
+        if (elem.type === 'Decision' && Array.isArray(elem.outcomes)) {
+          const yesOutcome = elem.outcomes.find((o) => /yes/i.test(o.name || ''));
+          const noOutcome = elem.outcomes.find((o) => o.isDefault || /no/i.test(o.name || ''));
+          return {
+            ...base,
+            yesNext: yesOutcome?.next || elem.next,
+            noNext: noOutcome?.next || elem.next,
+            outcomes: elem.outcomes,
+          };
+        }
+        if (elem.type === 'Assignment') {
+          return {
+            ...base,
+            assignments: Array.isArray(elem.assignments)
+              ? elem.assignments.map((a) => `${a.variable} = ${a.value}`).join('; ')
+              : elem.assignments,
+            next: elem.next,
+          };
+        }
+        if (elem.type === 'GetRecords') {
+          return {
+            ...base,
+            object: elem.object || '',
+            fields: Array.isArray(elem.fields) ? elem.fields.join(', ') : elem.fields,
+            next: elem.next,
+          };
+        }
+        if (elem.type === 'Loop') {
+          return {
+            ...base,
+            loopCondition: elem.condition || elem.loopCondition,
+            iterationCount: elem.iterations || elem.iterationCount,
+            next: elem.next,
+          };
+        }
+        if (elem.type === 'Wait') {
+          return {
+            ...base,
+            waitFor: elem.waitFor || elem.eventName || '',
+            waitDuration: elem.duration || elem.waitDuration || '',
+            next: elem.next,
+          };
+        }
+        if (elem.type === 'Fault') {
+          return {
+            ...base,
+            faultSource: elem.source || elem.faultSource || '',
+            faultMessage: elem.message || elem.faultMessage || '',
+            next: elem.next,
+          };
+        }
+        return {
+          ...base,
+          next: elem.next,
+        };
+      });
+    }
+
+    function loadFlowDsl(dsl) {
+      const nodesFromDsl = flowDslToNodes(dsl);
+      replaceActiveFlowNodes(nodesFromDsl);
+      renderAll();
+      markCurrentFlowDirty();
+      updateEmptyState();
+      setPreviewHint('Imported flow synced to Mermaid & DSL preview.', 'success');
+      latestDslData = dsl;
+    }
+
+    function downloadBlob(filename, data, type = 'text/plain') {
+      const blob = new Blob([data], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function generateSvgSnapshot() {
+      if (!nodes || nodes.length === 0) return '';
+      const ns = 'http://www.w3.org/2000/svg';
+      const width = Math.max(...nodes.map((n) => (n.x || 0))) + 260;
+      const height = Math.max(...nodes.map((n) => (n.y || 0))) + 220;
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('xmlns', ns);
+      svg.setAttribute('width', width);
+      svg.setAttribute('height', height);
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      const defs = document.createElementNS(ns, 'defs');
+      const arrow = document.createElementNS(ns, 'marker');
+      arrow.setAttribute('id', 'hub-arrow');
+      arrow.setAttribute('viewBox', '0 0 10 10');
+      arrow.setAttribute('refX', '5');
+      arrow.setAttribute('refY', '5');
+      arrow.setAttribute('markerWidth', '6');
+      arrow.setAttribute('markerHeight', '6');
+      arrow.setAttribute('orient', 'auto-start-reverse');
+      const path = document.createElementNS(ns, 'path');
+      path.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
+      path.setAttribute('fill', '#66e0ff');
+      arrow.appendChild(path);
+      defs.appendChild(arrow);
+      svg.appendChild(defs);
+      const edgeNodes = collectConnections(nodes);
+      const mapPositions = (node) => ({
+        x: (node.x || 0) + 60,
+        y: (node.y || 0) + 40,
+      });
+      edgeNodes.forEach((edge) => {
+        const source = nodes.find((n) => n.id === edge.from);
+        const target = nodes.find((n) => n.id === edge.to);
+        if (!source || !target) return;
+        const s = mapPositions(source);
+        const t = mapPositions(target);
+        const line = document.createElementNS(ns, 'line');
+        line.setAttribute('x1', s.x);
+        line.setAttribute('y1', s.y);
+        line.setAttribute('x2', t.x);
+        line.setAttribute('y2', t.y);
+        line.setAttribute('stroke', '#66e0ff');
+        line.setAttribute('stroke-width', '2');
+        line.setAttribute('marker-end', 'url(#hub-arrow)');
+        svg.appendChild(line);
+        if (edge.label) {
+          const text = document.createElementNS(ns, 'text');
+          text.setAttribute('x', (s.x + t.x) / 2);
+          text.setAttribute('y', (s.y + t.y) / 2 - 6);
+          text.setAttribute('fill', '#9aa5d3');
+          text.setAttribute('font-size', '12');
+          text.textContent = edge.label;
+          svg.appendChild(text);
+        }
+      });
+      nodes.forEach((node) => {
+        const pos = mapPositions(node);
+        const rect = document.createElementNS(ns, 'rect');
+        rect.setAttribute('x', (node.x || 0) + 20);
+        rect.setAttribute('y', (node.y || 0) + 10);
+        rect.setAttribute('width', '140');
+        rect.setAttribute('height', '48');
+        rect.setAttribute('rx', '12');
+        rect.setAttribute('fill', '#1b2546');
+        rect.setAttribute('stroke', '#223054');
+        svg.appendChild(rect);
+        const text = document.createElementNS(ns, 'text');
+        text.setAttribute('x', pos.x);
+        text.setAttribute('y', pos.y + 5);
+        text.setAttribute('fill', '#f5f7ff');
+        text.setAttribute('font-size', '12');
+        text.setAttribute('text-anchor', 'middle');
+        text.textContent = node.label || node.apiName || node.type;
+        svg.appendChild(text);
+      });
+      return new XMLSerializer().serializeToString(svg);
+    }
+
+    async function generatePngSnapshot() {
+      if (!nodes || nodes.length === 0) return '';
+      const canvas = document.createElement('canvas');
+      const offsetX = Math.max(0, -(Math.min(...nodes.map((n) => n.x || 0))) + 40);
+      const offsetY = Math.max(0, -(Math.min(...nodes.map((n) => n.y || 0))) + 40);
+      const width = Math.max(...nodes.map((n) => (n.x || 0))) + offsetX + 200;
+      const height = Math.max(...nodes.map((n) => (n.y || 0))) + offsetY + 200;
+      canvas.width = Math.max(400, width);
+      canvas.height = Math.max(300, height);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return '';
+      ctx.fillStyle = '#090f1f';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#66e0ff';
+      ctx.lineWidth = 2;
+      const nodePositions = nodes.map((node) => ({
+        id: node.id,
+        x: (node.x || 0) + offsetX + 70,
+        y: (node.y || 0) + offsetY + 40,
+      }));
+      collectConnections(nodes).forEach((edge) => {
+        const source = nodePositions.find((p) => p.id === edge.from);
+        const target = nodePositions.find((p) => p.id === edge.to);
+        if (!source || !target) return;
+        ctx.beginPath();
+        ctx.moveTo(source.x, source.y);
+        ctx.lineTo(target.x, target.y);
+        ctx.stroke();
+      });
+      ctx.fillStyle = '#1b2546';
+      ctx.strokeStyle = '#223054';
+      nodePositions.forEach((pos) => {
+        ctx.fillRect(pos.x - 70, pos.y - 24, 140, 48);
+        ctx.strokeRect(pos.x - 70, pos.y - 24, 140, 48);
+        ctx.fillStyle = '#f5f7ff';
+        ctx.font = '12px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText(nodes.find((n) => n.id === pos.id)?.label || pos.id, pos.x, pos.y + 5);
+        ctx.fillStyle = '#1b2546';
+      });
+      return canvas.toDataURL('image/png');
+    }
+
+    function saveCurrentFlowState() {
+      if (!activeFlowId) return;
+      const flow = flowBuffers.get(activeFlowId);
+      if (!flow) return;
+      flow.nodes = nodes;
+      flow.panX = panX;
+      flow.panY = panY;
+      flow.scale = scale;
+      flow.selectedId = selectedId;
+    }
+
+    function markFlowDirty(id, dirty = true) {
+      const flow = flowBuffers.get(id);
+      if (!flow) return;
+      flow.dirty = dirty;
+      renderFlowTabs();
+    }
+
+    function markCurrentFlowDirty(reason = 'Flow edit') {
+      markFlowDirty(activeFlowId, true);
+      captureFlowState(reason);
+      validateActiveFlow();
+    }
+
+    function markFlowClean(id = activeFlowId) {
+      markFlowDirty(id, false);
+    }
+
+    function nextNodeId(type, targetNodes = nodes) {
+      const list = Array.isArray(targetNodes) ? targetNodes : nodes;
+      const count = list.filter((n) => n.type === type).length + 1;
+      return `${type}_${count}`;
+    }
+
+    function buildNode(type, targetNodes = nodes, overrides = {}) {
+      const list = Array.isArray(targetNodes) ? targetNodes : nodes;
+      const base = typeDefaults[type] ? typeDefaults[type]() : { type, label: type };
+      const id = overrides.id || nextNodeId(type, list);
+      const apiName = overrides.apiName || id;
+      return { ...base, id, apiName, ...overrides };
+    }
+
+    function ensureTerminalNodes(reason = 'auto', targetNodes = nodes, options = {}) {
+      const list = Array.isArray(targetNodes) ? targetNodes : nodes;
+      if (!Array.isArray(list) || list.length === undefined) return [];
+      const notify = options.notify ?? list === nodes;
+      const addedTypes = [];
+      if (!list.some((n) => n.type === 'Start')) {
+        const startNode = buildNode('Start', list, { x: DEFAULT_NODE_X, y: DEFAULT_NODE_Y, next: '' });
+        list.push(startNode);
+        addedTypes.push('Start');
+      }
+      if (!list.some((n) => n.type === 'End')) {
+        const maxY = list.reduce((acc, node) => (typeof node.y === 'number' ? Math.max(acc, node.y) : acc), DEFAULT_NODE_Y);
+        const endNode = buildNode('End', list, { x: DEFAULT_NODE_X, y: maxY + END_VERTICAL_OFFSET });
+        list.push(endNode);
+        addedTypes.push('End');
+      }
+      if (notify && addedTypes.length) {
+        markCurrentFlowDirty();
+        showBanner({
+          type: 'warning',
+          title: 'Flow corrected',
+          message: `Added required ${addedTypes.join(' & ')} node${addedTypes.length > 1 ? 's' : ''}.`,
+          duration: 4500,
+        });
+      }
+      return addedTypes;
+    }
+
+    function renderFlowTabs() {
+      if (!flowTabs) return;
+      flowTabs.innerHTML = '';
+      flowBuffers.forEach((flow) => {
+        const tab = document.createElement('button');
+        tab.type = 'button';
+        tab.className = 'flow-tab';
+        if (flow.id === activeFlowId) tab.classList.add('active');
+        const label = document.createElement('span');
+        label.textContent = flow.name;
+        tab.appendChild(label);
+        if (flow.dirty) {
+          const indicator = document.createElement('span');
+          indicator.className = 'flow-indicator';
+          tab.appendChild(indicator);
+        }
+        tab.addEventListener('click', () => loadFlow(flow.id));
+        flowTabs.appendChild(tab);
+      });
+    }
+
+    function createFlow(name, nodesSnapshot = sampleNodes) {
+      const label = name || `Flow ${flowCounter++}`;
+      const id = `flow-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const nodeCopy = nodesSnapshot.map((n) => ({ ...n }));
+      ensureTerminalNodes('flow-init', nodeCopy, { notify: false });
+      const flow = {
+        id,
+        name: label,
+        nodes: nodeCopy,
+        panX: 0,
+        panY: 0,
+        scale: 1,
+        selectedId: null,
+        dirty: false,
+        history: loadStoredHistory(id),
+      };
+      flowBuffers.set(id, flow);
+      renderFlowTabs();
+      return flow;
+    }
+
+    function replaceActiveFlowNodes(newNodes) {
+      if (!Array.isArray(newNodes)) return;
+      ensureTerminalNodes('replace', newNodes, { notify: false });
+      const flow = flowBuffers.get(activeFlowId);
+      if (flow) {
+        flow.nodes = newNodes;
+      }
+      nodes = newNodes;
+    }
+
+    function captureFlowState(description = 'Flow edit') {
+      if (!stateManager || !Array.isArray(nodes)) return;
+      stateManager.captureStateNow(
+        {
+          nodes: cloneNodes(nodes),
+          panX,
+          panY,
+          scale,
+          selectedId,
+        },
+        description
+      );
+    }
+
+    function applyStateSnapshot(snapshot) {
+      if (!snapshot) return;
+      const restoredNodes = Array.isArray(snapshot.nodes) ? cloneNodes(snapshot.nodes) : [];
+      replaceActiveFlowNodes(restoredNodes);
+      panX = snapshot.panX ?? panX;
+      panY = snapshot.panY ?? panY;
+      scale = snapshot.scale ?? scale;
+      selectedId = snapshot.selectedId || null;
+      renderAll();
+      markFlowClean();
+      setPreviewHint('Flow restored to previous state.', 'info');
+    }
+
+    function performUndo() {
+      const description = stateManager.getUndoDescription() || 'previous change';
+      const snapshot = stateManager.undo();
+      if (!snapshot) {
+        showBanner({ type: 'warning', title: 'Undo', message: 'Nothing to undo.' });
+        return;
+      }
+      applyStateSnapshot(snapshot);
+      showBanner({ type: 'info', title: 'Undo', message: `Reverted: ${description}` });
+    }
+
+    function performRedo() {
+      const description = stateManager.getRedoDescription() || 'next change';
+      const snapshot = stateManager.redo();
+      if (!snapshot) {
+        showBanner({ type: 'warning', title: 'Redo', message: 'Nothing to redo.' });
+        return;
+      }
+      applyStateSnapshot(snapshot);
+      showBanner({ type: 'info', title: 'Redo', message: `Restored: ${description}` });
+    }
+
+    function addNodeFromToolbox(type, position) {
+      if (!type) return;
+      const fallbackX = DEFAULT_NODE_X;
+      const fallbackY = DEFAULT_NODE_Y + nodes.length * 140;
+      const resolvedX = position?.x != null ? snapToGrid(position.x) : fallbackX;
+      const resolvedY = position?.y != null ? snapToGrid(position.y) : fallbackY;
+      const node = buildNode(type, nodes, { x: resolvedX, y: resolvedY });
+      nodes.push(node);
+      selectedId = node.id;
+      renderAll();
+      markCurrentFlowDirty();
+    }
+
+    function loadFlow(id) {
+      if (!flowBuffers.has(id)) return;
+      if (id === activeFlowId) return;
+      saveCurrentFlowState();
+      activeFlowId = id;
+      const flow = flowBuffers.get(id);
+      flow.history = flow.history || loadStoredHistory(id);
+      nodes = flow.nodes;
+      ensureTerminalNodes('load-flow');
+      panX = flow.panX;
+      panY = flow.panY;
+      scale = flow.scale;
+      selectedId = flow.selectedId || null;
+      renderFlowTabs();
+      renderAll();
+      updateEmptyState();
+      updateHistorySummary(flow);
+      renderHistoryList();
+      stateManager.reset();
+      captureFlowState('Flow loaded');
+      markFlowClean();
+    }
+
+    newFlowBtn?.addEventListener('click', () => {
+      const flow = createFlow();
+      loadFlow(flow.id);
+    });
+
+    undoBtn?.addEventListener('click', performUndo);
+    redoBtn?.addEventListener('click', performRedo);
+
+    function requestRender() {
+      if (renderPending) return;
+      renderPending = true;
+      requestAnimationFrame(() => {
+        renderAll({ skipForm: true });
+        renderPending = false;
+      });
+    }
+
+    function updateEmptyState() {
+      // helper retained for compatibility; overlay is removed
+    }
+
+    function showCanvasOnInteraction() {
+      // legacy helper to ensure canvas visibility; overlay was removed so nothing to do
+    }
+
+    function setIssueState(level, entries = []) {
+      if (!statusDetails || !statusDetailsSummary || !statusDetailsList) return;
+      statusDetails.dataset.level = level;
+      statusDetailsSummary.textContent = entries.length ? entries[0] : 'No active issues.';
+      statusDetailsSummary.className = `inline-status ${level}`;
+      statusDetailsList.innerHTML = '';
+      entries.forEach((entry) => {
+        const li = document.createElement('li');
+        li.textContent = entry;
+        statusDetailsList.appendChild(li);
+      });
+    }
+
+    function clearIssueState() {
+      setIssueState('info', []);
+    }
+
+    function handleValidationAutoFix(action) {
+      if (!action) return;
+      if (action === 'ensure-terminals') {
+        const added = ensureTerminalNodes('auto-fix', nodes, { notify: false });
+        if (!added.length) {
+          showBanner({ type: 'info', title: 'Auto-fix', message: 'Flow already meets start/end requirements.' });
+          return;
+        }
+        renderAll();
+        markCurrentFlowDirty(`Auto fix: added ${added.join(' & ')}`);
+        showBanner({
+          type: 'success',
+          title: 'Auto-fix applied',
+          message: `Added missing ${added.join(' & ')} node${added.length > 1 ? 's' : ''}.`,
+        });
+        highlightNodesOnHover([]);
+        return;
+      }
+      showBanner({ type: 'warning', title: 'Auto-fix', message: 'Auto-fix action not supported yet.' });
+    }
+
+    function renderValidationIssues() {
+      if (!validationList) return;
+      const issues = validationResult?.all || [];
+      const formatted = issues.map(formatValidationError);
+      renderValidationCards(validationList, formatted, {
+        onAutoFix: handleValidationAutoFix,
+        onHighlight: highlightNodesOnHover,
+        onClearHighlight: () => highlightNodesOnHover([]),
+      });
+      if (!issues.length) {
+        validationBadge?.classList.add('hidden');
+        if (validationSummary) validationSummary.textContent = 'Validation OK.';
+        if (compileButton) compileButton.disabled = false;
+      } else {
+        const hasErrors = validationResult.errors.length > 0;
+        validationBadge?.classList.remove('hidden');
+        validationBadge?.setAttribute('data-severity', hasErrors ? 'error' : 'warning');
+        validationBadge.textContent = hasErrors
+          ? 'Validation errors block compile'
+          : `${validationResult.warnings.length} warning(s)`;
+        if (validationSummary) {
+          validationSummary.textContent = hasErrors
+            ? 'Fix validation errors before compiling.'
+            : 'Validation passed with warnings.';
+        }
+        if (compileButton) compileButton.disabled = hasErrors;
+      }
+      highlightInvalidNodes();
+    }
+
+    function highlightInvalidNodes() {
+      const invalidIds = new Set(
+        (validationResult?.errors || []).flatMap((issue) => issue.nodes || []),
+      );
+      canvasInner?.querySelectorAll('.node').forEach((el) => {
+        const nodeId = el.dataset.nodeId;
+        el.classList.toggle('node-invalid', Boolean(nodeId && invalidIds.has(nodeId)));
+      });
+    }
+
+    function highlightNodesOnHover(nodeIds = []) {
+      const targets = new Set(nodeIds || []);
+      canvasInner?.querySelectorAll('.node').forEach((el) => {
+        const id = el.dataset.nodeId;
+        el.classList.toggle('node-highlighted', Boolean(id && targets.has(id)));
+      });
+    }
+
+    function getNodeFromTarget(target) {
+      const nodeEl = target instanceof Element ? target.closest('.node') : null;
+      if (!nodeEl) return null;
+      return nodes.find((node) => node.id === nodeEl.dataset.nodeId);
+    }
+
+    function handleInlineEdit(node) {
+      nodeEditor.open(node);
+    }
+
+    function duplicateNode(node) {
+      const clone = {
+        ...node,
+        id: `${node.type}_${Date.now()}`,
+        apiName: `${node.type}_${Date.now()}`,
+        x: (node.x || 0) + 40,
+        y: (node.y || 0) + 40,
+      };
+      nodes.push(clone);
+      selectedId = clone.id;
+      renderAll();
+      markCurrentFlowDirty(`Duplicate ${node.type}`);
+      showBanner({ type: 'success', title: 'Node duplicated', message: `${node.type} copied to canvas.` });
+      return clone;
+    }
+
+    function deleteNode(node) {
+      if (!node) return;
+      nodes = nodes.filter((n) => n.id !== node.id);
+      ensureTerminalNodes('delete');
+      selectedId = null;
+      renderAll();
+      markCurrentFlowDirty(`Delete ${node.type}`);
+      showBanner({ type: 'warning', title: 'Node removed', message: `${node.type} deleted.` });
+    }
+
+    function contextMenuActions(node, event) {
+      removeContextMenu();
+      if (!node) return;
+      const position = { x: event.clientX, y: event.clientY };
+      createContextMenu(node, position, {
+        onEdit: (target) => handleInlineEdit(target),
+        onDuplicate: (target) => duplicateNode(target),
+        onDelete: (target) => deleteNode(target),
+      });
+    }
+
+    function validateActiveFlow() {
+      validationResult = validateFlow(nodes);
+      renderValidationIssues();
+    }
+
+    function applyAdvancedHighlight() {
+      document.querySelectorAll('.node').forEach((el) => {
+        const matches = el.dataset.nodeType === activeAdvancedType;
+        el.classList.toggle('advanced-highlight', Boolean(activeAdvancedType && matches));
+      });
+      if (advancedHelper) {
+        advancedHelper.textContent = activeAdvancedType
+          ? `Highlighting ${activeAdvancedType} nodes.`
+          : 'Click a pill to highlight Loop, Wait, or Fault nodes.';
+      }
+    }
+
+    function highlightAdvancedNodes(type) {
+      activeAdvancedType = type === 'clear' ? null : type;
+      advancedButtons.forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.advancedTarget === activeAdvancedType);
+      });
+      applyAdvancedHighlight();
+    }
+
+    function highlightTutorialTarget(selector) {
+      if (!tutorialHighlight) return;
+      const target = selector ? document.querySelector(selector) : null;
+      if (!target) {
+        tutorialHighlight.hidden = true;
+        return;
+      }
+      const rect = target.getBoundingClientRect();
+      tutorialHighlight.hidden = false;
+      tutorialHighlight.style.width = `${rect.width + 18}px`;
+      tutorialHighlight.style.height = `${rect.height + 18}px`;
+      tutorialHighlight.style.left = `${rect.left - 9 + window.scrollX}px`;
+      tutorialHighlight.style.top = `${rect.top - 9 + window.scrollY}px`;
+    }
+
+    function openTutorial(startAt = 0) {
+      if (!tutorialOverlay) return;
+      tutorialActive = true;
+      tutorialOverlay.classList.remove('hidden');
+      tutorialOverlay.setAttribute('aria-hidden', 'false');
+      tutorialStep = startAt;
+      updateTutorialStep();
+    }
+
+    function closeTutorial() {
+      if (!tutorialOverlay) return;
+      tutorialActive = false;
+      tutorialOverlay.classList.add('hidden');
+      tutorialOverlay.setAttribute('aria-hidden', 'true');
+      if (tutorialHighlight) {
+        tutorialHighlight.hidden = true;
+      }
+    }
+
+    function updateTutorialStep() {
+      if (!tutorialTitle || !tutorialDescription || !tutorialProgress || !tutorialNext || !tutorialPrev) return;
+      const step = tutorialSteps[tutorialStep];
+      tutorialTitle.textContent = step.title;
+      tutorialDescription.textContent = step.description;
+      tutorialProgress.textContent = `${tutorialStep + 1}/${tutorialSteps.length}`;
+      tutorialPrev.disabled = tutorialStep === 0;
+      tutorialNext.textContent = tutorialStep === tutorialSteps.length - 1 ? 'Finish' : 'Next';
+      highlightTutorialTarget(step.selector);
+    }
+
+    function navigateTutorial(delta) {
+      tutorialStep = Math.max(0, Math.min(tutorialSteps.length - 1, tutorialStep + delta));
+      updateTutorialStep();
+    }
+
+    function snapToGrid(value, step = 20) {
+      return Math.round(value / step) * step;
+    }
+
+    async function safeJson(res) {
+      const text = await res.text();
+      if (!text) return {};
+      try {
+        return JSON.parse(text);
+      } catch (err) {
+        throw new Error(`Unexpected response (${res.status}): ${text.slice(0, 160)}`);
+      }
+    }
 
     const sampleNodes = [
-      { id: 'Start_1', type: 'Start', label: 'Demo Start', apiName: 'Start_1', next: 'Screen_1' },
-      { id: 'Screen_1', type: 'Screen', label: 'Collect Data', apiName: 'Screen_1', next: 'Decision_1' },
-      { id: 'Decision_1', type: 'Decision', label: 'Route', apiName: 'Decision_1', yesNext: 'Assign_1', noNext: 'End_1' },
-      { id: 'Assign_1', type: 'Assignment', label: 'Set Flag', apiName: 'Assign_1', next: 'End_1', assignments: 'v_Flag = true' },
-      { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1' },
+      { id: 'Start_1', type: 'Start', label: 'Demo Start', apiName: 'Start_1', next: 'Screen_1', x: 320, y: 20 },
+      { id: 'Screen_1', type: 'Screen', label: 'Collect Data', apiName: 'Screen_1', next: 'Decision_1', x: 320, y: 190 },
+      { id: 'Decision_1', type: 'Decision', label: 'Route', apiName: 'Decision_1', yesNext: 'Assign_1', noNext: 'End_1', x: 320, y: 360 },
+      { id: 'Assign_1', type: 'Assignment', label: 'Set Flag', apiName: 'Assign_1', next: 'End_1', assignments: 'v_Flag = true', x: 500, y: 520 },
+      { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1', x: 320, y: 700 },
     ];
+
+    const templates = {
+      onboarding: {
+        name: 'Customer Onboarding',
+        description: 'Screen + Decision + Record create/update + Email subflow',
+        nodes: [
+          { id: 'Start_1', type: 'Start', label: 'Start', apiName: 'Start_1', next: 'Screen_1', x: 320, y: 20 },
+          { id: 'Screen_1', type: 'Screen', label: 'Collect Info', apiName: 'Screen_1', next: 'Decision_1', x: 320, y: 200 },
+          { id: 'Decision_1', type: 'Decision', label: 'Existing Customer?', apiName: 'Decision_1', yesNext: 'Update_1', noNext: 'Create_1', x: 320, y: 380 },
+          { id: 'Create_1', type: 'RecordCreate', label: 'Create Account', apiName: 'Create_1', next: 'Email_1', x: 160, y: 540 },
+          { id: 'Update_1', type: 'RecordUpdate', label: 'Update Account', apiName: 'Update_1', next: 'Email_1', x: 480, y: 540 },
+          { id: 'Email_1', type: 'Subflow', label: 'Send Welcome Email', apiName: 'Email_1', next: 'End_1', x: 320, y: 700 },
+          { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1', x: 320, y: 880 },
+        ],
+      },
+      lead: {
+        name: 'Lead Routing',
+        description: 'Decision + Assignment + GetRecords to route leads',
+        nodes: [
+          { id: 'Start_1', type: 'Start', label: 'Start', apiName: 'Start_1', next: 'Decision_1', x: 320, y: 20 },
+          { id: 'Decision_1', type: 'Decision', label: 'Qualified?', apiName: 'Decision_1', yesNext: 'Assign_1', noNext: 'End_1', x: 320, y: 200 },
+          { id: 'Assign_1', type: 'Assignment', label: 'Set Owner', apiName: 'Assign_1', assignments: 'Owner = Queue', next: 'Get_1', x: 320, y: 380 },
+          { id: 'Get_1', type: 'GetRecords', label: 'Lookup Lead', apiName: 'Get_1', next: 'End_1', x: 320, y: 560 },
+          { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1', x: 320, y: 740 },
+        ],
+      },
+      case: {
+        name: 'Case Escalation',
+        description: 'Screen + Decision + Wait/Fault connectors simplified',
+        nodes: [
+          { id: 'Start_1', type: 'Start', label: 'Start', apiName: 'Start_1', next: 'Screen_1', x: 320, y: 20 },
+          { id: 'Screen_1', type: 'Screen', label: 'Capture Case', apiName: 'Screen_1', next: 'Decision_1', x: 320, y: 200 },
+          { id: 'Decision_1', type: 'Decision', label: 'Severity?', apiName: 'Decision_1', yesNext: 'Assign_1', noNext: 'Wait_1', x: 320, y: 380 },
+          { id: 'Assign_1', type: 'Assignment', label: 'Escalate Owner', apiName: 'Assign_1', assignments: 'Owner = Tier2', next: 'End_1', x: 480, y: 540 },
+          { id: 'Wait_1', type: 'Wait', label: 'Follow-up', apiName: 'Wait_1', next: 'End_1', x: 160, y: 540 },
+          { id: 'End_1', type: 'End', label: 'Complete', apiName: 'End_1', x: 320, y: 720 },
+        ],
+      },
+      resilience: {
+        name: 'Resilient Loop Path',
+        description: 'Loop + Fault handling with wait checks',
+        nodes: [
+          { id: 'Start_1', type: 'Start', label: 'Start', apiName: 'Start_1', next: 'Screen_1', x: 320, y: 20 },
+          { id: 'Screen_1', type: 'Screen', label: 'Check System', apiName: 'Screen_1', next: 'Loop_1', x: 320, y: 200 },
+          { id: 'Loop_1', type: 'Loop', label: 'Retry Loop', apiName: 'Loop_1', next: 'Decision_1', loopCondition: 'Retry < 3', iterationCount: '3', x: 320, y: 380 },
+          { id: 'Decision_1', type: 'Decision', label: 'Success?', apiName: 'Decision_1', yesNext: 'End_1', noNext: 'Wait_1', x: 320, y: 560 },
+          { id: 'Wait_1', type: 'Wait', label: 'Delay', apiName: 'Wait_1', next: 'Fault_1', waitFor: 'External signal', waitDuration: '00:01:00', x: 480, y: 730 },
+          { id: 'Fault_1', type: 'Fault', label: 'Catch Error', apiName: 'Fault_1', next: 'End_1', faultSource: 'API', faultMessage: 'Retry required', x: 160, y: 730 },
+          { id: 'End_1', type: 'End', label: 'Done', apiName: 'End_1', x: 320, y: 900 },
+        ],
+      },
+    };
+
+    const iconMap = {
+      Start: '▶',
+      End: '⏹',
+      Screen: '📋',
+      Decision: '🔀',
+      Assignment: '✏️',
+      RecordCreate: '➕',
+      RecordUpdate: '🛠',
+      GetRecords: '📊',
+      Subflow: '🔁',
+      Loop: '⟳',
+      Wait: '⏳',
+      Fault: '⚠️',
+      default: '⬢',
+    };
 
     const typeDefaults = {
       Start: () => ({ type: 'Start', label: 'Start', next: '' }),
@@ -148,18 +1815,39 @@
       Assignment: () => ({ type: 'Assignment', label: 'Assignment', assignments: '', next: '' }),
       Decision: () => ({ type: 'Decision', label: 'Decision', yesNext: '', noNext: '' }),
       GetRecords: () => ({ type: 'GetRecords', label: 'Get Records', object: '', fields: '', filters: '', next: '' }),
+      Loop: () => ({ type: 'Loop', label: 'Loop', next: '', loopCondition: '', iterationCount: '' }),
+      Wait: () => ({ type: 'Wait', label: 'Wait', next: '', waitFor: '', waitDuration: '' }),
+      Fault: () => ({ type: 'Fault', label: 'Fault', next: '', faultSource: '', faultMessage: '' }),
     };
+    const TOOLBOX_DRAG_TYPE = 'application/x-flow-tool';
+    let draggingToolboxType = null;
+    const DEFAULT_NODE_X = 320;
+    const DEFAULT_NODE_Y = 20;
+    const END_VERTICAL_OFFSET = 180;
 
     function init() {
-      nodes = [...sampleNodes];
-      renderAll();
+      const defaultFlow = createFlow('Default Flow', sampleNodes);
+      renderTemplates();
+      restoreTheme();
+      renderShortcutLists();
+      setShortcutsState(shortcutsEnabled);
+      loadFlow(defaultFlow.id);
+      clearIssueState();
+      highlightAdvancedNodes('clear');
+      updateEmptyState();
+      setLoadingState(false, '');
+      showCanvasOnInteraction();
     }
 
-    function renderAll() {
+    function renderAll(options = {}) {
+      const { skipForm = false } = options;
       renderList();
       renderCanvas();
       renderPreview();
-      renderForm();
+      if (!skipForm) {
+        renderForm();
+      }
+      validateActiveFlow();
     }
 
     function applyTransform() {
@@ -172,7 +1860,8 @@
         const li = document.createElement('li');
         li.draggable = true;
         li.dataset.id = n.id;
-        li.innerHTML = `<div>${n.id}</div><span class="pill">${n.type}</span>`;
+        const icon = iconMap[n.type] || iconMap.default;
+        li.innerHTML = `<div style="display:flex; align-items:center; gap:0.4rem;"><span>${icon}</span>${n.id}</div><span class="pill"><span>${icon}</span>${n.type}</span>`;
         li.addEventListener('click', () => {
           selectedId = n.id;
           renderForm();
@@ -202,6 +1891,86 @@
       });
     }
 
+    function renderTemplates() {
+      if (!templateGrid) return;
+      templateGrid.innerHTML = '';
+      Object.entries(templates).forEach(([key, tpl]) => {
+        const div = document.createElement('div');
+        div.className = 'template-card';
+        div.innerHTML = `
+          <header>
+            <div>
+              <strong>${tpl.name}</strong><br/>
+              <small>${tpl.description}</small>
+            </div>
+            <span class="pill">Template</span>
+          </header>
+          <div class="row" style="margin-top:0.5rem;">
+            <button data-use="${key}" aria-label="Use template ${tpl.name}">Use</button>
+            <button class="secondary" data-preview="${key}" aria-label="Preview template ${tpl.name}">Preview</button>
+          </div>
+        `;
+        const useBtn = div.querySelector('[data-use]');
+        const previewBtn = div.querySelector('[data-preview]');
+        useBtn.addEventListener('click', (evt) => {
+          const btn = evt.currentTarget;
+          setButtonLoading(btn, true, 'Loading...');
+          requestAnimationFrame(() => {
+            loadTemplate(key);
+            setButtonLoading(btn, false);
+          });
+        });
+          previewBtn.addEventListener('click', (evt) => {
+            const btn = evt.currentTarget;
+            setButtonLoading(btn, true, 'Previewing...');
+            setLoadingState(true, 'Rendering preview...');
+            requestAnimationFrame(() => {
+              replaceActiveFlowNodes([...templates[key].nodes]);
+              renderAll();
+              markCurrentFlowDirty();
+              setButtonLoading(btn, false);
+        setLoadingState(false);
+              setPreviewHint(`Previewing ${tpl.name}. Use the compile action to turn it into XML.`, 'info');
+              showBanner({
+                type: 'info',
+                title: 'Template preview',
+                message: `${tpl.name} is rendering in the canvas.`,
+                duration: 2500,
+              });
+            });
+          });
+        templateGrid.appendChild(div);
+      });
+    }
+
+    function loadTemplate(key) {
+      const tpl = templates[key];
+      if (!tpl) return;
+      setLoadingState(true, 'Loading template...');
+      requestAnimationFrame(() => {
+        replaceActiveFlowNodes(JSON.parse(JSON.stringify(tpl.nodes)));
+        selectedId = null;
+        renderAll();
+        markCurrentFlowDirty();
+        scrollToBuilder();
+        output.textContent = `Template loaded: ${tpl.name}`;
+        setPreviewHint(`Loaded template "${tpl.name}". Loops/Waits/Faults keep their metadata in the preview.`, 'success');
+        showBanner({
+          type: 'success',
+          title: 'Template ready',
+          message: `${tpl.name} loaded into the canvas.`,
+        });
+        setLoadingState(false);
+      });
+    }
+
+  function scrollToBuilder() {
+    const builder = document.querySelector('main');
+    if (builder) builder.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  window.scrollToBuilder = scrollToBuilder;
+  window.loadTemplate = loadTemplate;
     function getDragAfterElement(container, y) {
       const elements = [...container.querySelectorAll('li:not(.dragging)')];
       return elements.reduce(
@@ -220,32 +1989,207 @@
 
     function renderCanvas() {
       canvasInner.innerHTML = '';
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.classList.add('edges');
+      canvasInner.appendChild(svg);
+
       nodes.forEach((n) => {
+        const icon = iconMap[n.type] || iconMap.default;
         const div = document.createElement('div');
         let cls = 'node default';
         if (n.type === 'Start') cls = 'node start';
         else if (n.type === 'End') cls = 'node end';
         else if (n.type === 'Decision') cls = 'node decision';
         div.className = cls;
-        div.textContent = `${n.id}: ${n.label || n.apiName || n.type}`;
+        div.innerHTML = `<span>${icon}</span><span>${n.id}: ${n.label || n.apiName || n.type}</span>`;
+        const tooltip = createNodeTooltip(n);
+        if (tooltip) div.appendChild(tooltip);
+        div.style.transform = `translate(${n.x || 0}px, ${(n.y || 0)}px)`;
+        div.setAttribute('role', 'button');
+        div.setAttribute('aria-label', `${n.type} node ${n.label || n.id}`);
+        div.dataset.nodeType = n.type;
+        div.dataset.nodeId = n.id;
+        div.addEventListener('mousedown', (e) => startNodeDrag(e, n.id));
+        div.addEventListener('mouseenter', () => {
+          hoverHighlightId = n.id;
+          updateEdgeHighlight();
+        });
+        div.addEventListener('mouseleave', () => {
+          hoverHighlightId = null;
+          updateEdgeHighlight();
+        });
+        div.addEventListener('click', () => {
+          selectedId = n.id;
+          renderForm();
+          updateEdgeHighlight();
+        });
         canvasInner.appendChild(div);
       });
-      const edgeBlock = document.createElement('div');
-      edgeBlock.style.marginTop = '0.5rem';
-      nodes.forEach((n) => {
-        if (n.type === 'Decision') {
-          if (n.yesNext) {
-            edgeBlock.appendChild(edgeLine(n.id, n.yesNext, '[Yes]'));
-          }
-          if (n.noNext) {
-            edgeBlock.appendChild(edgeLine(n.id, n.noNext, '[No/default]'));
-          }
-        } else if (n.next) {
-          edgeBlock.appendChild(edgeLine(n.id, n.next));
+
+      updateEmptyState();
+      drawEdges(svg);
+      edgeSvg = svg;
+      updateEdgeHighlight();
+      applyTransform();
+    }
+
+    function drawEdges(svg) {
+      const rect = canvasInner.getBoundingClientRect();
+      const nodeMap = new Map();
+      canvasInner.querySelectorAll('.node').forEach((el) => {
+        const id = el.dataset.nodeId;
+        if (!id) return;
+        const box = el.getBoundingClientRect();
+        nodeMap.set(id, {
+          x: box.left - rect.left + box.width / 2,
+          y: box.top - rect.top + box.height / 2,
+        });
+      });
+      const edges = collectConnections(nodes);
+      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+      marker.setAttribute('id', 'arrow');
+      marker.setAttribute('viewBox', '0 0 10 10');
+      marker.setAttribute('refX', '5');
+      marker.setAttribute('refY', '5');
+      marker.setAttribute('markerWidth', '6');
+      marker.setAttribute('markerHeight', '6');
+      marker.setAttribute('orient', 'auto-start-reverse');
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
+      path.setAttribute('fill', '#66e0ff');
+      marker.appendChild(path);
+      defs.appendChild(marker);
+      svg.prepend(defs);
+      edges.forEach(({ from, to, label }) => {
+        const a = nodeMap.get(from);
+        const b = nodeMap.get(to);
+        if (!a || !b) return;
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.classList.add('edge-line');
+        line.dataset.from = from;
+        line.dataset.to = to;
+        line.setAttribute('x1', a.x);
+        line.setAttribute('y1', a.y);
+        line.setAttribute('x2', b.x);
+        line.setAttribute('y2', b.y);
+        line.setAttribute('marker-end', 'url(#arrow)');
+        line.addEventListener('mouseenter', () => line.classList.add('highlight'));
+        line.addEventListener('mouseleave', () => updateEdgeHighlight());
+        svg.appendChild(line);
+        if (label) {
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.classList.add('edge-label');
+          text.setAttribute('x', (a.x + b.x) / 2);
+          text.setAttribute('y', (a.y + b.y) / 2 - 6);
+          text.textContent = label;
+          svg.appendChild(text);
         }
       });
-      canvasInner.appendChild(edgeBlock);
-      applyTransform();
+    }
+
+    function createNodeTooltip(node) {
+      const text = getAdvancedTooltipText(node);
+      if (!text) return null;
+      const span = document.createElement('span');
+      span.className = 'node-tooltip';
+      span.textContent = text;
+      return span;
+    }
+
+    function getAdvancedTooltipText(node) {
+      if (!node) return '';
+      if (node.type === 'Loop') {
+        return `Loop cond: ${node.loopCondition || 'auto'}, iterations: ${node.iterationCount || 'auto'}`;
+      }
+      if (node.type === 'Wait') {
+        return `Wait for: ${node.waitFor || 'signal'}, duration: ${node.waitDuration || 'auto'}`;
+      }
+      if (node.type === 'Fault') {
+        return `Fault from ${node.faultSource || 'unexpected source'}: ${node.faultMessage || 'require retry'}`;
+      }
+      return '';
+    }
+
+    function updateEdgeHighlight() {
+      if (!edgeSvg) return;
+      const active = hoverHighlightId || selectedId;
+      edgeSvg.querySelectorAll('.edge-line').forEach((line) => {
+        if (line.matches(':hover')) return;
+        const isConnected = Boolean(active && (line.dataset.from === active || line.dataset.to === active));
+        line.classList.toggle('highlight', isConnected);
+      });
+    }
+
+    function startNodeDrag(e, id) {
+      draggingNode = nodes.find((n) => n.id === id);
+      if (!draggingNode) return;
+      const rect = canvasInner.getBoundingClientRect();
+      const nodeRect = e.currentTarget.getBoundingClientRect();
+      dragOffset = {
+        x: e.clientX - nodeRect.left + rect.left,
+        y: e.clientY - nodeRect.top + rect.top,
+      };
+      window.addEventListener('mousemove', onNodeDrag);
+      window.addEventListener('mouseup', endNodeDrag);
+      e.preventDefault();
+    }
+
+    function onNodeDrag(e) {
+      if (!draggingNode) return;
+      const rect = canvasInner.getBoundingClientRect();
+      draggingNode.x = e.clientX - rect.left - (dragOffset.x - rect.left);
+      draggingNode.y = e.clientY - rect.top - (dragOffset.y - rect.top);
+      requestRender();
+    }
+
+    function endNodeDrag() {
+      if (draggingNode) {
+        draggingNode.x = snapToGrid(draggingNode.x);
+        draggingNode.y = snapToGrid(draggingNode.y);
+      }
+      draggingNode = null;
+      window.removeEventListener('mousemove', onNodeDrag);
+      window.removeEventListener('mouseup', endNodeDrag);
+      renderPreview();
+    }
+
+    function isToolboxDragEvent(event) {
+      if (draggingToolboxType) return true;
+      if (!event.dataTransfer || !event.dataTransfer.types) return false;
+      return Array.from(event.dataTransfer.types).includes(TOOLBOX_DRAG_TYPE);
+    }
+
+    function handleCanvasDragOver(event) {
+      if (!isToolboxDragEvent(event) || !canvasInner) return;
+      event.preventDefault();
+      canvas?.classList.add('drop-ready');
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = 'copy';
+      }
+    }
+
+    function handleCanvasDrop(event) {
+      if (!isToolboxDragEvent(event) || !canvasInner) return;
+      event.preventDefault();
+      const rect = canvasInner.getBoundingClientRect();
+      const type =
+        draggingToolboxType ||
+        event.dataTransfer?.getData(TOOLBOX_DRAG_TYPE) ||
+        event.dataTransfer?.getData('text/plain');
+      draggingToolboxType = null;
+      canvas?.classList.remove('drop-ready');
+      if (!type) return;
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      addNodeFromToolbox(type, { x, y });
+    }
+
+    function handleCanvasDragLeave(event) {
+      if (!isToolboxDragEvent(event)) return;
+      const nextTarget = event.relatedTarget;
+      if (!canvas || (nextTarget && canvas.contains(nextTarget))) return;
+      canvas.classList.remove('drop-ready');
     }
 
     function setScale(next) {
@@ -253,56 +2197,230 @@
       applyTransform();
     }
 
-    function edgeLine(from, to, label = '') {
-      const p = document.createElement('div');
-      p.className = 'edge';
-      p.textContent = `${from} -> ${to} ${label}`;
-      return p;
-    }
-
     function renderForm() {
       const node = nodes.find((n) => n.id === selectedId);
       if (!node) {
         editorCard.style.display = 'none';
+        form.innerHTML = '';
         return;
       }
       editorCard.style.display = 'block';
       form.innerHTML = '';
-      form.appendChild(inputField('Label', node.label || '', (v) => (node.label = v)));
-      form.appendChild(inputField('API Name', node.apiName || '', (v) => (node.apiName = v)));
-      if (node.type !== 'End' && node.type !== 'Decision') {
-        form.appendChild(inputField('Next', node.next || '', (v) => (node.next = v)));
-      }
-      if (node.type === 'Decision') {
-        form.appendChild(inputField('Yes Next', node.yesNext || '', (v) => (node.yesNext = v)));
-        form.appendChild(inputField('No/Default Next', node.noNext || '', (v) => (node.noNext = v)));
-      }
-      if (node.type === 'Assignment') {
-        form.appendChild(inputField('Assignments (text)', node.assignments || '', (v) => (node.assignments = v)));
-      }
-      if (node.type === 'GetRecords') {
-        form.appendChild(inputField('Object', node.object || '', (v) => (node.object = v)));
-        form.appendChild(inputField('Fields (comma)', node.fields || '', (v) => (node.fields = v)));
-        form.appendChild(inputField('Filters (key=value;)', node.filters || '', (v) => (node.filters = v)));
-      }
+      renderModal(node);
     }
 
-    function inputField(labelText, value, onChange) {
+    function inputField(labelText, value, onChange, type = 'text', options = {}) {
       const wrap = document.createElement('div');
-      wrap.style.marginBottom = '0.75rem';
+      wrap.className = 'modal-field';
       const lab = document.createElement('label');
       lab.textContent = labelText;
       const input = document.createElement('input');
+      input.type = type;
       input.value = value;
-      input.addEventListener('input', (e) => onChange(e.target.value));
+      const helper = document.createElement('small');
+      helper.className = 'field-helper';
+      helper.textContent = options.helpText || '';
+      const error = document.createElement('small');
+      error.className = 'field-error';
+      input.addEventListener('input', (e) => {
+        error.textContent = '';
+        error.style.display = 'none';
+        onChange(e.target.value);
+      });
       wrap.appendChild(lab);
       wrap.appendChild(input);
-      return wrap;
+      if (options.helpText) wrap.appendChild(helper);
+      wrap.appendChild(error);
+      return {
+        wrap,
+        input,
+        setError(msg) {
+          error.textContent = msg || '';
+          error.style.display = msg ? 'block' : 'none';
+        },
+      };
     }
 
     function renderPreview() {
+      if (nodes.length === 0) {
+        mermaidPreview.textContent = 'No diagram yet. Add nodes to see a Mermaid preview.';
+        setPreviewHint('Use the toolbox or templates to add Start/Screen nodes; advanced nodes will show condition metadata here.', 'info');
+        return;
+      }
       const mermaid = generateMermaid(nodes);
       mermaidPreview.textContent = mermaid;
+      setPreviewHint('The Mermaid preview reflects Loop/Wait/Fault metadata: hover the nodes in the sidebar for quick tips.', 'info');
+    }
+
+    function renderModal(node) {
+      closeModal();
+      modalEl = document.createElement('div');
+      modalEl.className = 'modal-backdrop';
+      modalEl.innerHTML = `
+        <div class="modal" role="dialog" aria-modal="true" aria-label="Edit ${node.type} node">
+          <header>
+            <h3 style="margin:0;">Edit ${node.type}</h3>
+            <button class="secondary" id="closeModal" aria-label="Close edit dialog">✕</button>
+          </header>
+          <div id="modalBody"></div>
+          <div class="row" style="margin-top:0.5rem;">
+            <button class="secondary" id="cancelModal">Cancel</button>
+            <button id="saveModal">Save</button>
+          </div>
+        </div>
+      `;
+      modalEl.addEventListener('click', (e) => {
+        if (e.target === modalEl) closeModal();
+      });
+      document.body.appendChild(modalEl);
+      const body = modalEl.querySelector('#modalBody');
+      const labelField = inputField('Label', node.label || '', (v) => (node.label = v));
+      const apiField = inputField(
+        'API Name',
+        node.apiName || '',
+        (v) => (node.apiName = v),
+        'text',
+        { helpText: 'Alphanumeric + underscores, start with a letter or underscore.' },
+      );
+      const xField = inputField('X', node.x ?? 0, (v) => (node.x = Number(v) || 0), 'number');
+      const yField = inputField('Y', node.y ?? 0, (v) => (node.y = Number(v) || 0), 'number');
+      body.appendChild(labelField.wrap);
+      body.appendChild(apiField.wrap);
+      body.appendChild(xField.wrap);
+      body.appendChild(yField.wrap);
+
+      const connectorHelp = 'Select the node that should run after this one.';
+      if (node.type !== 'End' && node.type !== 'Decision') {
+        const nextSelect = targetSelect('Next', node.next || '', (v) => (node.next = v), {
+          helpText: connectorHelp,
+        });
+        body.appendChild(nextSelect.wrap);
+      }
+      if (node.type === 'Decision') {
+        const yesSelect = targetSelect('Yes Next', node.yesNext || '', (v) => (node.yesNext = v), {
+          helpText: 'Default outcome is "Yes" unless branching differently.',
+        });
+        const noSelect = targetSelect('No/Default Next', node.noNext || '', (v) => (node.noNext = v), {
+          helpText: 'Salesforce requires one default outcome; select the node that should run when no other condition matches.',
+        });
+        body.appendChild(yesSelect.wrap);
+        body.appendChild(noSelect.wrap);
+      }
+
+      if (node.type === 'Assignment') {
+        const assignmentField = inputField('Assignments (text)', node.assignments || '', (v) => (node.assignments = v), 'text', {
+          helpText: 'Use format `Var = value`; multiple assignments can be separated by `;`.',
+        });
+        body.appendChild(assignmentField.wrap);
+      }
+      if (node.type === 'GetRecords') {
+        const objectField = inputField('Object', node.object || '', (v) => (node.object = v), 'text', {
+          helpText: 'Use API name (Account, Case, etc.).',
+        });
+        const fieldsField = inputField('Fields (comma)', node.fields || '', (v) => (node.fields = v), 'text', {
+          helpText: 'List output fields, comma separated.',
+        });
+        const filtersField = inputField('Filters (key=value;)', node.filters || '', (v) => (node.filters = v), 'text', {
+          helpText: 'Use `Field=Value;` pairs for where clause (simplified).',
+        });
+        body.appendChild(objectField.wrap);
+        body.appendChild(fieldsField.wrap);
+        body.appendChild(filtersField.wrap);
+      }
+      if (node.type === 'Loop') {
+        body.appendChild(createContextualHelp('Loop nodes let you retry a path; configure condition + iteration guard.'));
+        const loopConditionField = inputField('Loop condition', node.loopCondition || '', (v) => (node.loopCondition = v), 'text', {
+          helpText: 'Simple expression that determines whether to keep looping.',
+        });
+        const iterationField = inputField('Max iterations', node.iterationCount || '', (v) => (node.iterationCount = v), 'number', {
+          helpText: 'Set a safety limit to avoid infinite loops.',
+        });
+        body.appendChild(loopConditionField.wrap);
+        body.appendChild(iterationField.wrap);
+      }
+      if (node.type === 'Wait') {
+        body.appendChild(createContextualHelp('Wait nodes pause the flow until a duration or signal is met.'));
+        const waitForField = inputField('Wait for', node.waitFor || '', (v) => (node.waitFor = v), 'text', {
+          helpText: 'Signal or record change that should fire the wait.',
+        });
+        const durationField = inputField('Duration', node.waitDuration || '', (v) => (node.waitDuration = v), 'text', {
+          helpText: 'Time span (HH:MM:SS) or label (e.g., `auto`).',
+        });
+        body.appendChild(waitForField.wrap);
+        body.appendChild(durationField.wrap);
+      }
+      if (node.type === 'Fault') {
+        body.appendChild(createContextualHelp('Fault nodes capture errors and route to recovery paths.'));
+        const sourceField = inputField('Fault source', node.faultSource || '', (v) => (node.faultSource = v), 'text', {
+          helpText: 'Describe the fault source (API, Record, etc.).',
+        });
+        const messageField = inputField('Fault message', node.faultMessage || '', (v) => (node.faultMessage = v), 'text', {
+          helpText: 'Friendly message shown in status banners.',
+        });
+        body.appendChild(sourceField.wrap);
+        body.appendChild(messageField.wrap);
+      }
+
+      modalEl.querySelector('#closeModal').addEventListener('click', closeModal);
+      modalEl.querySelector('#cancelModal').addEventListener('click', closeModal);
+      modalEl.querySelector('#saveModal').addEventListener('click', () => {
+        let valid = true;
+        if (!labelField.input.value.trim()) {
+          labelField.setError('Label is required.');
+          valid = false;
+        }
+        const apiValue = apiField.input.value.trim();
+        if (!apiValue) {
+          apiField.setError('API Name is required.');
+          valid = false;
+        } else if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(apiValue)) {
+          apiField.setError('Use letters, numbers, underscores; must start with letter or underscore.');
+          valid = false;
+        }
+        if (!valid) return;
+        node.label = labelField.input.value.trim();
+        node.apiName = apiValue;
+        node.x = Number(xField.input.value) || 0;
+        node.y = Number(yField.input.value) || 0;
+        closeModal();
+        renderAll({ skipForm: true });
+        markCurrentFlowDirty();
+      });
+    }
+
+    function targetSelect(labelText, value, onChange, options = {}) {
+      const wrap = document.createElement('div');
+      wrap.className = 'modal-field';
+      const lab = document.createElement('label');
+      lab.textContent = labelText;
+      const sel = document.createElement('select');
+      sel.innerHTML = `<option value=\"\">(none)</option>` + nodes
+        .map((n) => `<option value=\"${n.id}\" ${value === n.id ? 'selected' : ''}>${n.id} (${n.type})</option>`)
+        .join('');
+      sel.addEventListener('change', (e) => onChange(e.target.value));
+      wrap.appendChild(lab);
+      wrap.appendChild(sel);
+      if (options.helpText) {
+        const helper = document.createElement('small');
+        helper.className = 'field-helper';
+        helper.textContent = options.helpText;
+        wrap.appendChild(helper);
+      }
+      return { wrap, select: sel };
+    }
+
+    function createContextualHelp(text) {
+      const el = document.createElement('p');
+      el.className = 'context-help';
+      el.textContent = text;
+      return el;
+    }
+
+    function closeModal() {
+      if (modalEl && modalEl.parentNode) {
+        modalEl.parentNode.removeChild(modalEl);
+        modalEl = null;
+      }
     }
 
     function highlightXmlBlock() {
@@ -315,13 +2433,16 @@
       const lines = ['flowchart TD'];
       nodesList.forEach((n) => {
         const label = n.label || n.type;
-        if (n.type === 'Start') lines.push(`  ${n.id}([START: ${label}])`);
-        else if (n.type === 'End') lines.push(`  ${n.id}([END: ${label}])`);
-        else if (n.type === 'Decision') lines.push(`  ${n.id}{DECISION: ${label}\\n api: ${n.apiName || n.id}}`);
-        else if (n.type === 'Assignment') lines.push(`  ${n.id}[ASSIGNMENT: ${label}\\n api: ${n.apiName || n.id}\\n set: ${n.assignments || ''}]`);
-        else if (n.type === 'Screen') lines.push(`  ${n.id}[SCREEN: ${label}\\n api: ${n.apiName || n.id}]`);
-        else if (n.type === 'GetRecords') lines.push(`  ${n.id}[GET: ${label}\\n api: ${n.apiName || n.id}\\n object: ${n.object || ''}\\n field: ${(n.fields || '').split(',')[0] || ''}]`);
-        else lines.push(`  ${n.id}[${label}]`);
+      if (n.type === 'Start') lines.push(`  ${n.id}([START: ${label}])`);
+      else if (n.type === 'End') lines.push(`  ${n.id}([END: ${label}])`);
+      else if (n.type === 'Decision') lines.push(`  ${n.id}{DECISION: ${label}\\n api: ${n.apiName || n.id}}`);
+      else if (n.type === 'Assignment') lines.push(`  ${n.id}[ASSIGNMENT: ${label}\\n api: ${n.apiName || n.id}\\n set: ${n.assignments || ''}]`);
+      else if (n.type === 'Screen') lines.push(`  ${n.id}[SCREEN: ${label}\\n api: ${n.apiName || n.id}]`);
+      else if (n.type === 'GetRecords') lines.push(`  ${n.id}[GET: ${label}\\n api: ${n.apiName || n.id}\\n object: ${n.object || ''}\\n field: ${(n.fields || '').split(',')[0] || ''}]`);
+      else if (n.type === 'Loop') lines.push(`  ${n.id}[LOOP: ${label}\\n api: ${n.apiName || n.id}\\n condition: ${n.loopCondition || 'auto'}\\n iterations: ${n.iterationCount || 'auto'}]`);
+      else if (n.type === 'Wait') lines.push(`  ${n.id}[WAIT: ${label}\\n api: ${n.apiName || n.id}\\n waitFor: ${n.waitFor || 'signal'}\\n duration: ${n.waitDuration || 'auto'}]`);
+      else if (n.type === 'Fault') lines.push(`  ${n.id}[FAULT: ${label}\\n api: ${n.apiName || n.id}\\n source: ${n.faultSource || 'error'}\\n message: ${n.faultMessage || 'recover'}]`);
+      else lines.push(`  ${n.id}[${label}]`);
       });
       nodesList.forEach((n, idx) => {
         if (n.type === 'Decision') {
@@ -333,7 +2454,9 @@
           lines.push(`  ${n.id} --> ${nodesList[idx + 1].id}`);
         }
       });
-      return lines.join('\\n');
+      const merged = lines.join('\n');
+      latestMermaid = merged;
+      return merged;
     }
 
     function generateDsl(nodesList) {
@@ -345,16 +2468,16 @@
           apiName: n.apiName || n.id,
           label: n.label,
         };
-        if (n.type === 'Decision') {
-          const outcomes = [];
-          if (n.yesNext) outcomes.push({ name: 'Yes', next: n.yesNext });
-          if (n.noNext) outcomes.push({ name: 'No', next: n.noNext, isDefault: true });
-          return { ...base, outcomes };
-        }
-        if (n.type === 'Assignment') {
-          return { ...base, assignments: n.assignments ? [{ variable: 'v_Flag', value: n.assignments }] : [], next: n.next };
-        }
-        if (n.type === 'GetRecords') {
+      if (n.type === 'Decision') {
+        const outcomes = [];
+        if (n.yesNext) outcomes.push({ name: 'Yes', next: n.yesNext });
+        if (n.noNext) outcomes.push({ name: 'No', next: n.noNext, isDefault: true });
+        return { ...base, outcomes };
+      }
+      if (n.type === 'Assignment') {
+        return { ...base, assignments: n.assignments ? [{ variable: 'v_Flag', value: n.assignments }] : [], next: n.next };
+      }
+      if (n.type === 'GetRecords') {
           const fields = (n.fields || '')
             .split(',')
             .map((f) => f.trim())
@@ -364,17 +2487,42 @@
             .map((p) => p.trim())
             .filter(Boolean)
             .map((pair) => {
-              const [field, value] = pair.split('=').map((s) => s.trim());
+              const [field, value] = pair.split('=')
+                .map((s) => s.trim());
               return { field, operator: 'EqualTo', value };
             });
-          return { ...base, object: n.object || '', fields, filters, next: n.next };
-        }
-        if (n.type !== 'End') {
-          return { ...base, next: n.next };
-        }
+        return { ...base, object: n.object || '', fields, filters, next: n.next };
+      }
+      if (n.type === 'Loop') {
+        return {
+          ...base,
+          next: n.next,
+          condition: n.loopCondition || '',
+          iterations: n.iterationCount || '',
+        };
+      }
+      if (n.type === 'Wait') {
+        return {
+          ...base,
+          next: n.next,
+          waitFor: n.waitFor || '',
+          duration: n.waitDuration || '',
+        };
+      }
+      if (n.type === 'Fault') {
+        return {
+          ...base,
+          next: n.next,
+          source: n.faultSource || '',
+          message: n.faultMessage || '',
+        };
+      }
+      if (n.type !== 'End') {
+        return { ...base, next: n.next };
+      }
         return base;
       });
-      return {
+      const payload = {
         version: 1,
         flowApiName: 'VisualizerFlow',
         label: 'Visualizer Flow',
@@ -382,17 +2530,231 @@
         startElement: start,
         elements,
       };
+      latestDslData = payload;
+      return payload;
     }
 
     document.querySelectorAll('[data-add]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const type = btn.dataset.add;
-        const base = typeDefaults[type] ? typeDefaults[type]() : { type, label: type };
-        const id = `${type}_${nodes.filter((n) => n.type === type).length + 1}`;
-        nodes.push({ id, apiName: id, ...base });
-        selectedId = id;
-        renderAll();
+      const type = btn.dataset.add;
+      btn.setAttribute('draggable', 'true');
+      btn.addEventListener('click', () => addNodeFromToolbox(type));
+      btn.addEventListener('dragstart', (event) => {
+        draggingToolboxType = type;
+        if (event.dataTransfer) {
+          event.dataTransfer.setData(TOOLBOX_DRAG_TYPE, type);
+          event.dataTransfer.setData('text/plain', type);
+          event.dataTransfer.effectAllowed = 'copy';
+        }
       });
+      btn.addEventListener('dragend', () => {
+        draggingToolboxType = null;
+        canvas?.classList.remove('drop-ready');
+      });
+    });
+    importDropzone?.addEventListener('click', () => importFileInput?.click());
+    importDropzone?.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      importDropzone.classList.add('hover');
+    });
+    importDropzone?.addEventListener('dragleave', () => importDropzone.classList.remove('hover'));
+    importDropzone?.addEventListener('drop', (event) => {
+      event.preventDefault();
+      importDropzone.classList.remove('hover');
+      const file = event.dataTransfer?.files?.[0];
+      if (file) {
+        handleImportFile(file);
+      }
+    });
+    importFileInput?.addEventListener('change', (event) => {
+      const file = event.target?.files?.[0];
+      if (file) {
+        handleImportFile(file);
+      }
+      importFileInput.value = '';
+    });
+    loadMermaidFromText?.addEventListener('click', async () => {
+      const text = importTextarea.value.trim();
+      if (!text) {
+        updateImportStatus('Enter Mermaid text before loading.', 'warning');
+        return;
+      }
+      await importMermaidText(text);
+    });
+    loadDslFromText?.addEventListener('click', async () => {
+      const text = importTextarea.value.trim();
+      if (!text) {
+        updateImportStatus('Paste DSL JSON before loading.', 'warning');
+        return;
+      }
+      await importDslText(text);
+    });
+    loadXmlFromText?.addEventListener('click', async () => {
+      const text = importTextarea.value.trim();
+      if (!text) {
+        updateImportStatus('Paste Flow XML before loading.', 'warning');
+        return;
+      }
+      await importXmlText(text);
+    });
+    openImportExportBtn?.addEventListener('click', () => openImportExport());
+    closeImportExportBtn?.addEventListener('click', () => closeImportExport());
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        if (importExportModal && !importExportModal.classList.contains('hidden')) {
+          closeImportExport();
+          event.preventDefault();
+          return;
+        }
+        if (historyModal && !historyModal.classList.contains('hidden')) {
+          closeHistoryModal();
+          event.preventDefault();
+          return;
+        }
+        if (shortcutsModal && !shortcutsModal.classList.contains('hidden')) {
+          closeShortcutsPanel();
+          event.preventDefault();
+          return;
+        }
+        removeContextMenu();
+        nodeEditor.close();
+      }
+      handleGlobalShortcuts(event);
+    });
+
+    captureHistoryBtn?.addEventListener('click', () => {
+      saveSnapshot('Manual snapshot');
+      showBanner({ type: 'success', title: 'Snapshot saved', message: 'Flow snapshot stored in browser history.' });
+    });
+    openHistoryBtn?.addEventListener('click', openHistoryModal);
+    historyCloseBtn?.addEventListener('click', closeHistoryModal);
+    historyList?.addEventListener('click', (event) => {
+      const button = event.target instanceof Element ? event.target.closest('button') : null;
+      if (!button) return;
+      const flow = getActiveFlow();
+      const index = Number(button.dataset.index);
+      const entry = flow?.history?.[index];
+      if (!entry) return;
+      if (button.dataset.action === 'restore') {
+        restoreSnapshot(entry);
+      }
+      if (button.dataset.action === 'compare') {
+        compareSnapshot(entry);
+      }
+    });
+    toggleShortcutsBtn?.addEventListener('click', () => {
+      const nextState = !shortcutsEnabled;
+      setShortcutsState(nextState);
+      showBanner({
+        type: 'info',
+        title: 'Shortcuts',
+        message: nextState ? 'Keyboard shortcuts enabled.' : 'Keyboard shortcuts paused.',
+        duration: 4000,
+      });
+    });
+    showShortcutsGuideBtn?.addEventListener('click', openShortcutsPanel);
+    closeShortcutsPanelBtn?.addEventListener('click', closeShortcutsPanel);
+
+    downloadMermaidHub?.addEventListener('click', () => {
+      const data = generateMermaid(nodes);
+      exportManager.exportMermaid(data);
+    });
+    downloadDslHub?.addEventListener('click', () => {
+      const dsl = generateDsl(nodes);
+      exportManager.exportDsl(dsl);
+    });
+    downloadXmlHub?.addEventListener('click', () => {
+      if (!latestXml) {
+        showBanner({ type: 'warning', title: 'No XML', message: 'Compile the flow before downloading XML.' });
+        return;
+      }
+      exportManager.exportXml(latestXml);
+    });
+    downloadSvgHub?.addEventListener('click', () => {
+      const svg = generateSvgSnapshot();
+      if (!svg) {
+        showBanner({ type: 'warning', title: 'No nodes', message: 'Add nodes before exporting SVG.' });
+        return;
+      }
+      downloadBlob(`${activeFlowId || 'flow'}.svg`, svg, 'image/svg+xml');
+    });
+    downloadPngHub?.addEventListener('click', async () => {
+      const png = await generatePngSnapshot();
+      if (!png) {
+        showBanner({ type: 'warning', title: 'No nodes', message: 'Add nodes before exporting PNG.' });
+        return;
+      }
+      downloadFromDataUrl(png, `${activeFlowId || 'flow'}.png`);
+    });
+
+    function handleImportFile(file) {
+      if (!file) return;
+      updateImportStatus(`Reading ${file.name}...`);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = reader.result?.toString?.() || '';
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        if (ext === 'mmd') {
+          importMermaidText(text);
+        } else if (ext === 'json' || ext === 'dsl') {
+          importDslText(text);
+        } else if (ext === 'xml' || file.name.toLowerCase().includes('.flow-meta')) {
+          importXmlText(text);
+        } else {
+          updateImportStatus('Unsupported file type. Use .mmd, .json/.dsl, or .xml', 'warning');
+        }
+      };
+      reader.onerror = () => updateImportStatus('Failed to read the file.', 'error');
+      reader.readAsText(file);
+    }
+
+    function openImportExport() {
+      if (!importExportModal) return;
+      importExportModal.classList.remove('hidden');
+      importExportModal.setAttribute('aria-hidden', 'false');
+      updateImportStatus('Drop a file or paste text to import.', 'info');
+      importTextarea.value = '';
+    }
+
+    function closeImportExport() {
+      if (!importExportModal) return;
+      importExportModal.classList.add('hidden');
+      importExportModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function downloadFromDataUrl(url, filename) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+    advancedButtons.forEach((btn) => {
+      btn.addEventListener('click', () => highlightAdvancedNodes(btn.dataset.advancedTarget));
+    });
+    tutorialTrigger?.addEventListener('click', () => openTutorial(0));
+    tutorialPrev?.addEventListener('click', () => navigateTutorial(-1));
+    tutorialNext?.addEventListener('click', () => {
+      if (tutorialStep === tutorialSteps.length - 1) {
+        closeTutorial();
+      } else {
+        navigateTutorial(1);
+      }
+    });
+    tutorialSkip?.addEventListener('click', closeTutorial);
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (tutorialActive) {
+          highlightTutorialTarget(tutorialSteps[tutorialStep]?.selector);
+        }
+      },
+      true,
+    );
+    window.addEventListener('resize', () => {
+      if (tutorialActive) {
+        highlightTutorialTarget(tutorialSteps[tutorialStep]?.selector);
+      }
     });
 
     document.getElementById('exportMermaid').addEventListener('click', () => {
@@ -418,6 +2780,22 @@
       applyTransform();
     });
 
+    canvasInner?.addEventListener('dragover', handleCanvasDragOver);
+    canvasInner?.addEventListener('drop', handleCanvasDrop);
+    canvasInner?.addEventListener('dragleave', handleCanvasDragLeave);
+    canvasInner?.addEventListener('dblclick', (event) => {
+      const node = getNodeFromTarget(event.target);
+      if (node) {
+        handleInlineEdit(node);
+      }
+    });
+    canvasInner?.addEventListener('contextmenu', (event) => {
+      const node = getNodeFromTarget(event.target);
+      if (!node) return;
+      event.preventDefault();
+      contextMenuActions(node, event);
+    });
+
     canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
       const delta = e.deltaY > 0 ? -0.1 : 0.1;
@@ -425,6 +2803,7 @@
     });
 
     canvas.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.node')) return;
       isPanning = true;
       panStart = { x: e.clientX, y: e.clientY };
       canvas.style.cursor = 'grabbing';
@@ -445,38 +2824,103 @@
       canvas.style.cursor = 'grab';
     });
 
-    document.getElementById('compileXml').addEventListener('click', async () => {
+    compileButton.addEventListener('click', async () => {
+      if (nodes.length === 0) {
+        xmlPreview.textContent = 'Add nodes before compiling.';
+        output.textContent = 'Cannot compile empty canvas.';
+        setXmlStatus('Canvas is empty. Add Start/Screen nodes before compiling.', 'warning');
+        showBanner({
+          type: 'warning',
+          title: 'Canvas empty',
+          message: 'Add nodes from the toolbox or use a template before compiling.',
+        });
+        setIssueState('warning', ['Add nodes before compiling.']);
+        setLoadingState(false);
+        highlightXmlBlock();
+        return;
+      }
       const mermaid = generateMermaid(nodes);
       mermaidPreview.textContent = mermaid;
+      output.textContent = 'Compiling via backend...';
+      setXmlStatus('Sending diagram to backend compiler...', 'info');
+      setLoadingState(true, 'Compiling flow...');
+      setIssueState('info', ['Sending diagram to backend compiler...']);
+      setButtonLoading(compileButton, true, 'Compiling...');
       try {
         const res = await fetch(`${API_BASE}/api/compile`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ mermaidText: mermaid }),
         });
-        const data = await res.json();
-        if (data.errors && data.errors.length > 0) {
-          xmlPreview.textContent = 'Errors:\n' + data.errors.map((e) => `- ${e.code}: ${e.message}`).join('\n');
+        const data = await safeJson(res);
+        if (!res.ok) {
+          const apiMessage = data?.message || data?.error || `Compile failed with status ${res.status}`;
+          throw new Error(apiMessage);
+        }
+        if (Array.isArray(data.errors) && data.errors.length > 0) {
+          xmlPreview.textContent =
+            'Errors:\n' + data.errors.map((e) => `- ${(e.code || 'ERR').toUpperCase()}: ${e.message}`).join('\n');
           output.textContent = 'Validation errors; XML not generated.';
+          setXmlStatus('Validation errors detected. Review the list below.', 'error');
+          showBanner({
+            type: 'error',
+            title: 'Validation failed',
+            message: `${data.errors.length} issue(s) detected. ${data.errors[0]?.message || ''}`.trim(),
+            sticky: true,
+          });
           highlightXmlBlock();
           return;
         }
         xmlPreview.textContent = data.xml || 'No XML generated.';
-        output.textContent = 'XML compiled via backend.';
         xmlPreview.dataset.xml = data.xml || '';
+        latestXml = data.xml || '';
         highlightXmlBlock();
+        const warnings = Array.isArray(data.warnings) ? data.warnings.filter(Boolean) : [];
+        if (warnings.length > 0) {
+          showBanner({
+            type: 'warning',
+            title: 'Compile warnings',
+            message: warnings[0],
+            duration: 9000,
+          });
+          setIssueState('warning', warnings);
+        } else {
+          showBanner({
+            type: 'success',
+            title: 'XML ready',
+            message: 'Flow compiled successfully.',
+          });
+          setIssueState('success', ['Flow compiled successfully.']);
+        }
+        output.textContent = 'XML compiled via backend.';
+        setXmlStatus('Latest compile succeeded.', 'success');
+        setPreviewHint('Compilation succeeded; advanced nodes sync with backend metadata.', 'success');
+        saveSnapshot('Compiled snapshot');
       } catch (err) {
         xmlPreview.textContent = 'Error: ' + err.message;
         highlightXmlBlock();
+        output.textContent = 'Backend error: ' + err.message;
+        setXmlStatus(`Compile failed: ${err.message}`, 'error');
+        showBanner({
+          type: 'error',
+          title: 'Compile failed',
+          message: err.message,
+          sticky: true,
+        });
+        setIssueState('error', [err.message]);
+      } finally {
+        setButtonLoading(compileButton, false);
+        setLoadingState(false);
       }
     });
 
-    document.getElementById('downloadXml').addEventListener('click', () => {
+    downloadButton.addEventListener('click', () => {
       const xml = xmlPreview.dataset.xml;
       if (!xml) {
         output.textContent = 'No XML to download. Compile first.';
         return;
       }
+      setButtonLoading(downloadButton, true, 'Preparing...');
       const blob = new Blob([xml], { type: 'application/xml' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -485,24 +2929,86 @@
       a.click();
       URL.revokeObjectURL(url);
       output.textContent = 'XML downloaded.';
+      setPreviewHint('Downloaded XML matches the previewed flow.', 'success');
+      showBanner({
+        type: 'success',
+        title: 'Download complete',
+        message: 'Flow XML saved locally.',
+      });
+      setTimeout(() => setButtonLoading(downloadButton, false), 400);
     });
 
-    document.getElementById('ping').addEventListener('click', async () => {
+    pingButton.addEventListener('click', async () => {
+      output.textContent = 'Pinging backend...';
+      setButtonLoading(pingButton, true, 'Checking...');
+      showBanner({ type: 'info', title: 'Checking backend', message: 'Calling /health endpoint...' });
       try {
         const res = await fetch(`${API_BASE}/health`);
-        const data = await res.json();
+        const data = await safeJson(res);
+        if (!res.ok) {
+          throw new Error(data?.message || `Health endpoint returned ${res.status}`);
+        }
         output.textContent = JSON.stringify(data, null, 2);
+        showBanner({
+          type: 'success',
+          title: 'Backend reachable',
+          message: `Health: ${data.status || 'ok'}`,
+          duration: 5000,
+        });
       } catch (err) {
         output.textContent = 'Error: ' + err.message;
+        showBanner({
+          type: 'error',
+          title: 'Backend unreachable',
+          message: err.message,
+          sticky: true,
+        });
+      } finally {
+        setButtonLoading(pingButton, false);
       }
     });
 
     document.getElementById('reset').addEventListener('click', () => {
-      nodes = [...sampleNodes];
+      replaceActiveFlowNodes([...sampleNodes]);
       selectedId = null;
-      output.textContent = 'Ready.';
       renderAll();
+      markCurrentFlowDirty();
+      output.textContent = 'Ready.';
+      clearIssueState();
+      setPreviewHint('Canvas reset. Start building or load a template.', 'info');
+      showBanner({
+        type: 'info',
+        title: 'Builder reset',
+        message: 'Sample flow restored; modify it or add new nodes.',
+        duration: 2500,
+      });
     });
+
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+    function toggleTheme() {
+      const current = document.body.getAttribute('data-theme') || 'dark';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', next);
+      document.getElementById('themeToggle').setAttribute('aria-pressed', next === 'dark' ? 'false' : 'true');
+      localStorage.setItem('theme', next);
+      showBanner({
+        type: 'info',
+        title: 'Theme switched',
+        message: `${next.charAt(0).toUpperCase() + next.slice(1)} mode is now active.`,
+        duration: 2500,
+      });
+    }
+
+    function restoreTheme() {
+      const stored = localStorage.getItem('theme');
+      if (stored) {
+        document.body.setAttribute('data-theme', stored);
+        document.getElementById('themeToggle').setAttribute('aria-pressed', stored === 'dark' ? 'false' : 'true');
+      } else {
+        document.body.setAttribute('data-theme', 'dark');
+      }
+    }
 
     init();
   </script>

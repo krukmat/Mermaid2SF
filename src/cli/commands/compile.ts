@@ -8,6 +8,8 @@ import { FlowValidator } from '../../validator/flow-validator';
 import { FlowXmlGenerator } from '../../generators/flow-xml-generator';
 import { DocsGenerator } from '../../generators/docs-generator'; // TASK 2.4
 import { logger } from '../../utils/logger';
+import { validateDsl } from '../../validation/flow-rules';
+import { logFlowValidationResult, ensureFlowValidationPasses } from '../utils/flow-validation';
 import { dump as yamlDump } from 'js-yaml';
 
 export const compileCommand = new Command('compile')
@@ -126,6 +128,10 @@ async function runCompileOnce(options: any) {
   }
 
   logger.info('Validation passed');
+
+  const flowValidation = validateDsl(dsl);
+  logFlowValidationResult(flowValidation, 'Visual validation');
+  ensureFlowValidationPasses(flowValidation, options.strict);
 
   // 6. Generate outputs
   const outputs: string[] = [];

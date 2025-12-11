@@ -1287,7 +1287,7 @@ Esta tarea requiere integración con un **proyecto externo** (`agnostic-ai-pipel
 
 **4.3.2: Generar Mermaid desde DSL**
 - [x] Usar DocsGenerator (reutilizado en comando decompile)
-- [ ] Layout optimization (pendiente)
+- [x] Layout optimization (traversal-based ordering + Mermaid class styles)
 - [ ] Preservar metadata completa (pendiente: components, fields detallados)
 
 **4.3.3: Comando `decompile`**
@@ -1298,7 +1298,7 @@ Esta tarea requiere integración con un **proyecto externo** (`agnostic-ai-pipel
 **4.3.4: Tests de round-trip**
 - [x] Mermaid → XML → DSL (basic round-trip)
 - [x] Mermaid → XML → Mermaid (via DSL + DocsGenerator)
-- [ ] Minimal diffs (layout/metadata completa opcional)
+- [x] Minimal diffs (layout/metadata incluida en Mermaid output)
 
 ---
 

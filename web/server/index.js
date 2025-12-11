@@ -1,7 +1,11 @@
+/* eslint-env node */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-require-imports */
 // Minimal HTTP server scaffold (no external deps)
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { parseFlowXmlText } = require(path.join(__dirname, '../../dist/reverse/xml-parser'));
 
 const PORT = process.env.PORT || 4000;
 
@@ -44,6 +48,27 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.url === '/api/decompile' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (chunk) => (body += chunk.toString()));
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const xmlText = payload.flowXml || payload.xml || '';
+        if (!xmlText) {
+          throw new Error('Missing flow XML payload.');
+        }
+        const parsed = parseFlowXmlText(xmlText, payload.flowName);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ dsl: parsed }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
   // Serve static frontend (web/frontend)
   const served = tryServeStatic(req, res);
   if (served) return;
@@ -54,10 +79,16 @@ const server = http.createServer((req, res) => {
 
 function compileMermaid(mermaidText) {
   const { MermaidParser } = require(path.join(__dirname, '../../dist/parser/mermaid-parser'));
-  const { MetadataExtractor } = require(path.join(__dirname, '../../dist/extractor/metadata-extractor'));
-  const { IntermediateModelBuilder } = require(path.join(__dirname, '../../dist/dsl/intermediate-model-builder'));
+  const { MetadataExtractor } = require(
+    path.join(__dirname, '../../dist/extractor/metadata-extractor'),
+  );
+  const { IntermediateModelBuilder } = require(
+    path.join(__dirname, '../../dist/dsl/intermediate-model-builder'),
+  );
   const { FlowValidator } = require(path.join(__dirname, '../../dist/validator/flow-validator'));
-  const { FlowXmlGenerator } = require(path.join(__dirname, '../../dist/generators/flow-xml-generator'));
+  const { FlowXmlGenerator } = require(
+    path.join(__dirname, '../../dist/generators/flow-xml-generator'),
+  );
 
   const parser = new MermaidParser();
   const extractor = new MetadataExtractor();
@@ -113,6 +144,7 @@ function tryServeStatic(req, res) {
     {
       '.html': 'text/html',
       '.js': 'application/javascript',
+      '.mjs': 'application/javascript',
       '.css': 'text/css',
       '.json': 'application/json',
       '.svg': 'image/svg+xml',

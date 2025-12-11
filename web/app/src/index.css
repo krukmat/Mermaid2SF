@@ -1,0 +1,14 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #080d1a;
+  color: #edf2ff;
+}
+
+#root {
+  min-height: 100vh;
+}
