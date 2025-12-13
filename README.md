@@ -643,7 +643,18 @@ See `PROJECT_PLAN.md` for complete roadmap.
 - 🚀 **[Quick Start Guide](docs/QUICK_START.md)** - From zero to working Flow in 2 minutes (start here!)
 - 🏗️ **[Architecture Document](mermaid-flow-compiler-architecture.md)** - System design and spec
 - 📝 **[CLAUDE.md](CLAUDE.md)** - Development guidelines and codebase overview
-- 📋 **[Project Plan](PROJECT_PLAN.md)** - Complete roadmap and task tracking
+
+### **Technical Reference:**
+
+- 📐 **[Mermaid Conventions](docs/MERMAID_CONVENTIONS.md)** - Mermaid syntax guide for Flow diagrams
+- ✅ **[Validation Rules](docs/FLOW_VALIDATION_RULES.md)** - Complete list of validation constraints
+- 🏛️ **[Validation Architecture](docs/FLOW_VALIDATION_ARCHITECTURE.md)** - How validation is implemented
+- 🔄 **[CI/CD Integration](docs/CI_CD_GUIDE.md)** - Set up automated validation and deployment
+
+### **Articles & Resources:**
+
+- 📄 **[Medium Article: Flows as Code](docs/MEDIUM_POST.md)** - Introduction to the project and philosophy
+- 📋 **[Project Plan](PROJECT_PLAN.md)** - Roadmap and task tracking
 
 ### **Quick Commands:**
 
