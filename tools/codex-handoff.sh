@@ -7,7 +7,7 @@ STATE_DIR=".codex"
 LOCK_FILE="$STATE_DIR/running.lock"
 HASH_FILE="$STATE_DIR/last_task.sha"
 
-DEFAULT_MINI="${CODEX_MODEL_MINI:-gpt-5.1-codex-mini}"
+DEFAULT_MINI="${CODEX_MODEL_MINI:-gpt-5.2-codex}"
 DEFAULT_MAX="${CODEX_MODEL_MAX:-gpt-5.1-codex-max}"
 
 mkdir -p "$(dirname "$OUT_FILE")" "$STATE_DIR"

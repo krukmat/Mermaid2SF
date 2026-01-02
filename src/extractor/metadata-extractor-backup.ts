@@ -57,7 +57,9 @@ export class MetadataExtractor {
   private extractLabel(label: string): string {
     const firstLine = label.split('\n')[0].trim();
     // Remove type prefix (e.g., "START: My Label" -> "My Label")
-    const match = firstLine.match(/^(START|END|ASSIGNMENT|DECISION|SCREEN|FAULT|SUBFLOW|LOOP|WAIT|GET|CREATE|UPDATE):s*(.+)$/i);
+    const match = firstLine.match(
+      /^(START|END|ASSIGNMENT|DECISION|SCREEN|FAULT|SUBFLOW|LOOP|WAIT|GET|CREATE|UPDATE):s*(.+)$/i,
+    );
     return match ? match[2].trim() : firstLine;
   }
 

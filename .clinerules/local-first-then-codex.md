@@ -126,8 +126,8 @@ If uncertain between MEDIUM and HIGH, choose HIGH.
 
 The runner will select:
 
-- Default: codex-mini
-- If `PRIORITY: HIGH`: codex-max
+- Default: gpt-5.2-codex
+- If `PRIORITY: HIGH`: gpt-5.2-codex
 - If `CODEX_MODEL:` is present: that override wins
 
 ---

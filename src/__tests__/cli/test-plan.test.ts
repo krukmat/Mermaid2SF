@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { MermaidParser } from '../../parser/mermaid-parser';
-import { MetadataExtractor } from '../../extractor/metadata-extractor';
+
 import { IntermediateModelBuilder } from '../../dsl/intermediate-model-builder';
 import { FlowValidator } from '../../validator/flow-validator';
 import { analyzePaths } from '../../test-generator/path-analyzer';
@@ -33,15 +33,15 @@ describe('Test Plan Generation - Simulated Tests', () => {
       { id: 'A', label: 'Start', shape: 'round' },
       { id: 'B', label: 'Decision', shape: 'diamond' },
       { id: 'C', label: 'Process Data', shape: 'square' },
-      { id: 'D', label: 'End', shape: 'square' }
+      { id: 'D', label: 'End', shape: 'square' },
     ],
     edges: [
       { from: 'A', to: 'B', label: '', arrowType: 'solid' },
       { from: 'B', to: 'C', label: 'Yes', arrowType: 'solid' },
       { from: 'B', to: 'D', label: 'No', arrowType: 'solid' },
-      { from: 'C', to: 'D', label: '', arrowType: 'solid' }
+      { from: 'C', to: 'D', label: '', arrowType: 'solid' },
     ],
-    direction: 'TD' as const
+    direction: 'TD' as const,
   };
 
   const mockDsl: FlowDSL = {
@@ -55,38 +55,38 @@ describe('Test Plan Generation - Simulated Tests', () => {
         id: 'Start',
         type: 'Start',
         apiName: 'Start',
-        label: 'Start'
-      }
+        label: 'Start',
+      },
     ],
-    startElement: 'Start'
+    startElement: 'Start',
   };
 
   const mockValidationResult = {
     valid: true,
     errors: [],
-    warnings: []
+    warnings: [],
   };
 
   const mockPaths = [
     ['A', 'B', 'C', 'D'],
-    ['A', 'B', 'D']
+    ['A', 'B', 'D'],
   ];
   const mockPathAnalysis = {
     paths: mockPaths,
     maxDepth: 4,
-    decisionCount: 1
+    decisionCount: 1,
   };
 
   const mockTestData = {
-    'A': { id: 'A', data: { name: 'Test Start' } },
-    'B': { id: 'B', data: { decisionValue: true } },
-    'C': { id: 'C', data: { processedData: 'test' } },
-    'D': { id: 'D', data: { result: 'completed' } }
+    A: { id: 'A', data: { name: 'Test Start' } },
+    B: { id: 'B', data: { decisionValue: true } },
+    C: { id: 'C', data: { processedData: 'test' } },
+    D: { id: 'D', data: { result: 'completed' } },
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Mock fs
     (fs.existsSync as jest.Mock).mockReturnValue(true);
     (fs.readFileSync as jest.Mock).mockReturnValue(mockMermaidContent);
@@ -120,28 +120,28 @@ describe('Test Plan Generation - Simulated Tests', () => {
 
       // SIMULAR la lógica del action de test-plan command
       const inputPath = path.resolve(options.input);
-      
+
       // Hacer que los mocks sean llamados realmente
       fs.existsSync(inputPath);
       fs.readFileSync(inputPath, 'utf-8');
-      
+
       // Verificar que el input existe
       expect(fs.existsSync).toHaveBeenCalledWith(inputPath);
       expect(fs.existsSync(inputPath)).toBe(true);
-      
+
       // Simular lectura de archivo
       const mermaidText = fs.readFileSync(inputPath, 'utf-8');
       expect(mermaidText).toBe(mockMermaidContent);
-      
+
       // Simular parsing y validación
       const parser = new MermaidParser();
       const graph = parser.parse(mermaidText);
       expect(graph).toBe(mockGraph);
-      
+
       const validator = new FlowValidator();
       const validationResult = validator.validate(mockDsl);
       expect(validationResult).toBe(mockValidationResult);
-      
+
       // Simular análisis y generación
       const analysis = analyzePaths(mockDsl);
       const testData = generateTestData(mockDsl);
@@ -164,7 +164,7 @@ describe('Test Plan Generation - Simulated Tests', () => {
       // Simular verificación de archivo
       const inputPath = path.resolve(options.input);
       expect(fs.existsSync(inputPath)).toBe(false);
-      
+
       // Esto debería fallar en la implementación real
       expect(() => {
         if (!fs.existsSync(inputPath)) {
@@ -195,24 +195,21 @@ describe('Test Plan Generation - Simulated Tests', () => {
     it('should analyze complex paths in flowchart', async () => {
       const complexGraph = {
         ...mockGraph,
-        edges: [
-          ...mockGraph.edges,
-          { from: 'C', to: 'B', label: 'retry', arrowType: 'solid' }
-        ]
+        edges: [...mockGraph.edges, { from: 'C', to: 'B', label: 'retry', arrowType: 'solid' }],
       };
-      
+
       (MermaidParser.prototype.parse as jest.Mock).mockReturnValue(complexGraph);
       (analyzePaths as jest.Mock).mockReturnValue({
         paths: [
           ['A', 'B', 'C', 'D'],
           ['A', 'B', 'D'],
-          ['A', 'B', 'C', 'B', 'C', 'D']
+          ['A', 'B', 'C', 'B', 'C', 'D'],
         ],
         maxDepth: 6,
-        decisionCount: 2
+        decisionCount: 2,
       });
 
-      const options = {
+      const _options = {
         input: mockInputPath,
         output: mockOutputDir,
         format: 'json',
@@ -226,7 +223,7 @@ describe('Test Plan Generation - Simulated Tests', () => {
       const graph = parser.parse(mockMermaidContent);
       expect(graph).toBe(complexGraph);
       const analysis = analyzePaths(mockDsl);
-      
+
       expect(analysis.paths.length).toBeGreaterThan(2); // Más paths debido al retry
       expect(analyzePaths).toHaveBeenCalledWith(mockDsl);
     });
@@ -235,17 +232,17 @@ describe('Test Plan Generation - Simulated Tests', () => {
       const emptyGraph = {
         nodes: [],
         edges: [],
-        direction: 'TD' as const
+        direction: 'TD' as const,
       };
-      
+
       (MermaidParser.prototype.parse as jest.Mock).mockReturnValue(emptyGraph);
       (analyzePaths as jest.Mock).mockReturnValue({
         paths: [],
         maxDepth: 0,
-        decisionCount: 0
+        decisionCount: 0,
       });
 
-      const options = {
+      const _options = {
         input: mockInputPath,
         output: mockOutputDir,
         format: 'json',
@@ -258,10 +255,10 @@ describe('Test Plan Generation - Simulated Tests', () => {
       const parser = new MermaidParser();
       const graph = parser.parse(mockMermaidContent);
       expect(graph).toBe(emptyGraph);
-      
+
       const analysis = analyzePaths(mockDsl);
       expect(analysis.paths).toEqual([]);
-      
+
       const testData = generateTestData(mockDsl);
       expect(testData).toBeDefined();
     });

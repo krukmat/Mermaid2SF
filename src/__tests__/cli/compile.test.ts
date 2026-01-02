@@ -31,13 +31,13 @@ flowchart TD
     nodes: [
       { id: 'A', label: 'Start', shape: 'round' },
       { id: 'B', label: 'Process', shape: 'square' },
-      { id: 'C', label: 'End', shape: 'square' }
+      { id: 'C', label: 'End', shape: 'square' },
     ],
     edges: [
       { from: 'A', to: 'B', label: '', arrowType: 'solid' },
-      { from: 'B', to: 'C', label: '', arrowType: 'solid' }
+      { from: 'B', to: 'C', label: '', arrowType: 'solid' },
     ],
-    direction: 'TD' as const
+    direction: 'TD' as const,
   };
 
   const mockDsl = {
@@ -50,28 +50,28 @@ flowchart TD
         id: 'A',
         type: 'Start' as const,
         apiName: 'Start',
-        label: 'Start'
+        label: 'Start',
       },
       {
         id: 'B',
         type: 'Assignment' as const,
         apiName: 'Assignment_1',
         label: 'Assignment 1',
-        assignments: []
+        assignments: [],
       },
       {
         id: 'C',
         type: 'End' as const,
         apiName: 'End',
-        label: 'End'
-      }
-    ]
+        label: 'End',
+      },
+    ],
   };
 
   const mockValidationResult = {
     valid: true,
     errors: [],
-    warnings: []
+    warnings: [],
   };
 
   beforeEach(() => {
@@ -86,9 +86,13 @@ flowchart TD
     (MetadataExtractor.prototype.extract as jest.Mock).mockReturnValue({});
     (IntermediateModelBuilder.prototype.build as jest.Mock).mockReturnValue(mockDsl);
     (FlowValidator.prototype.validate as jest.Mock).mockReturnValue(mockValidationResult);
-    (FlowXmlGenerator.prototype.generate as jest.Mock).mockReturnValue('<?xml version="1.0" encoding="UTF-8"?><Flow></Flow>');
+    (FlowXmlGenerator.prototype.generate as jest.Mock).mockReturnValue(
+      '<?xml version="1.0" encoding="UTF-8"?><Flow></Flow>',
+    );
     (DocsGenerator.prototype.generateMarkdown as jest.Mock).mockReturnValue('# Test Flow');
-    (DocsGenerator.prototype.generateMermaidDiagram as jest.Mock).mockReturnValue('flowchart TD A-->B');
+    (DocsGenerator.prototype.generateMermaidDiagram as jest.Mock).mockReturnValue(
+      'flowchart TD A-->B',
+    );
     (validateDsl as jest.Mock).mockReturnValue({ isValid: true, errors: [], warnings: [] });
   });
 
@@ -98,7 +102,7 @@ flowchart TD
         input: mockInputPath,
         verbose: false,
         debug: false,
-        strict: false
+        strict: false,
       };
 
       const result = await runCompileOnce(options);
@@ -115,7 +119,7 @@ flowchart TD
       const options = {
         input: '/nonexistent/file.mmd',
         verbose: false,
-        debug: false
+        debug: false,
       };
 
       await expect(runCompileOnce(options)).rejects.toThrow('Input file not found');
@@ -127,7 +131,7 @@ flowchart TD
         outFlow: mockOutputDir,
         verbose: false,
         debug: false,
-        strict: false
+        strict: false,
       };
 
       await runCompileOnce(options);
@@ -145,14 +149,14 @@ flowchart TD
         dslFormat: 'json',
         verbose: false,
         debug: false,
-        strict: false
+        strict: false,
       };
 
       await runCompileOnce(options);
 
       expect(fs.writeFileSync).toHaveBeenCalled();
       const callArgs = (fs.writeFileSync as jest.Mock).mock.calls.find((args) =>
-        args[0].includes('.flow.json')
+        args[0].includes('.flow.json'),
       );
       expect(callArgs).toBeDefined();
     });
@@ -164,14 +168,14 @@ flowchart TD
         dslFormat: 'yaml',
         verbose: false,
         debug: false,
-        strict: false
+        strict: false,
       };
 
       await runCompileOnce(options);
 
       expect(fs.writeFileSync).toHaveBeenCalled();
       const callArgs = (fs.writeFileSync as jest.Mock).mock.calls.find((args) =>
-        args[0].includes('.flow.yaml')
+        args[0].includes('.flow.yaml'),
       );
       expect(callArgs).toBeDefined();
     });
@@ -182,7 +186,7 @@ flowchart TD
         outDocs: mockOutputDir,
         verbose: false,
         debug: false,
-        strict: false
+        strict: false,
       };
 
       await runCompileOnce(options);
@@ -196,7 +200,7 @@ flowchart TD
       const mockErrorValidation = {
         valid: false,
         errors: [{ code: 'TEST_ERROR', message: 'Test error' }],
-        warnings: []
+        warnings: [],
       };
       (FlowValidator.prototype.validate as jest.Mock).mockReturnValue(mockErrorValidation);
 
@@ -204,7 +208,7 @@ flowchart TD
         input: mockInputPath,
         verbose: false,
         debug: false,
-        strict: false
+        strict: false,
       };
 
       await expect(runCompileOnce(options)).rejects.toThrow('Validation failed');
@@ -214,7 +218,7 @@ flowchart TD
       const mockWarningValidation = {
         valid: true,
         errors: [],
-        warnings: [{ code: 'TEST_WARNING', message: 'Test warning' }]
+        warnings: [{ code: 'TEST_WARNING', message: 'Test warning' }],
       };
       (FlowValidator.prototype.validate as jest.Mock).mockReturnValue(mockWarningValidation);
 
@@ -222,7 +226,7 @@ flowchart TD
         input: mockInputPath,
         strict: true,
         verbose: false,
-        debug: false
+        debug: false,
       };
 
       await expect(runCompileOnce(options)).rejects.toThrow('strict mode');
@@ -239,7 +243,7 @@ flowchart TD
         outFlow: '/nonexistent/dir',
         verbose: false,
         debug: false,
-        strict: false
+        strict: false,
       };
 
       await runCompileOnce(options);

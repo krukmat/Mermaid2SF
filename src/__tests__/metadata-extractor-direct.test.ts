@@ -12,11 +12,11 @@ describe('MetadataExtractor.extract() - Direct Tests', () => {
     const node: MermaidNode = {
       id: 'A',
       label: 'START: Start Process',
-      shape: 'round'
+      shape: 'round',
     };
-    
+
     const result = extractor.extract(node);
-    
+
     expect(result).toBeDefined();
     expect(result.type).toBe('Start');
     expect(result.label).toBe('Start Process');
@@ -27,11 +27,11 @@ describe('MetadataExtractor.extract() - Direct Tests', () => {
     const node: MermaidNode = {
       id: 'B',
       label: 'DECISION: Check Condition',
-      shape: 'diamond'
+      shape: 'diamond',
     };
-    
+
     const result = extractor.extract(node);
-    
+
     expect(result.type).toBe('Decision');
     expect(result.label).toBe('Check Condition');
   });
@@ -40,11 +40,11 @@ describe('MetadataExtractor.extract() - Direct Tests', () => {
     const node: MermaidNode = {
       id: 'C',
       label: 'ASSIGNMENT: Set Variable',
-      shape: 'square'
+      shape: 'square',
     };
-    
+
     const result = extractor.extract(node);
-    
+
     expect(result.type).toBe('Assignment');
     expect(result.label).toBe('Set Variable');
   });
@@ -53,11 +53,11 @@ describe('MetadataExtractor.extract() - Direct Tests', () => {
     const node: MermaidNode = {
       id: 'D',
       label: 'SCREEN: User Input',
-      shape: 'square'
+      shape: 'square',
     };
-    
+
     const result = extractor.extract(node);
-    
+
     expect(result.type).toBe('Screen');
     expect(result.label).toBe('User Input');
   });
@@ -66,11 +66,11 @@ describe('MetadataExtractor.extract() - Direct Tests', () => {
     const node: MermaidNode = {
       id: 'E',
       label: 'FAULT: Error Handler',
-      shape: 'round'
+      shape: 'round',
     };
-    
+
     const result = extractor.extract(node);
-    
+
     expect(result.type).toBe('Fault');
     expect(result.label).toBe('Error Handler');
   });
@@ -79,11 +79,11 @@ describe('MetadataExtractor.extract() - Direct Tests', () => {
     const node: MermaidNode = {
       id: 'F',
       label: 'END: Finish',
-      shape: 'square'
+      shape: 'square',
     };
-    
+
     const result = extractor.extract(node);
-    
+
     expect(result.type).toBe('End');
     expect(result.label).toBe('Finish');
   });

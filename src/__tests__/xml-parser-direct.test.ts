@@ -12,9 +12,9 @@ describe('XmlParser.parseFlowXmlText() - Direct Tests', () => {
         <locationY>0</locationY>
     </start>
 </Flow>`;
-    
+
     const result = parseFlowXmlText(xmlContent);
-    
+
     expect(result).toBeDefined();
     expect(result.apiVersion).toBe('60.0');
     expect(result.label).toBe('Test Flow');
@@ -44,9 +44,9 @@ describe('XmlParser.parseFlowXmlText() - Direct Tests', () => {
         </FlowElement>
     </elements>
 </Flow>`;
-    
+
     const result = parseFlowXmlText(xmlContent);
-    
+
     expect(result).toBeDefined();
     expect(result.elements).toBeDefined();
     expect(Array.isArray(result.elements)).toBe(true);
@@ -55,7 +55,7 @@ describe('XmlParser.parseFlowXmlText() - Direct Tests', () => {
 
   it('should handle XML content without throwing', () => {
     const xmlContent = `invalid xml content`;
-    
+
     expect(() => {
       parseFlowXmlText(xmlContent);
     }).not.toThrow(); // Should handle gracefully without crashing

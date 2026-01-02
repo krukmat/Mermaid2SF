@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { MermaidParser } from '../../parser/mermaid-parser';
-import { MetadataExtractor } from '../../extractor/metadata-extractor';
 import { IntermediateModelBuilder } from '../../dsl/intermediate-model-builder';
 import { FlowValidator } from '../../validator/flow-validator';
 import { FlowDSL } from '../../types/flow-dsl';
@@ -28,14 +27,14 @@ describe('Lint Command Logic - Simulated Tests', () => {
       { id: 'A', label: 'Start', shape: 'round' },
       { id: 'B', label: 'Decision', shape: 'diamond' },
       { id: 'C', label: 'Yes Path', shape: 'square' },
-      { id: 'D', label: 'No Path', shape: 'square' }
+      { id: 'D', label: 'No Path', shape: 'square' },
     ],
     edges: [
       { from: 'A', to: 'B', label: '', arrowType: 'solid' },
       { from: 'B', to: 'C', label: 'Yes', arrowType: 'solid' },
-      { from: 'B', to: 'D', label: 'No', arrowType: 'solid' }
+      { from: 'B', to: 'D', label: 'No', arrowType: 'solid' },
     ],
-    direction: 'TD' as const
+    direction: 'TD' as const,
   };
 
   const mockDsl: FlowDSL = {
@@ -49,21 +48,21 @@ describe('Lint Command Logic - Simulated Tests', () => {
         id: 'Start',
         type: 'Start',
         apiName: 'Start',
-        label: 'Start'
-      }
+        label: 'Start',
+      },
     ],
-    startElement: 'Start'
+    startElement: 'Start',
   };
 
   const mockValidationResult = {
     valid: true,
     errors: [],
-    warnings: []
+    warnings: [],
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Mock fs
     (fs.existsSync as jest.Mock).mockReturnValue(true);
     (fs.statSync as jest.Mock).mockReturnValue({ isFile: () => true });
@@ -92,23 +91,23 @@ describe('Lint Command Logic - Simulated Tests', () => {
 
       // SIMULAR el flujo de lintFlow sin importar la función
       const inputPath = path.resolve(options.input);
-      
+
       // Hacer que el mock sea llamado realmente
       fs.existsSync(inputPath);
-      
+
       // Verificar que el input existe
       expect(fs.existsSync).toHaveBeenCalledWith(inputPath);
       expect(fs.existsSync(inputPath)).toBe(true);
-      
+
       // Simular lectura de archivo
       const mermaidText = fs.readFileSync(inputPath, 'utf-8');
       expect(mermaidText).toBe(mockMermaidContent);
-      
+
       // Simular parsing
       const parser = new MermaidParser();
       const graph = parser.parse(mermaidText);
       expect(graph).toBe(mockGraph);
-      
+
       // Simular construcción de DSL
       const builder = new IntermediateModelBuilder();
       const metadataMap = new Map();
@@ -116,12 +115,12 @@ describe('Lint Command Logic - Simulated Tests', () => {
       const flowLabel = 'Test Flow';
       const dsl = builder.build(graph, metadataMap, flowApiName, flowLabel);
       expect(dsl).toBe(mockDsl);
-      
+
       // Simular validación
       const validator = new FlowValidator();
       const validationResult = validator.validate(dsl);
       expect(validationResult).toBe(mockValidationResult);
-      
+
       // Con validación exitosa, el proceso debería continuar
       expect(validationResult.valid).toBe(true);
     });
@@ -140,7 +139,7 @@ describe('Lint Command Logic - Simulated Tests', () => {
       // Simular verificación de archivo
       const inputPath = path.resolve(options.input);
       expect(fs.existsSync(inputPath)).toBe(false);
-      
+
       // Esto debería fallar en la implementación real
       expect(() => {
         if (!fs.existsSync(inputPath)) {
@@ -153,7 +152,7 @@ describe('Lint Command Logic - Simulated Tests', () => {
       const mockErrorValidation = {
         valid: false,
         errors: [{ code: 'INVALID_FLOW', message: 'Flow has cycles' }],
-        warnings: []
+        warnings: [],
       };
       (FlowValidator.prototype.validate as jest.Mock).mockReturnValue(mockErrorValidation);
 
@@ -168,7 +167,7 @@ describe('Lint Command Logic - Simulated Tests', () => {
       // Simular validación con errores
       const validator = new FlowValidator();
       const validationResult = validator.validate(mockDsl);
-      
+
       expect(validationResult.valid).toBe(false);
       expect(validationResult.errors.length).toBeGreaterThan(0);
     });
@@ -177,7 +176,7 @@ describe('Lint Command Logic - Simulated Tests', () => {
       const mockWarningValidation = {
         valid: true,
         errors: [],
-        warnings: [{ code: 'WARNING', message: 'Minor issue' }]
+        warnings: [{ code: 'WARNING', message: 'Minor issue' }],
       };
       (FlowValidator.prototype.validate as jest.Mock).mockReturnValue(mockWarningValidation);
 
@@ -191,7 +190,7 @@ describe('Lint Command Logic - Simulated Tests', () => {
 
       // En strict mode, warnings deberían tratarse como errores
       const validationResult = mockWarningValidation;
-      
+
       if (options.strict && validationResult.warnings.length > 0) {
         // Simular que warnings en strict mode se convierten en errores
         expect(validationResult.warnings.length).toBeGreaterThan(0);

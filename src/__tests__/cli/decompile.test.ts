@@ -10,7 +10,7 @@ jest.mock('../../utils/logger');
 describe('Decompile Command Logic - Simulated Tests', () => {
   const mockInputPath = '/test/input.flow-meta.xml';
   const mockOutputDir = '/test/output';
-  
+
   const mockParsedDsl = {
     apiVersion: '60.0',
     label: 'Test Flow',
@@ -20,10 +20,10 @@ describe('Decompile Command Logic - Simulated Tests', () => {
         id: 'Start',
         type: 'Start',
         apiName: 'Start',
-        label: 'Start'
-      }
+        label: 'Start',
+      },
     ],
-    startElement: 'Start'
+    startElement: 'Start',
   };
 
   const mockMermaidContent = `flowchart TD
@@ -31,7 +31,7 @@ describe('Decompile Command Logic - Simulated Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Mock fs
     (fs.existsSync as jest.Mock).mockReturnValue(true);
     (fs.mkdirSync as jest.Mock).mockReturnValue(undefined);
@@ -41,7 +41,9 @@ describe('Decompile Command Logic - Simulated Tests', () => {
     (parseFlowXml as jest.Mock).mockReturnValue(mockParsedDsl);
 
     // Mock DocsGenerator
-    (DocsGenerator.prototype.generateMermaidDiagram as jest.Mock).mockReturnValue(mockMermaidContent);
+    (DocsGenerator.prototype.generateMermaidDiagram as jest.Mock).mockReturnValue(
+      mockMermaidContent,
+    );
   });
 
   describe('Decompile Logic Simulation', () => {
@@ -55,23 +57,23 @@ describe('Decompile Command Logic - Simulated Tests', () => {
 
       // SIMULAR el flujo de runDecompile
       const inputPath = options.input;
-      
+
       // Hacer que el mock sea llamado realmente
       fs.existsSync(inputPath);
-      
+
       // Verificar que el input existe
       expect(fs.existsSync).toHaveBeenCalledWith(inputPath);
       expect(fs.existsSync(inputPath)).toBe(true);
-      
+
       // Simular parseFlowXml
       const dsl = parseFlowXml(inputPath);
       expect(dsl).toBe(mockParsedDsl);
-      
+
       // Simular generación de Mermaid
       const generator = new DocsGenerator();
       const mermaid = generator.generateMermaidDiagram(dsl);
       expect(mermaid).toBe(mockMermaidContent);
-      
+
       // Simular escritura de archivo
       const outputPath = `${mockOutputDir}/test-flow.mmd`;
       fs.writeFileSync(outputPath, mermaid);
@@ -90,7 +92,7 @@ describe('Decompile Command Logic - Simulated Tests', () => {
 
       // Simular verificación de archivo
       expect(fs.existsSync(options.input)).toBe(false);
-      
+
       // Esto debería fallar en la implementación real
       expect(() => {
         if (!fs.existsSync(options.input)) {
@@ -145,7 +147,7 @@ describe('Decompile Command Logic - Simulated Tests', () => {
       // Simular extracción de nombre de archivo
       const filename = 'test-flow.mmd';
       const outputPath = `${options.output}/${filename}`;
-      
+
       expect(filename).toBe('test-flow.mmd');
       expect(outputPath).toBe('/test/output/test-flow.mmd');
     });

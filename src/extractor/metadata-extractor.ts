@@ -58,7 +58,9 @@ export class MetadataExtractor {
     const firstLine = label.split('\n')[0].trim();
     // Remove type prefix (e.g., "START: My Label" -> "My Label")
     // Fix regex to include all supported types
-    const match = firstLine.match(/^(START|END|ASSIGNMENT|DECISION|SCREEN|FAULT|SUBFLOW|LOOP|WAIT|GET|CREATE|UPDATE):\s*(.+)$/i);
+    const match = firstLine.match(
+      /^(START|END|ASSIGNMENT|DECISION|SCREEN|FAULT|SUBFLOW|LOOP|WAIT|GET|CREATE|UPDATE):\s*(.+)$/i,
+    );
     return match ? match[2].trim() : firstLine;
   }
 

@@ -1,173 +1,195 @@
-# CODEX HANDOFF - CORRECCIÓN COMPLETA DE TESTS
+# CODEX HANDOFF - EJECUCIÓN DEL PLAN DE REFACTORING
 
 **PRIORITY: HIGH**
 
+# Optional override:
+CODEX_MODEL: gpt-5.2-codex
+
 ## Goal
 
-Completar la corrección de los tests fallando en el proyecto Mermaid2SF, alcanzando los objetivos de:
-- Cobertura global > 80%
-- Cobertura individual > 85%
-- Tests funcionando al 100%
-- Análisis de complejidad ciclomática
-
-## Non-goals
-
-- No modificar arquitectura fundamental del proyecto
-- No reescribir módulos existentes sin necesidad
-- No crear tests innecesarios para funcionalidad ya cubierta
+Ejecutar el plan de refactoring aprobado para los scripts críticos identificados en el análisis de complejidad, aplicando patrones de diseño y principios SOLID para mejorar mantenibilidad y escalabilidad del proyecto Mermaid2SF.
 
 ## Estado Actual
 
-**Tests ejecutándose**: 158 de 158 (100%)
-**Test suites**: 20 de 20 funcionando (100%)
-**Tests fallando**: 0 test suites
-**Estado**: Tests funcionando correctamente, pendiente mejora de cobertura
+**Plan de refactoring**: APROBADO por el usuario
+**Módulos críticos identificados**: 5 módulos con alta/muy alta complejidad
+**Estrategias definidas**: 6 patrones de diseño específicos
+**Cronograma**: 3 sprints definidos
 
-## Progreso Realizado por Codex
+## Módulos a Refactorizar
 
-### ✅ Completado Exitosamente:
-1. **Tests funcionando**: Mejorados de 120/120 a 158/158 tests
-2. **Test suites**: Mejoradas de 17/20 a 20/20 funcionando
-3. **Tests CLI**: Reestructurados sin dependencias del framework Commander
-4. **Herramientas instaladas**: Plato y escomplex para análisis de complejidad
-5. **Regex corregidos**: Tipos SCREEN, FAULT, etc. ahora reconocidos
-6. **Types corregidos**: Errores de parámetros resueltos
+### 🔴 Prioridad 1 (Complejidad ALTA):
+1. **`generators/flow-xml-generator.ts`** - 592 líneas
+   - **Problema**: Función `generateXML()` monolítica de 200+ líneas
+   - **Solución**: Strategy Pattern + Factory Pattern
+   - **Archivos resultantes**: 8-10 clases especializadas
 
-### 📊 Cobertura Actual vs Objetivos:
-- **Statements**: 58.26% (objetivo 80%) - Gap: -21.74%
-- **Branches**: 49.73% (objetivo 80%) - Gap: -30.27%
-- **Lines**: 58.53% (objetivo 80%) - Gap: -21.47%
-- **Functions**: 67.54% (objetivo 80%) - Gap: -12.46%
+2. **`generators/docs-generator.ts`** - 494 líneas
+   - **Problema**: Generación y renderizado mezclados
+   - **Solución**: Template Method Pattern + Separación de responsabilidades
+   - **Archivos resultantes**: 6-8 clases especializadas
 
-## Módulos con Cobertura Excelente (>85%)
+### 🟡 Prioridad 2 (Complejidad MEDIA):
+3. **`extractor/metadata-extractor.ts`** - 373 líneas
+4. **`reverse/xml-parser.ts`** - 364 líneas
+5. **`validator/flow-validator.ts`** - 354 líneas
 
-| Módulo | Cobertura | Estado |
-|--------|-----------|--------|
-| test-generator/script-generator.ts | 100% | Perfecto |
-| validator/flow-validator.ts | 95.62% | Excelente |
-| validator/schema-validator.ts | 93.75% | Excelente |
-| test-generator/path-analyzer.ts | 92% | Excelente |
-| parser/mermaid-parser.ts | 83.07% | Cerca del objetivo |
+## Archivos a Crear/Modificar
 
-## Módulos Críticos con Baja Cobertura (0-20%)
+### **Sprint 1: Módulos Prioridad Alta**
 
-| Módulo | Cobertura | Acción Requerida |
-|--------|-----------|------------------|
-| cli/commands/decompile.ts | 0% | Crear tests completos |
-| cli/commands/lint.ts | 0% | Tests de validación |
-| cli/commands/test-plan.ts | 0% | Tests de generación |
-| cli/index.ts | 0% | Tests de entrada principal |
-| cli/utils/flow-validation.ts | 16.66% | Ampliar tests |
+#### **flow-xml-generator.ts** → Refactoring completo:
+- `src/generators/xml/XMLGenerator.ts` (clase principal)
+- `src/generators/xml/strategies/ElementStrategy.ts` (interface)
+- `src/generators/xml/strategies/ScreenStrategy.ts`
+- `src/generators/xml/strategies/AssignmentStrategy.ts`
+- `src/generators/xml/strategies/DecisionStrategy.ts`
+- `src/generators/xml/factories/GeneratorFactory.ts`
+- `src/generators/xml/components/HeaderGenerator.ts`
+- `src/generators/xml/components/ElementGenerator.ts`
+- `src/generators/xml/components/ConnectorGenerator.ts`
+- `src/generators/xml/components/FooterGenerator.ts`
 
-## Tasks Pendientes para Alcanzar 80% Cobertura
+#### **docs-generator.ts** → Refactoring completo:
+- `src/generators/docs/DocsGenerator.ts` (clase principal)
+- `src/generators/docs/templates/DocumentationTemplate.ts` (abstract)
+- `src/generators/docs/templates/TechnicalDocumentationTemplate.ts`
+- `src/generators/docs/renderers/DiagramRenderer.ts`
+- `src/generators/docs/formatters/DocumentationFormatter.ts`
 
-### Phase 1: Tests para Módulos CLI Críticos (3-4 horas)
-1. **Crear cli/commands/decompile.test.ts**
-   - Tests de comando de decompilación
-   - Validación de entrada y salida
-   - Manejo de errores
+### **Sprint 2: Módulos Prioridad Media**
 
-2. **Crear cli/commands/lint.test.ts**
-   - Tests de validación de archivos
-   - Tests de diferentes tipos de validación
-   - Tests de configuración
+#### **metadata-extractor.ts** → Refactoring:
+- `src/extractor/handlers/ExtractionHandler.ts` (interface)
+- `src/extractor/handlers/ScreenExtractionHandler.ts`
+- `src/extractor/handlers/AssignmentExtractionHandler.ts`
+- `src/extractor/handlers/DecisionExtractionHandler.ts`
 
-3. **Crear cli/commands/test-plan.test.ts**
-   - Tests de generación de planes
-   - Tests de análisis de paths
-   - Tests de generación de datos
+#### **xml-parser.ts** → Refactoring:
+- `src/reverse/parsers/XMLParseable.ts` (interface)
+- `src/reverse/parsers/CompositeXMLParser.ts`
+- `src/reverse/parsers/ScreenXMLParser.ts`
+- `src/reverse/parsers/AssignmentXMLParser.ts`
 
-4. **Crear cli/index.test.ts**
-   - Tests de punto de entrada principal
-   - Tests de routing de comandos
-   - Tests de manejo de argumentos
-
-### Phase 2: Mejora de Cobertura en Módulos Existentes (2-3 horas)
-1. **Ampliar cli/commands/compile.test.ts**
-   - De 12.4% → 50%+ cobertura
-   - Más casos de prueba de validación
-   - Tests de diferentes escenarios de compilación
-
-2. **Mejorar cli/utils/flow-validation.ts**
-   - De 16.66% → 70%+ cobertura
-   - Tests de funciones de utilidad
-   - Tests de validación de flujos
-
-3. **Ampliar reverse/xml-parser.test.ts**
-   - De 41.71% → 70%+ cobertura
-   - Más casos de parsing XML
-   - Tests de diferentes estructuras XML
-
-### Phase 3: Refactoring de Complejidad (1-2 horas)
-1. **Dividir funciones complejas**
-   - flow-xml-generator.ts (592 líneas)
-   - docs-generator.ts (494 líneas)
-   - Aplicar principio de responsabilidad única
-
-2. **Aplicar patrones de diseño**
-   - Strategy pattern para generadores
-   - Factory pattern para parsers
-   - Template method para validaciones
-
-## Files to change
-
-- `src/__tests__/cli/decompile.test.ts` - Crear (nuevo archivo)
-- `src/__tests__/cli/lint.test.ts` - Crear (nuevo archivo)
-- `src/__tests__/cli/test-plan.test.ts` - Mejorar cobertura existente
-- `src/__tests__/cli/index.test.ts` - Crear (nuevo archivo)
-- `src/__tests__/cli/compile.test.ts` - Ampliar cobertura existente
-- `src/__tests__/cli/utils/flow-validation.test.ts` - Crear si no existe
-- `src/generators/flow-xml-generator.ts` - Refactoring de complejidad
-- `src/generators/docs-generator.ts` - Refactoring de complejidad
+#### **flow-validator.ts** → Refactoring:
+- `src/validator/visitors/FlowElementVisitor.ts` (interface)
+- `src/validator/visitors/ValidationVisitor.ts`
+- `src/validator/elements/ScreenElement.ts`
+- `src/validator/elements/AssignmentElement.ts`
+- `src/validator/elements/DecisionElement.ts`
 
 ## Commands to run
 
 ```bash
-# Verificar estado actual
+# Verificar estado inicial
 npm test -- --silent --passWithNoTests
 
-# Ejecutar con cobertura
+# Ejecutar con cobertura antes del refactoring
 npm test -- --coverage
 
-# Verificar cobertura específica
-npm test -- --coverage --collectCoverageFrom="src/cli/**/*.ts"
-npm test -- --coverage --collectCoverageFrom="src/generators/**/*.ts"
+# Testing durante desarrollo
+npm run test -- --watch
 
-# Análisis de complejidad
-npx plato -d complexity-reports src/**/*.ts
+# Testing de integración
+npm run test -- --testPathPatterns="integration"
+
+# Verificar cobertura después de cada sprint
+npm test -- --coverage --collectCoverageFrom="src/generators/xml/**/*.ts"
+npm test -- --coverage --collectCoverageFrom="src/generators/docs/**/*.ts"
+
+# Linting y formatting
+npm run lint
+npm run format
+
+# Compilación
+npm run build
+
+# CI completo
+npm run ci
 ```
 
 ## Acceptance criteria
 
-1. **Tests funcionando**: 158/158 tests pasando ✅
-2. **Cobertura global**: >80% en todas las métricas ❌ (actual: 58.26% statements)
-3. **Cobertura individual**: >85% en módulos críticos ❌ (5 módulos <20%)
-4. **0 tests fallando**: Todas las test suites funcionando ✅
-5. **Análisis de complejidad**: Herramientas instaladas ✅
-6. **Refactoring**: Funciones complejas divididas ❌
+1. **Funcionalidad preservada**: Todos los tests existentes deben seguir pasando
+2. **Complejidad reducida**: 
+   - flow-xml-generator.ts: 592 líneas → <200 líneas por clase
+   - docs-generator.ts: 494 líneas → <200 líneas por clase
+   - Complejidad ciclomática <10 por función
+3. **Cobertura mantenida**: >85% en módulos refactorizados
+4. **Compatibilidad hacia atrás**: API existente sin breaking changes
+5. **Tests adicionales**: Tests específicos para nuevos patrones implementados
+6. **Performance**: No degradación de performance significativa
 
-## Gap Remaining
+## Estrategia de Implementación
 
-- **Coverage gap**: ~22% para alcanzar 80% global
-- **Modules to test**: 5 módulos CLI sin tests
-- **Complexity refactoring**: 8 módulos con alta complejidad
-- **Estimated effort**: 6-8 horas de trabajo
+### **Phase 1: Backup y Setup (30 minutos)**
+1. Crear backup del estado actual
+2. Configurar branch para refactoring
+3. Verificar tests baseline
+
+### **Phase 2: Sprint 1 - flow-xml-generator.ts (2-3 días)**
+1. **Día 1**: Crear estructura de directorios y interfaces
+2. **Día 2**: Implementar Strategy Pattern para elementos
+3. **Día 3**: Implementar Factory Pattern y testing
+4. **Día 4**: Migración gradual y testing
+5. **Día 5**: Validación y optimización
+
+### **Phase 3: Sprint 2 - docs-generator.ts (2 días)**
+1. **Día 1**: Implementar Template Method Pattern
+2. **Día 2**: Separación renderizado/generación
+3. **Día 3**: Testing y validación
+
+### **Phase 4: Sprint 3 - Módulos Prioridad Media (2-3 días)**
+1. **Día 1**: metadata-extractor.ts (Chain of Responsibility)
+2. **Día 2**: xml-parser.ts (Composite Pattern)
+3. **Día 3**: flow-validator.ts (Visitor Pattern)
+
+### **Phase 5: Integración y Testing (1-2 días)**
+1. Testing de integración end-to-end
+2. Validación de performance
+3. Documentación final
 
 ## Rollback plan
 
-- Backup actual: `git stash` antes de cambios mayores
-- Restaurar archivos específicos si hay problemas
-- Mantener cambios exitosos en ramas separadas
-- Rollback a commit anterior si es necesario
+- **Backup inicial**: git stash antes de empezar
+- **Migración gradual**: Implementar patrones sin eliminar código original
+- **Testing continuo**: Verificar funcionalidad en cada paso
+- **Branching strategy**: Crear rama `refactoring/2026-01-02` para desarrollo
+- **Merge strategy**: Merge con squash para mantener historial limpio
+
+## Risk Mitigation
+
+### **Riesgo: Breaking Changes**
+- **Mitigación**: Mantener interfaces originales, crear nuevas implementaciones
+- **Verificación**: Tests de compatibilidad automática
+
+### **Riesgo: Performance Degradation**
+- **Mitigación**: Benchmarking antes y después de cada sprint
+- **Verificación**: Tests de performance específicos
+
+### **Riesgo: Testing Coverage Reduction**
+- **Mitigación**: Estrategia de testing robusto implementada desde el inicio
+- **Verificación**: Monitoreo continuo de cobertura
+
+### **Riesgo: Complex Dependencies**
+- **Mitigación**: Implementación incremental con validación en cada paso
+- **Verificación**: Testing de integración continuo
 
 ## Context importante
 
-Este proyecto es un compilador de flows de Mermaid a Salesforce Flow XML. Los tests son críticos para:
-- Validar parsing correcto de diagramas Mermaid
-- Verificar generación de XML válido para Salesforce
-- Asegurar compatibilidad con diferentes tipos de elementos (Screen, Assignment, Decision, etc.)
-- Mantener integridad en el pipeline de conversión
+Este refactoring es crítico para:
+- **Mantenibilidad**: Código más fácil de entender y modificar
+- **Escalabilidad**: Facilitar adición de nuevos tipos de elementos
+- **Testing**: Mayor facilidad para crear tests específicos
+- **Performance**: Mejor uso de memoria y procesamiento
 
-La corrección de estos tests es esencial para la confiabilidad del sistema de conversión.
+El proyecto es un compilador de flows de Mermaid a Salesforce Flow XML, por lo que la estabilidad y confiabilidad son fundamentales.
 
-**Estado actual**: Codex logró un éxito parcial - todos los tests funcionan pero falta alcanzar cobertura del 80%.
+## Estimación de Esfuerzo
+
+**Total**: 8-10 días de desarrollo
+- **Sprint 1**: 4-5 días (flow-xml-generator.ts + docs-generator.ts)
+- **Sprint 2**: 2-3 días (3 módulos restantes)
+- **Sprint 3**: 2 días (integración y testing)
+
+**Priority**: ALTA - Impacto significativo en mantenibilidad del proyecto
