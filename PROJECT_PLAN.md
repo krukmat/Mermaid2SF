@@ -1518,6 +1518,27 @@ npm run interactive
 
 ---
 
+## REFACTORING - CICLOMÁTICA (SPRINT 2)
+**Estado**: 🚧 In Progress
+**Objetivo**: Reducir complejidad ciclomática en validación y parsers reverse sin romper APIs públicas.
+
+**Tareas**:
+- [x] Refactor `ValidationVisitor` con Strategy + Registry
+- [x] Refactor `CompositeXMLParser` con ParserRegistry
+- [x] Refactor `ScreenXMLParser` con helpers
+- [ ] Validación final de lint (pendiente por errores existentes fuera de scope)
+
+**Archivos afectados**:
+- `src/validator/visitors/ValidationVisitor.ts`
+- `src/validator/visitors/ValidationRegistry.ts`
+- `src/validator/visitors/strategies/`
+- `src/reverse/parsers/CompositeXMLParser.ts`
+- `src/reverse/parsers/ParserRegistry.ts`
+- `src/reverse/parsers/ScreenXMLParser.ts`
+- `docs/planning/sprint2-cyclomatic-refactor.md`
+
+---
+
 **FIN DEL PLAN**
 
 Este documento debe actualizarse conforme se completan tareas y se descubren nuevas necesidades.
