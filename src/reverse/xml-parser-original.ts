@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import { FlowDSL, FlowElement } from '../types/flow-dsl';
 import { DEFAULT_API_VERSION } from '../types/flow-dsl';
-import { CompositeXMLParser } from './parsers/CompositeXMLParser';
 
 /**
  * Parse a Salesforce Flow XML file into a DSL-like structure.
@@ -73,14 +72,6 @@ export function parseFlowXml(filePath: string): FlowDSL {
   const inferredName = filePath.split('/').pop()?.replace('.flow-meta.xml', '') || 'Flow';
   return parseFlowXmlText(text, inferredName);
 }
-
-// Export as facade to maintain compatibility
-export { CompositeXMLParser as XMLParser };
-
-// Re-export specific parsers for direct access
-export { ScreenXMLParser } from './parsers/ScreenXMLParser';
-export { AssignmentXMLParser } from './parsers/AssignmentXMLParser';
-export { DecisionXMLParser } from './parsers/DecisionXMLParser';
 
 function extractValue(text: string, regex: RegExp): string | undefined {
   const match = text.match(regex);
