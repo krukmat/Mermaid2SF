@@ -60,7 +60,7 @@ async function watchCompile(options: any) {
   });
 }
 
-async function runCompileOnce(options: any) {
+export async function runCompileOnce(options: any) {
   if (options.verbose || options.debug) {
     logger.level = 'debug';
   }

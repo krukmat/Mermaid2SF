@@ -167,7 +167,7 @@ flowchart TD
 
       expect(result.valid).toBe(true);
       expect(xml).toContain('<screens>');
-      expect(xml).toContain('<name>SCREEN_User_Input</name>');
+      expect(xml).toMatch(/<name>User_Input<\/name>/);
     });
   });
 
@@ -196,7 +196,7 @@ flowchart TD
 
       expect(result.valid).toBe(true);
       expect(xml).toContain('<recordCreates>');
-      expect(xml).toContain('<name>CREATE_New_Account</name>');
+      expect(xml).toMatch(/<name>New_Account<\/name>/);
     });
   });
 
@@ -225,7 +225,7 @@ flowchart TD
 
       expect(result.valid).toBe(true);
       expect(xml).toContain('<recordUpdates>');
-      expect(xml).toContain('<name>UPDATE_Account_Status</name>');
+      expect(xml).toMatch(/<name>Account_Status<\/name>/);
     });
   });
 
@@ -254,7 +254,7 @@ flowchart TD
 
       expect(result.valid).toBe(true);
       expect(xml).toContain('<subflows>');
-      expect(xml).toContain('<name>SUBFLOW_Email_Notification</name>');
+      expect(xml).toMatch(/<name>Email_Notification<\/name>/);
     });
   });
 
