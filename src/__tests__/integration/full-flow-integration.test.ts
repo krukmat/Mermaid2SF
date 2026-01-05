@@ -85,7 +85,7 @@ describe('Full Flow Integration Tests', () => {
 
       // Strategy Pattern (XML Generator)
       expect(xmlResult).toContain('<screens>');
-      
+
       // Chain of Responsibility (Metadata Extractor)
       const metadata = metadataExtractor.extract(graph.nodes[0]);
       expect(metadata).toBeDefined();
@@ -121,7 +121,7 @@ describe('Full Flow Integration Tests', () => {
       };
       const xmlResult = xmlGenerator.generate(emptyDsl as any);
       expect(xmlResult).toBeDefined();
-      
+
       // Test validation with invalid elements
       const validation = validator.validate(emptyDsl as any);
       expect(validation).toBeDefined();

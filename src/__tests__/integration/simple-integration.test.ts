@@ -36,12 +36,9 @@ describe('Simple Integration Tests', () => {
     });
 
     it('should parse simple Mermaid flow', () => {
-      const simpleMermaid = [
-        'flowchart TD',
-        'A([START: Start])',
-        'B([END: End])',
-        'A --> B',
-      ].join('\n');
+      const simpleMermaid = ['flowchart TD', 'A([START: Start])', 'B([END: End])', 'A --> B'].join(
+        '\n',
+      );
       const graph = parser.parse(simpleMermaid);
       expect(graph).toBeDefined();
       expect(graph.nodes).toBeDefined();

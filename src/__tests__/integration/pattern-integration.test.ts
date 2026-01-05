@@ -39,7 +39,7 @@ describe('Pattern Integration Tests', () => {
             next: 'End',
           },
           { id: 'End', type: 'End', apiName: 'End' },
-        ]
+        ],
       };
 
       const xmlResult = xmlGenerator.generate(mockDsl as any);
@@ -68,15 +68,8 @@ describe('Pattern Integration Tests', () => {
 
   describe('Sprint 2 Patterns Integration', () => {
     it('should work with Chain of Responsibility (Metadata Extractor)', () => {
-      const mockElement = {
-        type: 'Screen',
-        id: 'screen1',
-        apiName: 'TestScreen',
-        label: 'Test Screen'
-      };
-
       const metadata = metadataExtractor.extract({
-        id: mockElement.id,
+        id: 'screen1',
         label: 'SCREEN: Test Screen',
         shape: 'square',
       });
@@ -88,8 +81,8 @@ describe('Pattern Integration Tests', () => {
       const mockXmlElement = {
         screens: {
           name: 'TestScreen',
-          label: 'Test Screen'
-        }
+          label: 'Test Screen',
+        },
       };
 
       const parsed = xmlParser.parseXML(mockXmlElement);
@@ -106,7 +99,14 @@ describe('Pattern Integration Tests', () => {
         startElement: 'Start',
         elements: [
           { id: 'Start', type: 'Start', apiName: 'Start', next: 'screen1' },
-          { id: 'screen1', type: 'Screen', apiName: 'screen1', label: 'Test Screen', components: [], next: 'End' },
+          {
+            id: 'screen1',
+            type: 'Screen',
+            apiName: 'screen1',
+            label: 'Test Screen',
+            components: [],
+            next: 'End',
+          },
           { id: 'End', type: 'End', apiName: 'End' },
         ],
       } as any);
@@ -117,13 +117,6 @@ describe('Pattern Integration Tests', () => {
 
   describe('Sprint 2B Patterns Integration', () => {
     it('should work with refined Strategy Pattern (Validation)', () => {
-      const mockElement = {
-        type: 'Screen',
-        id: 'screen1',
-        label: 'Test Screen',
-        components: []
-      };
-
       const validation = validator.validate({
         version: 1,
         flowApiName: 'validator-test',
@@ -132,7 +125,14 @@ describe('Pattern Integration Tests', () => {
         startElement: 'Start',
         elements: [
           { id: 'Start', type: 'Start', apiName: 'Start', next: 'screen1' },
-          { id: 'screen1', type: 'Screen', apiName: 'screen1', label: 'Test Screen', components: [], next: 'End' },
+          {
+            id: 'screen1',
+            type: 'Screen',
+            apiName: 'screen1',
+            label: 'Test Screen',
+            components: [],
+            next: 'End',
+          },
           { id: 'End', type: 'End', apiName: 'End' },
         ],
       } as any);
@@ -143,7 +143,7 @@ describe('Pattern Integration Tests', () => {
       const mockElement = {
         type: 'Screen',
         name: 'TestScreen',
-        label: 'Test Screen'
+        label: 'Test Screen',
       };
 
       // Test that parser registry can handle different element types

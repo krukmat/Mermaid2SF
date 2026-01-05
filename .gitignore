@@ -43,3 +43,4 @@ test-interactive-tutorial 2.js
 .gitignore
 test-interactive-tutorial.js
 test-first-steps.js
+docs/planning/sprint3-integration-testing.md
