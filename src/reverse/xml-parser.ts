@@ -31,10 +31,14 @@ export function parseFlowXmlText(text: string, flowName?: string): FlowDSL {
     text,
     /<start>[\s\S]*?<targetReference>(.*?)<\/targetReference>[\s\S]*?<\/start>/,
   );
+  // TASK F5.1: Parse layout from Start element
+  const startSegment = text.match(/<start>[\s\S]*?<\/start>/)?.[0] || '';
+  const startLayout = parseLayout(startSegment);
   elements.push({
     id: 'Start',
     type: 'Start',
     apiName: 'Start',
+    layout: startLayout,
     next: startNext || undefined,
   } as any);
 
@@ -87,6 +91,16 @@ function extractValue(text: string, regex: RegExp): string | undefined {
   return match ? match[1] : undefined;
 }
 
+// TASK F5.1: Parse layout coordinates from locationX and locationY
+function parseLayout(segment: string): { x: number; y: number } | undefined {
+  const x = extractValue(segment, /<locationX>(.*?)<\/locationX>/);
+  const y = extractValue(segment, /<locationY>(.*?)<\/locationY>/);
+  if (x && y) {
+    return { x: parseInt(x, 10), y: parseInt(y, 10) };
+  }
+  return undefined;
+}
+
 function parseAssignments(xml: string, elements: FlowElement[]) {
   const blocks = xml.split('<assignments>').slice(1);
   for (const block of blocks) {
@@ -105,12 +119,15 @@ function parseAssignments(xml: string, elements: FlowElement[]) {
       segment,
       /<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/,
     );
+    // TASK F5.1: Parse and include layout
+    const layout = parseLayout(segment);
     elements.push({
       id: apiName,
       apiName,
       label,
       type: 'Assignment',
       assignments,
+      layout,
       next: next || undefined,
     } as any);
   }
@@ -137,12 +154,18 @@ function parseDecisions(xml: string, elements: FlowElement[]) {
     if (defNext) {
       outcomes.push({ name: 'Default', next: defNext, isDefault: true });
     }
+    // TASK F5.1: Parse and include layout
+    const layout = parseLayout(segment);
+    // TASK F5.2: Parse and include conditionLogic
+    const conditionLogic = extractValue(segment, /<conditionLogic>(.*?)<\/conditionLogic>/);
     elements.push({
       id: apiName,
       apiName,
       label,
       type: 'Decision',
       outcomes,
+      layout,
+      conditionLogic: conditionLogic || undefined,
     } as any);
   }
 }
@@ -158,35 +181,41 @@ function parseScreens(xml: string, elements: FlowElement[]) {
       segment,
       /<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/,
     );
+    // TASK F5.1: Parse and include layout
+    const layout = parseLayout(segment);
     elements.push({
       id: apiName,
       apiName,
       label,
       type: 'Screen',
       components: [],
+      layout,
       next: next || undefined,
     } as any);
   }
 }
 
 function parseRecordCreates(xml: string, elements: FlowElement[]) {
-  const regex =
-    /<recordCreates>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<object>(.*?)<\/object>[\s\S]*?(<inputAssignments>[\s\S]*?<\/inputAssignments>)*[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
-  let m;
-  while ((m = regex.exec(xml)) !== null) {
-    const apiName = m[1];
-    const label = m[2];
-    const object = m[3];
-    const inputBlock = m[4] || '';
-    const connectorBlock = m[5] || '';
+  const blocks = xml.split('<recordCreates>').slice(1);
+  for (const block of blocks) {
+    const segment = block.split('</recordCreates>')[0];
+    const apiName = extractValue(segment, /<name>(.*?)<\/name>/);
+    const label = extractValue(segment, /<label>(.*?)<\/label>/);
+    const object = extractValue(segment, /<object>(.*?)<\/object>/);
+    if (!apiName) continue;
     const fields: Record<string, string> = {};
     const inputRegex =
       /<inputAssignments>[\s\S]*?<field>(.*?)<\/field>[\s\S]*?<stringValue>(.*?)<\/stringValue>[\s\S]*?<\/inputAssignments>/g;
     let im;
-    while ((im = inputRegex.exec(inputBlock)) !== null) {
+    while ((im = inputRegex.exec(segment)) !== null) {
       fields[im[1]] = im[2];
     }
-    const next = extractValue(connectorBlock, /<targetReference>(.*?)<\/targetReference>/);
+    const next = extractValue(
+      segment,
+      /<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/,
+    );
+    // TASK F5.1: Parse and include layout
+    const layout = parseLayout(segment);
     elements.push({
       id: apiName,
       apiName,
@@ -194,29 +223,35 @@ function parseRecordCreates(xml: string, elements: FlowElement[]) {
       type: 'RecordCreate',
       object,
       fields,
+      layout,
       next: next || undefined,
     } as any);
   }
 }
 
 function parseRecordUpdates(xml: string, elements: FlowElement[]) {
-  const regex =
-    /<recordUpdates>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<object>(.*?)<\/object>[\s\S]*?(<inputAssignments>[\s\S]*?<\/inputAssignments>)*[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
-  let m;
-  while ((m = regex.exec(xml)) !== null) {
-    const apiName = m[1];
-    const label = m[2];
-    const object = m[3];
-    const inputBlock = m[4] || '';
-    const connectorBlock = m[5] || '';
+  const blocks = xml.split('<recordUpdates>').slice(1);
+  for (const block of blocks) {
+    const segment = block.split('</recordUpdates>')[0];
+    const apiName = extractValue(segment, /<name>(.*?)<\/name>/);
+    const label = extractValue(segment, /<label>(.*?)<\/label>/);
+    const object = extractValue(segment, /<object>(.*?)<\/object>/);
+    if (!apiName) continue;
     const fields: Record<string, string> = {};
     const inputRegex =
       /<inputAssignments>[\s\S]*?<field>(.*?)<\/field>[\s\S]*?<stringValue>(.*?)<\/stringValue>[\s\S]*?<\/inputAssignments>/g;
     let im;
-    while ((im = inputRegex.exec(inputBlock)) !== null) {
+    while ((im = inputRegex.exec(segment)) !== null) {
       fields[im[1]] = im[2];
     }
-    const next = extractValue(connectorBlock, /<targetReference>(.*?)<\/targetReference>/);
+    const next = extractValue(
+      segment,
+      /<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/,
+    );
+    // TASK F5.1: Parse and include layout
+    const layout = parseLayout(segment);
+    // TASK F5.3: Parse and include filterLogic
+    const filterLogic = extractValue(segment, /<filterLogic>(.*?)<\/filterLogic>/);
     elements.push({
       id: apiName,
       apiName,
@@ -224,70 +259,83 @@ function parseRecordUpdates(xml: string, elements: FlowElement[]) {
       type: 'RecordUpdate',
       object,
       fields,
+      layout,
+      filterLogic: filterLogic || undefined,
       next: next || undefined,
     } as any);
   }
 }
 
 function parseSubflows(xml: string, elements: FlowElement[]) {
-  const regex =
-    /<subflows>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<flowName>(.*?)<\/flowName>[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
-  let m;
-  while ((m = regex.exec(xml)) !== null) {
-    const apiName = m[1];
-    const label = m[2];
-    const flowName = m[3];
-    const connectorBlock = m[4] || '';
-    const next = extractValue(connectorBlock, /<targetReference>(.*?)<\/targetReference>/);
+  const blocks = xml.split('<subflows>').slice(1);
+  for (const block of blocks) {
+    const segment = block.split('</subflows>')[0];
+    const apiName = extractValue(segment, /<name>(.*?)<\/name>/);
+    const label = extractValue(segment, /<label>(.*?)<\/label>/);
+    const flowName = extractValue(segment, /<flowName>(.*?)<\/flowName>/);
+    if (!apiName) continue;
+    const next = extractValue(
+      segment,
+      /<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/,
+    );
+    // TASK F5.1: Parse and include layout
+    const layout = parseLayout(segment);
     elements.push({
       id: apiName,
       apiName,
       label,
       type: 'Subflow',
       flowName,
+      layout,
       next: next || undefined,
     } as any);
   }
 }
 
 function parseLoops(xml: string, elements: FlowElement[]) {
-  const regex =
-    /<loops>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<collectionReference>(.*?)<\/collectionReference>[\s\S]*?(<nextValueConnector>[\s\S]*?<\/nextValueConnector>)?/g;
-  let m;
-  while ((m = regex.exec(xml)) !== null) {
-    const apiName = m[1];
-    const label = m[2];
-    const collection = m[3];
-    const connectorBlock = m[4] || '';
-    const next = extractValue(connectorBlock, /<targetReference>(.*?)<\/targetReference>/);
+  const blocks = xml.split('<loops>').slice(1);
+  for (const block of blocks) {
+    const segment = block.split('</loops>')[0];
+    const apiName = extractValue(segment, /<name>(.*?)<\/name>/);
+    const label = extractValue(segment, /<label>(.*?)<\/label>/);
+    const collection = extractValue(segment, /<collectionReference>(.*?)<\/collectionReference>/);
+    if (!apiName) continue;
+    const next = extractValue(
+      segment,
+      /<nextValueConnector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/,
+    );
+    // TASK F5.1: Parse and include layout
+    const layout = parseLayout(segment);
     elements.push({
       id: apiName,
       apiName,
       label,
       type: 'Loop',
       collection,
+      layout,
       next: next || undefined,
     } as any);
   }
 }
 
 function parseWaits(xml: string, elements: FlowElement[]) {
-  const regex =
-    /<waits>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?(<waitEvents>[\s\S]*?<\/waitEvents>)?[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
-  let m;
-  while ((m = regex.exec(xml)) !== null) {
-    const apiName = m[1];
-    const label = m[2];
-    const eventsBlock = m[3] || '';
-    const connectorBlock = m[4] || '';
-    const condition = extractValue(eventsBlock, /<conditionLogic>(.*?)<\/conditionLogic>/);
+  const blocks = xml.split('<waits>').slice(1);
+  for (const block of blocks) {
+    const segment = block.split('</waits>')[0];
+    const apiName = extractValue(segment, /<name>(.*?)<\/name>/);
+    const label = extractValue(segment, /<label>(.*?)<\/label>/);
+    if (!apiName) continue;
+    const condition = extractValue(segment, /<conditionLogic>(.*?)<\/conditionLogic>/);
     const platformEventName = extractValue(
-      eventsBlock,
+      segment,
       /<platformEventName>(.*?)<\/platformEventName>/,
     );
-    const offsetNumber = extractValue(eventsBlock, /<offsetNumber>(.*?)<\/offsetNumber>/);
-    const offsetUnit = extractValue(eventsBlock, /<offsetUnit>(.*?)<\/offsetUnit>/);
-    const next = extractValue(connectorBlock, /<targetReference>(.*?)<\/targetReference>/);
+    const offsetNumber = extractValue(segment, /<offsetNumber>(.*?)<\/offsetNumber>/);
+    const offsetUnit = extractValue(segment, /<offsetUnit>(.*?)<\/offsetUnit>/);
+    const next = extractValue(
+      segment,
+      /<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/,
+    );
     let waitType: 'condition' | 'duration' | 'event' | undefined;
     let durationValue: number | undefined;
     let durationUnit: string | undefined;
@@ -302,6 +350,8 @@ function parseWaits(xml: string, elements: FlowElement[]) {
       waitType = 'condition';
     }
 
+    // TASK F5.1: Parse and include layout
+    const layout = parseLayout(segment);
     elements.push({
       id: apiName,
       apiName,
@@ -312,33 +362,35 @@ function parseWaits(xml: string, elements: FlowElement[]) {
       durationValue,
       durationUnit: (durationUnit as any) || undefined,
       eventName: platformEventName || undefined,
+      layout,
       next: next || undefined,
     } as any);
   }
 }
 
 function parseLookups(xml: string, elements: FlowElement[]) {
-  const regex =
-    /<recordLookups>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<object>(.*?)<\/object>[\s\S]*?(<filters>[\s\S]*?<\/filters>)*[\s\S]*?(<sortField>[\s\S]*?<\/sortField>)?[\s\S]*?(<sortOrder>[\s\S]*?<\/sortOrder>)?[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
-  let m;
-  while ((m = regex.exec(xml)) !== null) {
-    const apiName = m[1];
-    const label = m[2];
-    const object = m[3];
-    const filtersBlock = m[4] || '';
-    const sortFieldBlock = m[5] || '';
-    const sortOrderBlock = m[6] || '';
-    const connectorBlock = m[7] || '';
+  const blocks = xml.split('<recordLookups>').slice(1);
+  for (const block of blocks) {
+    const segment = block.split('</recordLookups>')[0];
+    const apiName = extractValue(segment, /<name>(.*?)<\/name>/);
+    const label = extractValue(segment, /<label>(.*?)<\/label>/);
+    const object = extractValue(segment, /<object>(.*?)<\/object>/);
+    if (!apiName) continue;
     const filters: any[] = [];
     const fRegex =
       /<filters>[\s\S]*?<field>(.*?)<\/field>[\s\S]*?<operator>(.*?)<\/operator>[\s\S]*?<stringValue>(.*?)<\/stringValue>[\s\S]*?<\/filters>/g;
     let fm;
-    while ((fm = fRegex.exec(filtersBlock)) !== null) {
+    while ((fm = fRegex.exec(segment)) !== null) {
       filters.push({ field: fm[1], operator: fm[2], value: fm[3] });
     }
-    const sortField = extractValue(sortFieldBlock, /<sortField>(.*?)<\/sortField>/);
-    const sortOrder = extractValue(sortOrderBlock, /<sortOrder>(.*?)<\/sortOrder>/);
-    const next = extractValue(connectorBlock, /<targetReference>(.*?)<\/targetReference>/);
+    const sortField = extractValue(segment, /<sortField>(.*?)<\/sortField>/);
+    const sortOrder = extractValue(segment, /<sortOrder>(.*?)<\/sortOrder>/);
+    const next = extractValue(
+      segment,
+      /<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/,
+    );
+    // TASK F5.1: Parse and include layout
+    const layout = parseLayout(segment);
     elements.push({
       id: apiName,
       apiName,
@@ -348,25 +400,31 @@ function parseLookups(xml: string, elements: FlowElement[]) {
       filters,
       sortField: sortField || undefined,
       sortDirection: (sortOrder as any) || undefined,
+      layout,
       next: next || undefined,
     } as any);
   }
 }
 
 function parseFaults(xml: string, elements: FlowElement[]) {
-  const regex =
-    /<faults>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?(<connector>[\s\S]*?<\/connector>)?/g;
-  let m;
-  while ((m = regex.exec(xml)) !== null) {
-    const apiName = m[1];
-    const label = m[2];
-    const connectorBlock = m[3] || '';
-    const next = extractValue(connectorBlock, /<targetReference>(.*?)<\/targetReference>/);
+  const blocks = xml.split('<faults>').slice(1);
+  for (const block of blocks) {
+    const segment = block.split('</faults>')[0];
+    const apiName = extractValue(segment, /<name>(.*?)<\/name>/);
+    const label = extractValue(segment, /<label>(.*?)<\/label>/);
+    if (!apiName) continue;
+    const next = extractValue(
+      segment,
+      /<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/,
+    );
+    // TASK F5.1: Parse and include layout
+    const layout = parseLayout(segment);
     elements.push({
       id: apiName,
       apiName,
       label,
       type: 'Fault',
+      layout,
       next: next || undefined,
     } as any);
   }
