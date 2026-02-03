@@ -42,24 +42,8 @@ export function parseFlowXmlText(text: string, flowName?: string): FlowDSL {
     next: startNext || undefined,
   } as any);
 
-  // Ensure End element exists; if none found and startNext empty, synthesize End
-  if (!elements.some((e) => e.type === 'End')) {
-    const endId = 'End';
-    if (!elements.some((e) => e.id === endId)) {
-      elements.push({ id: endId, type: 'End', apiName: endId } as any);
-    }
-    if (startNext === undefined) {
-      const start = elements.find((e) => e.type === 'Start');
-      if (start && 'next' in start) {
-        (start as any).next = endId;
-      }
-    }
-  }
-
-  // Ensure End element exists
-  if (!elements.some((e) => e.type === 'End')) {
-    elements.push({ id: 'End', type: 'End', apiName: 'End' } as any);
-  }
+  // Ensure End element exists and link if needed
+  ensureEndElement(elements, startNext);
 
   return {
     version: 1,
@@ -85,6 +69,21 @@ export { CompositeXMLParser as XMLParser };
 export { ScreenXMLParser } from './parsers/ScreenXMLParser';
 export { AssignmentXMLParser } from './parsers/AssignmentXMLParser';
 export { DecisionXMLParser } from './parsers/DecisionXMLParser';
+
+// TASK: Reduce CC in parseFlowXmlText - extract End element logic
+function ensureEndElement(elements: FlowElement[], startNext: string | undefined): void {
+  if (!elements.some((e) => e.type === 'End')) {
+    const endId = 'End';
+    elements.push({ id: endId, type: 'End', apiName: endId } as any);
+    // Link Start to End if no next reference found
+    if (startNext === undefined) {
+      const start = elements.find((e) => e.type === 'Start');
+      if (start && 'next' in start) {
+        (start as any).next = endId;
+      }
+    }
+  }
+}
 
 function extractValue(text: string, regex: RegExp): string | undefined {
   const match = text.match(regex);
@@ -140,20 +139,8 @@ function parseDecisions(xml: string, elements: FlowElement[]) {
     const apiName = extractValue(segment, /<name>(.*?)<\/name>/);
     const label = extractValue(segment, /<label>(.*?)<\/label>/);
     if (!apiName) continue;
-    const outcomes = [];
-    const ruleRegex =
-      /<rules>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>[\s\S]*?<\/connector>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<\/rules>/g;
-    let rm;
-    while ((rm = ruleRegex.exec(segment)) !== null) {
-      outcomes.push({ name: rm[1], next: rm[2], condition: rm[3], isDefault: false });
-    }
-    const defNext = extractValue(
-      segment,
-      /<defaultConnector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/,
-    );
-    if (defNext) {
-      outcomes.push({ name: 'Default', next: defNext, isDefault: true });
-    }
+    // TASK: Reduce CC in parseDecisions - extract outcome building
+    const outcomes = buildDecisionOutcomes(segment);
     // TASK F5.1: Parse and include layout
     const layout = parseLayout(segment);
     // TASK F5.2: Parse and include conditionLogic
@@ -168,6 +155,25 @@ function parseDecisions(xml: string, elements: FlowElement[]) {
       conditionLogic: conditionLogic || undefined,
     } as any);
   }
+}
+
+// TASK: Reduce CC in parseDecisions - helper for outcome extraction
+function buildDecisionOutcomes(segment: string): any[] {
+  const outcomes = [];
+  const ruleRegex =
+    /<rules>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>[\s\S]*?<\/connector>[\s\S]*?<label>(.*?)<\/label>[\s\S]*?<\/rules>/g;
+  let rm;
+  while ((rm = ruleRegex.exec(segment)) !== null) {
+    outcomes.push({ name: rm[1], next: rm[2], condition: rm[3], isDefault: false });
+  }
+  const defNext = extractValue(
+    segment,
+    /<defaultConnector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/,
+  );
+  if (defNext) {
+    outcomes.push({ name: 'Default', next: defNext, isDefault: true });
+  }
+  return outcomes;
 }
 
 function parseScreens(xml: string, elements: FlowElement[]) {
@@ -336,19 +342,13 @@ function parseWaits(xml: string, elements: FlowElement[]) {
       segment,
       /<connector>[\s\S]*?<targetReference>(.*?)<\/targetReference>/,
     );
-    let waitType: 'condition' | 'duration' | 'event' | undefined;
-    let durationValue: number | undefined;
-    let durationUnit: string | undefined;
-
-    if (offsetNumber) {
-      waitType = 'duration';
-      durationValue = parseFloat(offsetNumber);
-      durationUnit = offsetUnit || 'Seconds';
-    } else if (platformEventName) {
-      waitType = 'event';
-    } else if (condition) {
-      waitType = 'condition';
-    }
+    // TASK: Reduce CC in parseWaits - extract waitType determination
+    const { waitType, durationValue, durationUnit: resolvedUnit } = determineWaitType(
+      offsetNumber,
+      offsetUnit,
+      platformEventName,
+      condition,
+    );
 
     // TASK F5.1: Parse and include layout
     const layout = parseLayout(segment);
@@ -360,12 +360,39 @@ function parseWaits(xml: string, elements: FlowElement[]) {
       waitType,
       condition: condition || undefined,
       durationValue,
-      durationUnit: (durationUnit as any) || undefined,
+      durationUnit: (resolvedUnit as any) || undefined,
       eventName: platformEventName || undefined,
       layout,
       next: next || undefined,
     } as any);
   }
+}
+
+// TASK: Reduce CC in parseWaits - helper for waitType determination
+function determineWaitType(
+  offsetNumber: string | undefined,
+  offsetUnit: string | undefined,
+  platformEventName: string | undefined,
+  condition: string | undefined,
+): {
+  waitType: 'condition' | 'duration' | 'event' | undefined;
+  durationValue: number | undefined;
+  durationUnit: string | undefined;
+} {
+  if (offsetNumber) {
+    return {
+      waitType: 'duration',
+      durationValue: parseFloat(offsetNumber),
+      durationUnit: offsetUnit || 'Seconds',
+    };
+  }
+  if (platformEventName) {
+    return { waitType: 'event', durationValue: undefined, durationUnit: undefined };
+  }
+  if (condition) {
+    return { waitType: 'condition', durationValue: undefined, durationUnit: undefined };
+  }
+  return { waitType: undefined, durationValue: undefined, durationUnit: undefined };
 }
 
 function parseLookups(xml: string, elements: FlowElement[]) {
@@ -376,13 +403,8 @@ function parseLookups(xml: string, elements: FlowElement[]) {
     const label = extractValue(segment, /<label>(.*?)<\/label>/);
     const object = extractValue(segment, /<object>(.*?)<\/object>/);
     if (!apiName) continue;
-    const filters: any[] = [];
-    const fRegex =
-      /<filters>[\s\S]*?<field>(.*?)<\/field>[\s\S]*?<operator>(.*?)<\/operator>[\s\S]*?<stringValue>(.*?)<\/stringValue>[\s\S]*?<\/filters>/g;
-    let fm;
-    while ((fm = fRegex.exec(segment)) !== null) {
-      filters.push({ field: fm[1], operator: fm[2], value: fm[3] });
-    }
+    // TASK: Reduce CC in parseLookups - extract filter building
+    const filters = buildLookupFilters(segment);
     const sortField = extractValue(segment, /<sortField>(.*?)<\/sortField>/);
     const sortOrder = extractValue(segment, /<sortOrder>(.*?)<\/sortOrder>/);
     const next = extractValue(
@@ -404,6 +426,18 @@ function parseLookups(xml: string, elements: FlowElement[]) {
       next: next || undefined,
     } as any);
   }
+}
+
+// TASK: Reduce CC in parseLookups - helper for filter extraction
+function buildLookupFilters(segment: string): any[] {
+  const filters: any[] = [];
+  const fRegex =
+    /<filters>[\s\S]*?<field>(.*?)<\/field>[\s\S]*?<operator>(.*?)<\/operator>[\s\S]*?<stringValue>(.*?)<\/stringValue>[\s\S]*?<\/filters>/g;
+  let fm;
+  while ((fm = fRegex.exec(segment)) !== null) {
+    filters.push({ field: fm[1], operator: fm[2], value: fm[3] });
+  }
+  return filters;
 }
 
 function parseFaults(xml: string, elements: FlowElement[]) {
