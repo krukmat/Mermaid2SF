@@ -1,0 +1,30 @@
+version: 1
+flowApiName: SimpleFlow
+label: Simple Test Flow
+processType: Autolaunched
+apiVersion: '60.0'
+startElement: Start_1
+elements:
+  - id: Start_1
+    type: Start
+    next: Assign_1
+    layout:
+      x: 50
+      y: 0
+  - id: Assign_1
+    type: Assignment
+    apiName: AssignVar
+    label: Initialize Count
+    layout:
+      x: 50
+      y: 100
+    assignments:
+      - variable: v_Count
+        value: '0'
+        operator: Assign
+    next: End_1
+  - id: End_1
+    type: End
+    layout:
+      x: 50
+      y: 200

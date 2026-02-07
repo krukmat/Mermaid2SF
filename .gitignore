@@ -1,6 +1,8 @@
 # Dependencies
 node_modules/
 
+complexity-reports/
+
 # Build output
 dist/
 
@@ -42,3 +44,13 @@ tmp-*
 
 # Debug directories (any level)
 **/.debug/
+
+# local test/debug scripts
+test-card-logic.js
+test-card-position.js
+test-final-positioning.js
+test-highlight-debug.js
+test-interactive-tutorial 2.js
+test-interactive-tutorial.js
+test-first-steps.js
+docs/planning/sprint3-integration-testing.md

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>60.0</apiVersion>
+    <label>Simple Test Flow</label>
+    <processType>Autolaunched</processType>
+    <assignments>
+        <name>AssignVar</name>
+        <label>Initialize Count</label>
+        <locationX>50</locationX>
+        <locationY>100</locationY>
+        <assignmentItems>
+            <assignToReference>v_Count</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>0</stringValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>End_1</targetReference>
+        </connector>
+    </assignments>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>AssignVar</targetReference>
+        </connector>
+    </start>
+</Flow>

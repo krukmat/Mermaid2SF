@@ -7,6 +7,8 @@ import { MetadataExtractor } from '../../extractor/metadata-extractor';
 import { IntermediateModelBuilder } from '../../dsl/intermediate-model-builder';
 import { FlowValidator } from '../../validator/flow-validator';
 import { logger } from '../../utils/logger';
+import { validateDsl } from '../../validation/flow-rules';
+import { logFlowValidationResult } from '../utils/flow-validation';
 
 export const lintCommand = new Command('lint')
   .description('Validate Mermaid flowchart without generating output')
@@ -186,10 +188,15 @@ async function lintSingleFile(filePath: string, options: any): Promise<LintResul
       });
     }
 
-    const valid =
-      validationResult.valid && (!options.strict || validationResult.warnings.length === 0);
+    const flowValidation = validateDsl(dsl);
+    logFlowValidationResult(flowValidation, 'Visual validation');
 
-    if (valid && validationResult.warnings.length === 0) {
+    const totalErrors = validationResult.errors.length + flowValidation.errors.length;
+    const totalWarnings = validationResult.warnings.length + flowValidation.warnings.length;
+    const strictFailure = options.strict && totalWarnings > 0;
+    const valid = totalErrors === 0 && !strictFailure;
+
+    if (valid && totalWarnings === 0) {
       logger.info(`  ✓ ${fileName} passed`);
     } else if (valid) {
       logger.warn(`  ⚠ ${fileName} passed with warnings`);
@@ -199,8 +206,8 @@ async function lintSingleFile(filePath: string, options: any): Promise<LintResul
 
     return {
       valid,
-      errors: validationResult.errors.length,
-      warnings: validationResult.warnings.length,
+      errors: totalErrors,
+      warnings: totalWarnings,
     };
   } catch (error: any) {
     logger.error(`  ✗ ${fileName} failed: ${error.message}`);

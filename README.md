@@ -85,40 +85,95 @@ npm run cli -- compile --input my-flow.mmd --out-flow ./flows
 - ✅ **Flow Analysis & Explain**: Analyze complexity, generate recommendations, and export reports (text/json/html)
 - ✅ **Lint Command**: Validate flows without generating output
 - ✅ **Interactive Mode**: Wizard to compile or create flows with live validation
-- ✅ **Decompile Command**: Reverse Flow XML into DSL + Mermaid
+- ✅ **Decompile Command**: Reverse Flow XML into DSL + Mermaid with full metadata preservation (layout, conditionLogic, filterLogic)
+- ✅ **MermaidGenerator**: Convert Flow DSL back to Mermaid diagrams with complete metadata fidelity
+- ✅ **Round-Trip Validation**: Ensure XML → DSL → Mermaid preserves all flow metadata without loss
 - ✅ **Web Visualizer**: Drag/drop editor with live XML preview (syntax highlighting) and zoom/pan
 - ✅ **Strict Mode**: Treat warnings as errors for stricter validation
 - ✅ **Deterministic Output**: Same input always produces identical output (Git-friendly)
 - ✅ **Performance Checked**: 50+ node flows parse/validate/generate in <3s locally
 - ✅ **Hosted Frontend Ready**: Static UI can be served from `web/server/index.js` (open `/flow/` if you proxy WordPress on `/`)
+- ✅ **Version history**: Save snapshots per flow and restore/compare states through the history modal; the most recent 10 entries stay in localStorage.
+- ✅ **Keyboard shortcuts**: Ctrl/Cmd+S compiles, Ctrl/Cmd+T starts the tutorial, Delete removes nodes, arrows nudge, and a shortcut guide can be toggled on/off for accessibility.
 
 ---
 
 ## 🎨 Web Visualizer (Interactive Editor)
 
-The **Web Visualizer** provides a complete drag-and-drop interface for building and editing Salesforce Flows visually:
+The **Web Visualizer** provides a complete drag-and-drop interface for building and editing Salesforce Flows visually without touching code:
 
-![Web Visualizer Frontend](docs/images/web-visualizer.png)
+![Web Visualizer - Diagram Builder Interface](docs/assets/web-visualizer-full.png)
 
-### Features:
-- **Toolbox**: Quick buttons to add Start, Screen, Assignment, Decision, GetRecords, End elements
-- **Canvas**: Drag-and-drop visual flow builder with auto-layout
-- **Nodes Panel**: Manage all flow elements with type labels
-- **Live Preview**:
-  - Mermaid diagram preview (real-time as you build)
-  - XML preview with syntax highlighting
-- **Export**: Download flows as Mermaid or DSL JSON
-- **Compile & Preview XML**: Generate and preview Salesforce Flow XML instantly
+### What You See:
+
+- **Left Sidebar**: Toolbox with quick-add buttons for all flow element types (Start, Screen, Assignment, Decision, GetRecords, Loop, Wait, Fault, End)
+- **Central Canvas**: Visual drag-and-drop flow builder with automatic edge rendering and connectors
+- **Top Header**: Undo/Redo buttons, theme toggle (dark/light modes), and tutorial launcher
+- **Bottom Cards**: Mermaid preview, XML output with syntax highlighting, validation status, and version history
+
+### Key Capabilities:
+
+**Core Editing:**
+
+- ✨ **Drag-and-Drop Toolbox**: Add elements by dragging to canvas or quick-click buttons
+- 🔗 **Visual Connectors**: Auto-drawn edges with decision labels (Yes/No for conditions)
+- 📋 **Live Mermaid Preview**: Real-time Mermaid diagram rendering as you build
+- 🎯 **Type-Aware Elements**: Color-coded nodes (green Start, red End, blue Screen, orange Decision, cyan Assignment)
+
+**Validation & Feedback:**
+
+- 🧪 **Validation UX**: Error/warning cards with remedies and auto-fix buttons; hover to highlight affected nodes
+- ✅ **Live Validation**: Real-time messages for structural issues (missing Start, unreachable nodes)
+- 📊 **Status Banners**: Floating notifications for compile events, warnings, and backend health
+
+**Productivity Features:**
+
+- ⏪ **Undo/Redo**: Full edit history (up to 20 snapshots) with `Ctrl/Cmd+Z` / `Ctrl/Cmd+Shift+Z` and header buttons
+- 💾 **Version History**: Save snapshots and restore previous versions (localStorage-backed)
+- ✏️ **Inline Editing**: Double-click nodes to edit inline; right-click context menu for edit/duplicate/delete
+- 🧾 **Smart Export**: Flow name input prefixes downloads (Mermaid/DSL/XML) for version control
+
+**Accessibility & Learning:**
+
+- 🎓 **Interactive Tutorial**: Guided onboarding with `Ctrl/Cmd+T` or header button
+- 🔍 **Advanced Node Cues**: Highlight Loop/Wait/Fault nodes to understand retry/delay patterns
+- 🌓 **Theme Toggle**: Dark and light modes for comfortable editing
+- ⌨️ **Keyboard Shortcuts**:
+  - `Ctrl/Cmd+S` - Compile
+  - `Ctrl/Cmd+Z` / `Ctrl/Cmd+Shift+Z` - Undo/Redo
+  - `Ctrl/Cmd+T` - Tutorial
+  - `Delete` - Remove node
+  - Arrow keys - Nudge position
+
+**Frontend Improvements (Recent Refactor):**
+
+- 🚀 **Modular Component Architecture**: Extracted validation UI, export manager, and state management into reusable modules for maintainability
+- 📱 **Responsive Layout**: Improved media queries ensure usable canvas on tablets and mobile (sidebar collapses appropriately)
+- 🎨 **Enhanced Theming**: Light/dark mode with CSS variables for consistent styling across 300+ UI elements
+- 🧪 **Comprehensive Testing**: 6 test suites (vitest + jsdom) covering export, state, validation, and editor modules
 
 ### Try it now:
-🌐 **[Open Web Visualizer](http://iotforce.es/flow/)** (Live Demo)
 
-Or self-host:
+**Self-hosted (recommended for testing):**
+
 ```bash
 npm run build
 node web/server/index.js
-# Open http://localhost:4000/flow/
+# Open http://localhost:4000
 ```
+
+**Or see the live demo:**
+🌐 **[Open Web Visualizer (iotforce.es)](http://iotforce.es/flow/)** _(may be offline)_
+
+### 🌐 Web Visualizer Deployment
+
+The hosted demo runs on a DigitalOcean droplet using Node 18, `pm2`, and Apache as a reverse proxy. Follow `DEPLOY_STEPS.md` for the exact commands, systemd service, and proxy configuration that keep `/flow/`, `/api/compile`, and `/health` available.
+
+**Why this architecture?**
+
+- Backend validates using the **same pipeline** as the CLI (Mermaid → DSL → XML)
+- What you see in the UI **always matches** what deploys to Salesforce
+- Perfect for learning, prototyping, and rapid iteration before CI/CD integration
 
 ---
 
@@ -158,6 +213,22 @@ mermaid-flow-compile lint --input flows/
 mermaid-flow-compile lint --input my-flow.mmd --strict
 ```
 
+## 📋 Automatic Test Case Generation
+
+Use `mermaid-flow-compile test-plan` to derive path coverage, sample variable data, and placeholder scripts any time you change a Flow DSL or Mermaid source.
+
+```bash
+mermaid-flow-compile test-plan \
+  --input output/dsl/complete-flow.flow.json \
+  --out artifacts/test-plan \
+  --format json
+```
+
+- `--input`: accepts `.mmd`, `.json`, `.yaml`, or `.yml`.
+- `--out`: writes `<flowApiName>.test-plan.json` plus one script per path (Apex class names) and a checksum.
+- `--format json|text`: choose CLI summary format.
+- Use `--skip-scripts` to only print the summary, or `--skip-validation` if the DSL is already trusted.
+
 ### Analyze a Flow
 
 ```bash
@@ -174,9 +245,11 @@ mermaid-flow-compile explain --input my-flow.mmd --format html > report.html
 ## Commands
 
 ### `compile`
+
 Compile Mermaid flowchart to Salesforce Flow metadata.
 
 **Options:**
+
 - `--input <path>` - Path to Mermaid file (required)
 - `--out-flow <dir>` - Output directory for Flow XML
 - `--out-json <dir>` - Output directory for DSL JSON
@@ -188,6 +261,7 @@ Compile Mermaid flowchart to Salesforce Flow metadata.
 - `--watch` - Watch input file and recompile on changes
 
 **Example:**
+
 ```bash
 mermaid-flow-compile compile \
   --input my-flow.mmd \
@@ -201,9 +275,11 @@ mermaid-flow-compile compile \
 ```
 
 ### `lint`
+
 Validate Mermaid flowchart without generating output.
 
 **Options:**
+
 - `--input <path>` - Path to Mermaid file or directory (required)
 - `--strict` - Treat warnings as errors
 - `--verbose` - Verbose logging
@@ -211,14 +287,17 @@ Validate Mermaid flowchart without generating output.
 - `--watch` - Watch file/directory and re-run lint on changes
 
 **Example:**
+
 ```bash
 mermaid-flow-compile lint --input flows/ --strict
 ```
 
 ### `explain`
+
 Analyze and summarize Flow structure, complexity, and generate recommendations.
 
 **Options:**
+
 - `--input <path>` - Path to Mermaid (.mmd) or DSL (.json/.yaml/.yml) file (required)
 - `--format <format>` - Output format: `text`, `json`, or `html` (default: `text`)
 - `--strict` - Treat warnings as errors
@@ -226,6 +305,7 @@ Analyze and summarize Flow structure, complexity, and generate recommendations.
 - `--debug` - Debug logging and validation timings
 
 **Example:**
+
 ```bash
 # Text summary (default)
 mermaid-flow-compile explain --input my-flow.mmd
@@ -241,6 +321,7 @@ mermaid-flow-compile interactive
 ```
 
 **Output includes:**
+
 - Flow metadata (API name, label, process type)
 - Element counts by type (Screens, Assignments, Decisions, etc.)
 - Cyclomatic complexity metric
@@ -253,6 +334,7 @@ mermaid-flow-compile interactive
   - Validation issue resolution tips
 
 **Example output (text format):**
+
 ```
 Flow: Customer Onboarding (CustomerOnboarding)
 Process: Autolaunched | API: 60.0
@@ -267,31 +349,48 @@ Recommendations:
 ```
 
 ### `interactive`
+
 Run an interactive wizard to compile existing Mermaid files or create a new flow skeleton with validation and ASCII preview.
 
 **Options:**
+
 - No flags required; prompts guide file selection and optional generation of XML/DSL/Docs.
 
 **Example:**
+
 ```bash
 mermaid-flow-compile interactive
 ```
 
 ### `decompile`
-Reverse a Flow XML (`*.flow-meta.xml`) into DSL JSON and Mermaid.
+
+Reverse a Flow XML (`*.flow-meta.xml`) into DSL JSON and Mermaid diagram with full metadata preservation.
+
+**Metadata Extraction:**
+- ✅ Layout coordinates (locationX, locationY) for all elements
+- ✅ Decision conditionLogic ('and'/'or')
+- ✅ RecordUpdate filterLogic ('and'/'or')
+- ✅ All element types (Start, Assignment, Decision, Screen, RecordCreate, RecordUpdate, Subflow, Loop, Wait, GetRecords, Fault)
 
 **Options:**
+
 - `--input <path>` - Path to Flow XML (required)
 - `--out-json <dir>` - Output directory for DSL JSON
 - `--out-mermaid <dir>` - Output directory for Mermaid
 
 **Example:**
+
 ```bash
 mermaid-flow-compile decompile \
   --input force-app/main/default/flows/MyFlow.flow-meta.xml \
   --out-json .generated/flows \
   --out-mermaid docs/flows
 ```
+
+**Output:**
+- DSL JSON with complete metadata (layout, conditionLogic, filterLogic)
+- Mermaid diagram with metadata annotations
+- Ready for version control, diffing, and round-trip compilation
 
 ## End-to-end example
 
@@ -314,10 +413,31 @@ node dist/cli/index.js decompile \
 ```
 
 Artifacts:
+
 - Flow XML: `output/flows/complete-flow.flow-meta.xml`
 - DSL JSON: `output/dsl/complete-flow.flow.json`
 - Mermaid: `output/docs/complete-flow.mmd` (open in https://mermaid.live or VS Code)
 - Markdown summary: `output/docs/complete-flow.md`
+
+### Round-Trip Metadata Preservation
+
+The decompile process preserves all flow metadata through the reverse transformation:
+
+```
+Original XML (with layout, conditionLogic, filterLogic)
+    ↓ parseFlowXmlText()
+Flow DSL (metadata preserved)
+    ↓ MermaidGenerator.generate()
+Mermaid Diagram (metadata included as annotations)
+```
+
+**What's preserved:**
+- Layout coordinates for all elements (displayed as `layout: pos: x,y`)
+- Decision conditionLogic ('and'/'or' logic for multiple conditions)
+- RecordUpdate filterLogic ('and'/'or' for filter combinations)
+- All element connections and labels
+
+This enables true **bidirectional workflows**: design in Flow Builder, export to XML, decompile to Mermaid for version control, then recompile back to XML without losing any metadata.
 
 ## API / OpenAPI
 
@@ -327,6 +447,7 @@ Artifacts:
 - CI/CD guide: see `docs/CI_CD_GUIDE.md` for GH Actions and Husky instructions.
 
 -### Web visualizer
+
 - Serve the static UI directly from the Node server (included): start `node web/server/index.js` and open `http://<host>/flow/` if you proxy WordPress on `/` (adjust Apache/Nginx ProxyPass accordingly), or `/` if Node serves the root.
 - Online demo: [http://iotforce.es/flow/](http://iotforce.es/flow/) (same UI backed by the live API).
 - Backend endpoints: `/health` and `/api/compile` (used by the UI). Frontend uses `window.location.origin` as base URL.
@@ -334,27 +455,33 @@ Artifacts:
 ## View the result without running commands
 
 Pre-generated outputs live under `examples/output/` so visitors can inspect the full pipeline without compiling locally:
+
 - Mermaid: [examples/output/complete-flow.mmd](examples/output/complete-flow.mmd)
 - Flow XML: [examples/output/complete-flow.flow-meta.xml](examples/output/complete-flow.flow-meta.xml)
 - DSL JSON: [examples/output/complete-flow.flow.json](examples/output/complete-flow.flow.json)
-Input source diagram lives at [examples/v1/complete-flow.mmd](examples/v1/complete-flow.mmd).
+  Input source diagram lives at [examples/v1/complete-flow.mmd](examples/v1/complete-flow.mmd).
 
 Open the Mermaid file in https://mermaid.live, skim the XML in an editor, or diff the DSL/mermaid/XML pair to see the deterministic round-trip.
 
+## Frontend Testing
+
+The UI helpers under `web/frontend/modules/` now ship with a Vitest/`jsdom` harness (`vitest.config.js` + `web/frontend/__tests__/setup.js`). Run `npm run test:web` to exercise the helper modules and the new canvas renderer helpers, or `npm run test:web:watch` while you iterate locally.
+
 ## Supported Flow Elements
 
-| Element Type | Mermaid Shape | Prefix | Description |
-|--------------|---------------|--------|-------------|
-| Start | `([...])` | `START:` | Flow entry point |
-| End | `([...])` | `END:` | Flow termination |
-| Assignment | `[...]` | `ASSIGNMENT:` | Set variable values |
-| Decision | `{...}` | `DECISION:` | Conditional branching |
-| Screen | `[...]` | `SCREEN:` | Display UI to users |
-| RecordCreate | `[...]` | `CREATE:` | Create Salesforce records |
-| RecordUpdate | `[...]` | `UPDATE:` | Update Salesforce records |
-| Subflow | `[[...]]` | `SUBFLOW:` | Invoke another flow |
+| Element Type | Mermaid Shape | Prefix        | Description               |
+| ------------ | ------------- | ------------- | ------------------------- |
+| Start        | `([...])`     | `START:`      | Flow entry point          |
+| End          | `([...])`     | `END:`        | Flow termination          |
+| Assignment   | `[...]`       | `ASSIGNMENT:` | Set variable values       |
+| Decision     | `{...}`       | `DECISION:`   | Conditional branching     |
+| Screen       | `[...]`       | `SCREEN:`     | Display UI to users       |
+| RecordCreate | `[...]`       | `CREATE:`     | Create Salesforce records |
+| RecordUpdate | `[...]`       | `UPDATE:`     | Update Salesforce records |
+| Subflow      | `[[...]]`     | `SUBFLOW:`    | Invoke another flow       |
 
 GetRecords supports filters, field selection, and optional sorting:
+
 ```
 GET: Accounts
  api: Get_Accounts
@@ -392,19 +519,23 @@ See `docs/MERMAID_CONVENTIONS.md` for complete syntax guide.
 ## Validation Features
 
 ### Structural Validation
+
 - Exactly one Start element
 - At least one End element
 - Valid element references
 - Decision outcomes (must have one default)
 
 ### Semantic Validation (v1 Usable)
+
 - Variable reference checking
 - Undefined variable warnings
 - Cycle detection (infinite loops)
 - Reachability analysis
 
 ### Strict Mode
+
 Use `--strict` flag to treat warnings as errors:
+
 ```bash
 mermaid-flow-compile compile --input flow.mmd --out-flow flows/ --strict
 ```
@@ -414,6 +545,7 @@ mermaid-flow-compile compile --input flow.mmd --out-flow flows/ --strict
 The project includes JSON Schema integration for VSCode, providing autocomplete and validation for `.flow.json` files.
 
 **Features:**
+
 - ✅ Autocomplete for all Flow DSL properties
 - ✅ Real-time validation with inline errors
 - ✅ Hover documentation for fields
@@ -423,6 +555,7 @@ The project includes JSON Schema integration for VSCode, providing autocomplete 
 The schema is automatically configured in `.vscode/settings.json`. When you open a `.flow.json` file in VSCode, you'll get full IntelliSense support.
 
 **Usage:**
+
 1. Create or open a `.flow.json` file
 2. Start typing - VSCode will suggest valid properties
 3. Hover over properties to see documentation
@@ -431,6 +564,7 @@ The schema is automatically configured in `.vscode/settings.json`. When you open
 ## Development
 
 ### Scripts
+
 ```bash
 npm run build     # Compile TypeScript
 npm run dev       # Watch mode
@@ -476,7 +610,8 @@ npm test
 ```
 
 Current coverage:
-- **58 tests passing (100%)**
+
+- **95 tests passing (100%)**
 - **Integration Tests**: 24 tests (end-to-end pipeline for all v1 elements)
   - Complete flow with all 8 element types
   - Individual element type tests (Screen, RecordCreate, RecordUpdate, Subflow, Assignment, Decision)
@@ -484,6 +619,10 @@ Current coverage:
   - Deterministic output verification
   - Real-world example files (5 examples)
   - Documentation generation
+- **Reverse Engineering (F5)**: 37 tests (XML → DSL → Mermaid with metadata preservation)
+  - XML Parser: 16 tests (layout, conditionLogic, filterLogic extraction)
+  - MermaidGenerator: 12 tests (DSL → Mermaid conversion with all metadata)
+  - Round-Trip Validation: 9 tests (structural integrity, metadata fidelity)
 - **Validator**: 16 tests (structural + semantic validation)
 - **DocsGenerator**: 7 tests (Markdown + Mermaid generation)
 - **Flow XML Generator**: 3 tests (XML generation, YAML export)
@@ -498,6 +637,7 @@ Current coverage:
 ## Phase Status
 
 ### ✅ Phase 1 - PoC (Complete)
+
 - Basic element types (Start, End, Assignment, Decision)
 - Mermaid parser
 - Metadata extraction
@@ -507,6 +647,7 @@ Current coverage:
 - CLI foundation
 
 ### ✅ Phase 2 - v1 Usable (Complete)
+
 - Extended element types (Screen, RecordCreate, RecordUpdate, Subflow)
 - Enhanced semantic validation
 - DocsGenerator (Markdown + normalized Mermaid)
@@ -516,29 +657,53 @@ Current coverage:
 - Documentation
 
 ### ✅ Phase 3 - Advanced DX (Complete)
+
 - Reverse engineering (`decompile`) and round-trip tests
 - Explain/analyze reports (text/json/html)
 - Interactive CLI wizard
 - Performance instrumentation and watch mode
 
-### ✅ Phase 4 - Extensions (Core implemented; deploy optional)
+### ✅ Phase 4 - Extensions (Complete)
+
 - Advanced elements: Loop, Wait, GetRecords, Fault paths
 - Web visualizer/editor with live XML preview
-- Reverse XML parser to DSL/Mermaid
+- Reverse XML parser to DSL/Mermaid with metadata preservation
 - YAML DSL export
 - Deployment hosting is deferred
+
+### ✅ Phase F5 - Reverse Engineering (Complete)
+
+- **XML Layout Parsing**: Extract locationX/locationY from all element types
+- **Decision conditionLogic**: Parse and preserve logic type ('and'/'or')
+- **RecordUpdate filterLogic**: Extract filter combination strategy
+- **MermaidGenerator**: Convert DSL to Mermaid flowcharts with metadata
+- **Round-Trip Validation**: Pragmatic structural integrity tests (37 tests passing)
+- **Metadata Fidelity**: Zero-loss transformation through XML → DSL → Mermaid
 
 See `PROJECT_PLAN.md` for complete roadmap.
 
 ## 📚 Documentation & Resources
 
 ### **Getting Started:**
+
 - 🚀 **[Quick Start Guide](docs/QUICK_START.md)** - From zero to working Flow in 2 minutes (start here!)
 - 🏗️ **[Architecture Document](mermaid-flow-compiler-architecture.md)** - System design and spec
 - 📝 **[CLAUDE.md](CLAUDE.md)** - Development guidelines and codebase overview
-- 📋 **[Project Plan](PROJECT_PLAN.md)** - Complete roadmap and task tracking
+
+### **Technical Reference:**
+
+- 📐 **[Mermaid Conventions](docs/MERMAID_CONVENTIONS.md)** - Mermaid syntax guide for Flow diagrams
+- ✅ **[Validation Rules](docs/FLOW_VALIDATION_RULES.md)** - Complete list of validation constraints
+- 🏛️ **[Validation Architecture](docs/FLOW_VALIDATION_ARCHITECTURE.md)** - How validation is implemented
+- 🔄 **[CI/CD Integration](docs/CI_CD_GUIDE.md)** - Set up automated validation and deployment
+
+### **Articles & Resources:**
+
+- 📄 **[Medium Article: Flows as Code](docs/MEDIUM_POST.md)** - Introduction to the project and philosophy
+- 📋 **[Project Plan](PROJECT_PLAN.md)** - Roadmap and task tracking
 
 ### **Quick Commands:**
+
 - ⚡ `npm run cli -- interactive` - Try interactive mode wizard
 - 📊 `npm run cli -- explain --input examples/v1/complete-flow.mmd` - Analyze a flow
 - ✅ `npm run cli -- lint --input examples/v1/` - Validate flows
@@ -549,21 +714,25 @@ See `PROJECT_PLAN.md` for complete roadmap.
 ## 🌟 What Makes This Special?
 
 ### **For Solo Developers:**
+
 - ✅ **Git-based workflow** - Version control your Flows like any other code
 - ✅ **Local development** - Edit in VS Code with Mermaid preview
 - ✅ **Fast iteration** - Watch mode for instant feedback
 
 ### **For Teams:**
+
 - ✅ **Code reviews** - Pull requests with clear diffs in DSL JSON
 - ✅ **Collaboration** - Multiple developers on same Flow without conflicts
 - ✅ **Documentation** - Always up-to-date, auto-generated docs
 
 ### **For DevOps:**
+
 - ✅ **CI/CD ready** - Automated validation, testing, deployment
 - ✅ **Quality gates** - Strict mode prevents bad Flows
 - ✅ **Performance** - Sub-second compilation for rapid pipelines
 
 ### **For AI/Automation:**
+
 - ✅ **AI-friendly DSL** - ChatGPT/Claude can read, analyze, and suggest improvements
 - ✅ **Programmatic** - Generate Flows from requirements automatically
 - ✅ **Analyzable** - Complexity metrics, recommendations, pattern detection

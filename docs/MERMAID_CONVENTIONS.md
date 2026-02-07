@@ -150,6 +150,148 @@ input: recipientEmail = {!v_Email}
 output: v_Success = emailSent]]
 ```
 
+## F5 Features: Layout & Metadata Preservation
+
+### Layout Coordinates (v1.1)
+All elements support layout positioning to preserve canvas coordinates from Salesforce Flow Builder:
+
+```mermaid
+Node[TYPE: Label
+layout: pos: 100,200]
+```
+
+**Format**: `layout: pos: x,y` where x and y are pixel coordinates
+
+**Example**:
+```mermaid
+Start([START: Flow Begins
+layout: pos: 50,0])
+
+Screen[SCREEN: Collect Info
+layout: pos: 50,100]
+
+End([END: Complete
+layout: pos: 50,200])
+
+Start --> Screen --> End
+```
+
+**Important**: Layout coordinates are preserved through:
+- Forward: Mermaid → DSL → XML (when compiling)
+- Reverse: XML → DSL → Mermaid (when decompiling)
+
+### Decision Condition Logic
+Specify how multiple conditions are combined in Decision elements:
+
+```mermaid
+Decision{DECISION: Check Eligibility
+conditionLogic: and}
+```
+
+**Values**: `and` or `or`
+
+**Meaning**:
+- `and`: All conditions must be true
+- `or`: At least one condition must be true
+
+**Example**:
+```mermaid
+Decision{DECISION: Premium Customer?
+conditionLogic: and
+condition: v_Status = Premium
+condition: v_Score > 80}
+```
+
+### RecordUpdate Filter Logic
+Specify how multiple filter conditions are combined when updating records:
+
+```mermaid
+Update[UPDATE: Mark as Active
+object: Account
+filterLogic: or
+filter: Status = Pending
+filter: Status = Processing
+field: Status = Active
+layout: pos: 150,250]
+```
+
+**Values**: `and` or `or`
+
+**Meaning**:
+- `and`: All filter conditions must be true
+- `or`: At least one filter condition must be true
+
+**Example**:
+```mermaid
+Update[UPDATE: Deactivate Expired
+object: Account
+object: Account
+filterLogic: or
+filter: ExpiryDate < TODAY()
+filter: IsExpired = true
+field: IsActive = false]
+```
+
+### Assignment Operators
+Specify how values are assigned to variables:
+
+```mermaid
+Assign[ASSIGNMENT: Increment Counter
+set: v_Count = 1
+op: v_Count = Add]
+```
+
+**Supported Operators**:
+- `Assign`: Set the variable to the specified value
+- `Add`: Add the value to the variable
+- `Subtract`: Subtract the value from the variable
+- `AddItem`: Add an item to a collection variable
+- `RemoveItem`: Remove an item from a collection variable
+
+**Value Types**:
+Explicitly specify variable data types:
+
+```mermaid
+Assign[ASSIGNMENT: Initialize Variables
+set: v_Name = John
+set: v_Age = 30
+valueType: v_Name = String
+valueType: v_Age = Number]
+```
+
+**Supported Value Types**:
+- `String`, `Number`, `Boolean`, `Date`, `Currency`, `Percent`
+- `Collection`, `Record`
+
+## Round-Trip Metadata Preservation
+
+The system preserves all metadata through complete cycles:
+
+```
+Salesforce Flow Builder (XML with layout, conditionLogic, filterLogic)
+    ↓ [decompile command]
+Flow DSL (complete metadata preserved)
+    ↓ [MermaidGenerator]
+Mermaid Diagram (all metadata as annotations)
+    ↓ [compile command]
+Salesforce Flow Builder (XML - ready to deploy)
+```
+
+**What's Preserved**:
+- ✅ Element layout coordinates (locationX, locationY)
+- ✅ Decision condition logic (and/or)
+- ✅ RecordUpdate filter logic (and/or)
+- ✅ Assignment operators (Assign, Add, Subtract, etc.)
+- ✅ Variable value types
+- ✅ All element connections
+- ✅ Element IDs and labels
+
+**Use Cases**:
+1. **Version Control**: Export Flow as Mermaid, commit to Git, track changes
+2. **Code Review**: Review flows as human-readable diagrams in PRs
+3. **Backup/Restore**: Decompile a flow to Mermaid, then recompile to identical XML
+4. **Documentation**: Auto-generate Mermaid and Markdown docs from production flows
+
 ## Complete Example
 
 ```mermaid

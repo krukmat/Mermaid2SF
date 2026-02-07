@@ -1,0 +1,11 @@
+On branch feat/backend-refactoring
+Your branch is ahead of 'origin/feat/backend-refactoring' by 1 commit.
+  (use "git push" to publish your local commits)
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   .clineignore
+	new file:   .clinerules/local-first-then-codex.md
+	new file:   tools/codex-handoff.sh
+	new file:   tools/codex_task.md
+	new file:   workflow-0.1.patch

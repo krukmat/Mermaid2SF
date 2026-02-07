@@ -40,6 +40,11 @@ export interface BaseElement {
   label?: string;
   /** Next element ID (for linear flow) */
   next?: string;
+  /** TASK F5.1: Layout coordinates from Salesforce Flow Builder */
+  layout?: {
+    x: number;
+    y: number;
+  };
 }
 
 /**
@@ -79,6 +84,8 @@ export interface DecisionElement extends BaseElement {
   type: 'Decision';
   /** List of possible outcomes */
   outcomes: DecisionOutcome[];
+  /** TASK F5.2: Condition logic combining multiple conditions ('and'/'or') */
+  conditionLogic?: string;
 }
 
 export interface DecisionOutcome {
@@ -148,6 +155,8 @@ export interface RecordUpdateElement extends BaseElement {
   filters?: RecordFilter[];
   /** Update mode: 'single' or 'all' */
   updateMode?: 'single' | 'all';
+  /** TASK F5.3: Filter logic combining multiple filter conditions ('and'/'or') */
+  filterLogic?: string;
 }
 
 export interface RecordFilter {

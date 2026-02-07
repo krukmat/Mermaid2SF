@@ -1,11 +1,15 @@
 // TASK 2.4: DocsGenerator tests
 import { DocsGenerator } from '../generators/docs-generator';
 import {
-  FlowDSL,
-  StartElement,
-  EndElement,
   AssignmentElement,
   DecisionElement,
+  EndElement,
+  FaultElement,
+  FlowDSL,
+  GetRecordsElement,
+  LoopElement,
+  StartElement,
+  WaitElement,
 } from '../types/flow-dsl';
 
 describe('DocsGenerator', () => {
@@ -89,7 +93,7 @@ describe('DocsGenerator', () => {
 
       const diagram = generator.generateMermaidDiagram(dsl);
 
-      expect(diagram).toContain('Decision{Check Condition}');
+      expect(diagram).toContain('Decision{Check Condition');
       expect(diagram).toContain('Decision -->|Yes| End1');
       expect(diagram).toContain('Decision -->|No| End2');
     });
@@ -122,6 +126,115 @@ describe('DocsGenerator', () => {
 
       expect(diagram).toContain('#91;');
       expect(diagram).toContain('#93;');
+    });
+
+    it('orders nodes by traversal path and emits classes', () => {
+      const dsl: FlowDSL = {
+        version: 1,
+        flowApiName: 'OrderFlow',
+        label: 'Order Flow',
+        processType: 'Autolaunched',
+        apiVersion: '60.0',
+        startElement: 'Start',
+        elements: [
+          {
+            id: 'Decision',
+            type: 'Decision',
+            apiName: 'Decision',
+            outcomes: [
+              { name: 'Yes', next: 'End' },
+              { name: 'No', next: 'Assignment' },
+            ],
+          } as DecisionElement,
+          {
+            id: 'Assignment',
+            type: 'Assignment',
+            apiName: 'Assign',
+            assignments: [],
+            next: 'End',
+          } as AssignmentElement,
+          {
+            id: 'Start',
+            type: 'Start',
+            apiName: 'Start',
+            next: 'Decision',
+          } as StartElement,
+          {
+            id: 'End',
+            type: 'End',
+            apiName: 'End',
+          } as EndElement,
+        ],
+      };
+
+      const diagram = generator.generateMermaidDiagram(dsl);
+      const startIdx = diagram.indexOf('Start');
+      const decisionIdx = diagram.indexOf('Decision{');
+      const assignmentIdx = diagram.indexOf('Assignment[');
+      const endIdx = diagram.indexOf('End([');
+
+      expect(startIdx).toBeGreaterThan(-1);
+      expect(decisionIdx).toBeGreaterThan(-1);
+      expect(assignmentIdx).toBeGreaterThan(-1);
+      expect(endIdx).toBeGreaterThan(-1);
+      expect(startIdx).toBeLessThan(decisionIdx);
+      expect(decisionIdx).toBeLessThan(endIdx);
+      expect(endIdx).toBeLessThan(assignmentIdx);
+      expect(diagram).toContain('classDef start');
+      expect(diagram).toContain('class Decision decision');
+    });
+
+    it('renders metadata for loops, waits, lookups, and faults', () => {
+      const dsl: FlowDSL = {
+        version: 1,
+        flowApiName: 'ComplexFlow',
+        label: 'Complex Flow',
+        processType: 'Autolaunched',
+        apiVersion: '60.0',
+        startElement: 'Start',
+        elements: [
+          { id: 'Start', type: 'Start', apiName: 'Start', next: 'Loop1' } as StartElement,
+          {
+            id: 'Loop1',
+            type: 'Loop',
+            apiName: 'Loop1',
+            collection: 'v_Items',
+            next: 'Wait1',
+          } as LoopElement,
+          {
+            id: 'Wait1',
+            type: 'Wait',
+            apiName: 'Wait1',
+            waitType: 'duration',
+            durationValue: 5,
+            durationUnit: 'Minutes',
+            next: 'Lookup1',
+          } as WaitElement,
+          {
+            id: 'Lookup1',
+            type: 'GetRecords',
+            apiName: 'Lookup1',
+            object: 'Account',
+            filters: [{ field: 'Status', operator: 'EqualTo', value: 'New' }],
+            next: 'Fault1',
+          } as GetRecordsElement,
+          {
+            id: 'Fault1',
+            type: 'Fault',
+            apiName: 'Fault1',
+            next: 'End',
+          } as FaultElement,
+          { id: 'End', type: 'End', apiName: 'End' } as EndElement,
+        ],
+      };
+
+      const diagram = generator.generateMermaidDiagram(dsl);
+
+      expect(diagram).toContain('collection: v_Items');
+      expect(diagram).toContain('duration: 5Minutes');
+      expect(diagram).toContain('object: Account');
+      expect(diagram).toContain('filters: StatusEqualToNew');
+      expect(diagram).toContain('fault handler');
     });
   });
 

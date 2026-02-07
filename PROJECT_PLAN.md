@@ -1287,7 +1287,7 @@ Esta tarea requiere integración con un **proyecto externo** (`agnostic-ai-pipel
 
 **4.3.2: Generar Mermaid desde DSL**
 - [x] Usar DocsGenerator (reutilizado en comando decompile)
-- [ ] Layout optimization (pendiente)
+- [x] Layout optimization (traversal-based ordering + Mermaid class styles)
 - [ ] Preservar metadata completa (pendiente: components, fields detallados)
 
 **4.3.3: Comando `decompile`**
@@ -1298,7 +1298,7 @@ Esta tarea requiere integración con un **proyecto externo** (`agnostic-ai-pipel
 **4.3.4: Tests de round-trip**
 - [x] Mermaid → XML → DSL (basic round-trip)
 - [x] Mermaid → XML → Mermaid (via DSL + DocsGenerator)
-- [ ] Minimal diffs (layout/metadata completa opcional)
+- [x] Minimal diffs (layout/metadata incluida en Mermaid output)
 
 ---
 
@@ -1489,6 +1489,53 @@ npm run cli -- explain flows/MyFlow.mmd
 npm run cli -- --watch
 npm run interactive
 ```
+
+---
+
+## REFACTORING - CRITICAL SCRIPTS (SPRINT 1)
+**Estado**: 🚧 In Progress
+**Objetivo**: Refactorizar `flow-xml-generator.ts` y `docs-generator.ts` con patrones Strategy/Factory y Template Method.
+
+**Tareas**:
+- [x] Crear estructura de `src/generators/xml/` con strategies/components/factory
+- [x] Implementar `XMLGenerator` y mantener `FlowXmlGenerator` como facade
+- [x] Crear estructura de `src/generators/docs/` con templates/renderers/formatters
+- [x] Implementar `DocsGenerator` como facade sobre el template
+- [ ] Ajustar/añadir tests adicionales y validaciones finales
+
+**Archivos afectados**:
+- `src/generators/flow-xml-generator.ts`
+- `src/generators/xml/xml-generator.ts`
+- `src/generators/xml/components/`
+- `src/generators/xml/strategies/`
+- `src/generators/xml/factories/generator-factory.ts`
+- `src/generators/docs-generator.ts`
+- `src/generators/docs/docs-generator.ts`
+- `src/generators/docs/templates/`
+- `src/generators/docs/renderers/`
+- `src/generators/docs/formatters/`
+- `src/__tests__/generators/`
+
+---
+
+## REFACTORING - CICLOMÁTICA (SPRINT 2)
+**Estado**: 🚧 In Progress
+**Objetivo**: Reducir complejidad ciclomática en validación y parsers reverse sin romper APIs públicas.
+
+**Tareas**:
+- [x] Refactor `ValidationVisitor` con Strategy + Registry
+- [x] Refactor `CompositeXMLParser` con ParserRegistry
+- [x] Refactor `ScreenXMLParser` con helpers
+- [ ] Validación final de lint (pendiente por errores existentes fuera de scope)
+
+**Archivos afectados**:
+- `src/validator/visitors/ValidationVisitor.ts`
+- `src/validator/visitors/ValidationRegistry.ts`
+- `src/validator/visitors/strategies/`
+- `src/reverse/parsers/CompositeXMLParser.ts`
+- `src/reverse/parsers/ParserRegistry.ts`
+- `src/reverse/parsers/ScreenXMLParser.ts`
+- `docs/planning/sprint2-cyclomatic-refactor.md`
 
 ---
 
