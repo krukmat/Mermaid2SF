@@ -93,6 +93,15 @@ describe('MermaidParser', () => {
     expect(() => parser.parse(input)).toThrow('unknown node');
   });
 
+  test('should throw on edge from unknown node', () => {
+    const input = `
+      flowchart TD
+      B[End]
+      Unknown --> B
+    `;
+    expect(() => parser.parse(input)).toThrow('unknown node');
+  });
+
   test('should handle node labels with special characters', () => {
     const input = `
       flowchart TD
@@ -105,5 +114,43 @@ describe('MermaidParser', () => {
     expect(result.nodes[0].label).toBe('Multi Line Label');
     expect(result.nodes[1].label).toBe('Label: With Colon');
     expect(result.nodes[2].label).toBe('Label-With-Dash');
+  });
+
+  test('should parse additional shapes and arrow types', () => {
+    const input = `
+      flowchart TD
+      A[[Subroutine]]
+      B[(Cylinder)]
+      C((Circle))
+      D[Square]
+      A ..> B
+      B ==> C
+      C --> D
+    `;
+
+    const result = parser.parse(input);
+    expect(result.nodes.find((n) => n.id === 'A')?.shape).toBe('subroutine');
+    expect(result.nodes.find((n) => n.id === 'B')?.shape).toBe('cylinder');
+    expect(result.nodes.find((n) => n.id === 'C')?.shape).toBe('circle');
+
+    expect(result.edges.find((e) => e.from === 'A' && e.to === 'B')?.arrowType).toBe('dotted');
+    expect(result.edges.find((e) => e.from === 'B' && e.to === 'C')?.arrowType).toBe('thick');
+    expect(result.edges.find((e) => e.from === 'C' && e.to === 'D')?.arrowType).toBe('solid');
+  });
+
+  test('should default direction to TD when omitted and ignore comments', () => {
+    const input = `
+      %% this is a comment
+      flowchart
+      A[Start]
+      %% another comment
+      B[End]
+      A --> B
+    `;
+
+    const result = parser.parse(input);
+    expect(result.direction).toBe('TD');
+    expect(result.nodes).toHaveLength(2);
+    expect(result.edges).toHaveLength(1);
   });
 });

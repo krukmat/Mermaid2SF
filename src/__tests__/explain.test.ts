@@ -4,6 +4,7 @@ import {
   buildDslFromMermaid,
   renderSummary,
   loadDsl,
+  getComplexityLevel,
 } from '../cli/commands/explain';
 import { FlowValidator } from '../validator/flow-validator';
 import { FlowDSL } from '../types/flow-dsl';
@@ -53,6 +54,13 @@ flowchart TD
 `;
 
 describe('Explain command helpers', () => {
+  describe('getComplexityLevel', () => {
+    it('returns VERY_HIGH for high cyclomatic values', () => {
+      expect(getComplexityLevel(20)).toBe('VERY_HIGH');
+      expect(getComplexityLevel(35)).toBe('VERY_HIGH');
+    });
+  });
+
   describe('summarizeFlow', () => {
     it('summarizes a flow built from Mermaid', () => {
       const dsl = buildDslFromMermaid(mermaidSample, 'Demo_Flow');
@@ -230,6 +238,106 @@ describe('Explain command helpers', () => {
       const text = renderSummary(summary, 'text');
 
       expect(text).toContain('No issues detected');
+    });
+
+    it('renders error details and critical recommendations when flow has no End and errors', () => {
+      const invalidDsl: FlowDSL = {
+        version: 1,
+        flowApiName: 'No_End_Flow',
+        label: 'No End',
+        processType: 'Autolaunched',
+        startElement: 'Start',
+        elements: [{ id: 'Start', type: 'Start', next: 'Missing' }],
+      };
+
+      const validator = new FlowValidator();
+      const validation = validator.validate(invalidDsl);
+      const summary = summarizeFlow(invalidDsl, validation);
+      const text = renderSummary(summary, 'text');
+
+      expect(text).toContain('Errors:');
+      expect(text).toContain('CRITICAL: Flow has no End element');
+      expect(text).toContain('CRITICAL: Fix');
+    });
+
+    it('renders VERY_HIGH recommendation for highly complex flow', () => {
+      const veryComplexFlow = `
+flowchart TD
+  Start([START: Big])
+  D1{DECISION: D1}
+  D2{DECISION: D2}
+  D3{DECISION: D3}
+  D4{DECISION: D4}
+  D5{DECISION: D5}
+  D6{DECISION: D6}
+  D7{DECISION: D7}
+  D8{DECISION: D8}
+  D9{DECISION: D9}
+  D10{DECISION: D10}
+  D11{DECISION: D11}
+  D12{DECISION: D12}
+  D13{DECISION: D13}
+  D14{DECISION: D14}
+  D15{DECISION: D15}
+  D16{DECISION: D16}
+  D17{DECISION: D17}
+  D18{DECISION: D18}
+  D19{DECISION: D19}
+  D20{DECISION: D20}
+  End([END: End])
+
+  Start --> D1
+  D1 -->|Yes| D2
+  D1 -->|No default| End
+  D2 -->|Yes| D3
+  D2 -->|No default| End
+  D3 -->|Yes| D4
+  D3 -->|No default| End
+  D4 -->|Yes| D5
+  D4 -->|No default| End
+  D5 -->|Yes| D6
+  D5 -->|No default| End
+  D6 -->|Yes| D7
+  D6 -->|No default| End
+  D7 -->|Yes| D8
+  D7 -->|No default| End
+  D8 -->|Yes| D9
+  D8 -->|No default| End
+  D9 -->|Yes| D10
+  D9 -->|No default| End
+  D10 -->|Yes| D11
+  D10 -->|No default| End
+  D11 -->|Yes| D12
+  D11 -->|No default| End
+  D12 -->|Yes| D13
+  D12 -->|No default| End
+  D13 -->|Yes| D14
+  D13 -->|No default| End
+  D14 -->|Yes| D15
+  D14 -->|No default| End
+  D15 -->|Yes| D16
+  D15 -->|No default| End
+  D16 -->|Yes| D17
+  D16 -->|No default| End
+  D17 -->|Yes| D18
+  D17 -->|No default| End
+  D18 -->|Yes| D19
+  D18 -->|No default| End
+  D19 -->|Yes| D20
+  D19 -->|No default| End
+  D20 -->|Yes| End
+  D20 -->|No default| End
+`;
+
+      const dsl = buildDslFromMermaid(veryComplexFlow, 'VeryComplexFlow');
+      const validator = new FlowValidator();
+      const summary = summarizeFlow(dsl, validator.validate(dsl));
+      const text = renderSummary(summary, 'text');
+
+      expect(summary.complexityLevel).toBe('VERY_HIGH');
+      expect(text).toContain('Very high complexity detected');
+      expect(text).toContain('Many decisions detected');
+      expect(text).toContain('Flow has many elements');
     });
   });
 

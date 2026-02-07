@@ -586,6 +586,84 @@ describe('FlowValidator', () => {
     });
   });
 
+  describe('Additional edge cases (Sprint closure)', () => {
+    it('should error when flow has multiple Start elements', () => {
+      const dsl: FlowDSL = {
+        version: 1,
+        flowApiName: 'Test_Flow',
+        label: 'Test Flow',
+        processType: 'Autolaunched',
+        apiVersion: '60.0',
+        startElement: 'Start1',
+        elements: [
+          {
+            id: 'Start1',
+            type: 'Start',
+            apiName: 'Start1',
+            next: 'End',
+          } as StartElement,
+          {
+            id: 'Start2',
+            type: 'Start',
+            apiName: 'Start2',
+            next: 'End',
+          } as StartElement,
+          {
+            id: 'End',
+            type: 'End',
+            apiName: 'End',
+          } as EndElement,
+        ],
+      };
+
+      const result = validator.validate(dsl);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.code === 'MULTIPLE_START')).toBe(true);
+    });
+
+    it('should detect undefined variables with $var and {var} patterns', () => {
+      const dsl: FlowDSL = {
+        version: 1,
+        flowApiName: 'Pattern_Flow',
+        label: 'Pattern Flow',
+        processType: 'Autolaunched',
+        apiVersion: '60.0',
+        startElement: 'Start',
+        elements: [
+          {
+            id: 'Start',
+            type: 'Start',
+            apiName: 'Start',
+            next: 'Decision',
+          } as StartElement,
+          {
+            id: 'Decision',
+            type: 'Decision',
+            apiName: 'CheckPatterns',
+            outcomes: [
+              {
+                name: 'Yes',
+                condition: '$missingVar = {otherMissing}',
+                isDefault: false,
+                next: 'End',
+              },
+              { name: 'No', isDefault: true, next: 'End' },
+            ],
+          } as DecisionElement,
+          {
+            id: 'End',
+            type: 'End',
+            apiName: 'End',
+          } as EndElement,
+        ],
+      };
+
+      const result = validator.validate(dsl);
+      const undefinedWarnings = result.warnings.filter((w) => w.code === 'UNDEFINED_VARIABLE');
+      expect(undefinedWarnings.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
   describe('Schema validation (Task 3.0)', () => {
     it('should report schema violations before structural validation', () => {
       const dsl: FlowDSL = {

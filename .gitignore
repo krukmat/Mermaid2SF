@@ -33,14 +33,24 @@ Thumbs.db
 .env
 .env.local
 .github/workflows/ci.yml.old
+complexity-reports/
+tmp-compile-reports/
+tmp-compile-6BMpqW/
+tmp-compile-*
+tmp-*
+
+# Temp directories (any level)
+**/tmp-*/
+
+# Debug directories (any level)
+**/.debug/
+
+# local test/debug scripts
 test-card-logic.js
-.gitignore
 test-card-position.js
-.gitignore
 test-final-positioning.js
 test-highlight-debug.js
 test-interactive-tutorial 2.js
-.gitignore
 test-interactive-tutorial.js
 test-first-steps.js
 docs/planning/sprint3-integration-testing.md

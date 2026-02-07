@@ -28,4 +28,32 @@ describe('interactive helpers', () => {
     expect(lines.find((l) => l.includes('Assign_Api'))).toBeDefined();
     expect(lines.find((l) => l.includes('End_Api'))).toBeDefined();
   });
+
+  it('renders decision outcomes in ASCII preview', () => {
+    const dsl: FlowDSL = {
+      version: 1,
+      flowApiName: 'AsciiDecision',
+      label: 'AsciiDecision',
+      processType: 'Autolaunched',
+      apiVersion: '60.0',
+      startElement: 'Start',
+      elements: [
+        { id: 'Start', type: 'Start', apiName: 'Start_Api', next: 'Decision' },
+        {
+          id: 'Decision',
+          type: 'Decision',
+          apiName: 'Decision_Api',
+          outcomes: [
+            { name: 'Yes', next: 'End', isDefault: false },
+            { name: 'No', next: 'End', isDefault: true },
+          ],
+        },
+        { id: 'End', type: 'End', apiName: 'End_Api' },
+      ],
+    };
+
+    const lines = buildAsciiPreview(dsl);
+    expect(lines.some((l) => l.includes('Decision_Api [Decision]'))).toBe(true);
+    expect(lines.some((l) => l.includes('Yes -> End_Api'))).toBe(true);
+  });
 });
