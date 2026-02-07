@@ -31,3 +31,14 @@ Thumbs.db
 .env
 .env.local
 .github/workflows/ci.yml.old
+complexity-reports/
+tmp-compile-reports/
+tmp-compile-6BMpqW/
+tmp-compile-*
+tmp-*
+
+# Temp directories (any level)
+**/tmp-*/
+
+# Debug directories (any level)
+**/.debug/
