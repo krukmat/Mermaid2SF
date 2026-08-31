@@ -22,6 +22,29 @@ jobs:
         if: always()
         run: npm run build
 
+  salesforce-org-gate:
+    runs-on: ubuntu-latest
+    env:
+      SF_AUTH_URL: ${{ secrets.SF_AUTH_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Explain unavailable authenticated gate
+        if: ${{ env.SF_AUTH_URL == '' }}
+        run: echo "SF_AUTH_URL is not configured; authenticated Salesforce deployment validation is skipped."
+      - name: Install Salesforce CLI
+        if: ${{ env.SF_AUTH_URL != '' }}
+        run: npm install --global @salesforce/cli
+      - name: Authenticate validation org
+        if: ${{ env.SF_AUTH_URL != '' }}
+        working-directory: test/salesforce-project
+        run: |
+          printf '%s' "$SF_AUTH_URL" > /tmp/m2sf-sfdx-url
+          sf org login sfdx-url --sfdx-url-file /tmp/m2sf-sfdx-url --alias m2sf-ci --set-default
+      - name: Validate golden Flow metadata in Salesforce
+        if: ${{ env.SF_AUTH_URL != '' }}
+        working-directory: test/salesforce-project
+        run: sf project deploy validate --source-dir force-app --target-org m2sf-ci --test-level NoTestRun --wait 20
+
   legacy-style-debt:
     runs-on: ubuntu-latest
     continue-on-error: true
