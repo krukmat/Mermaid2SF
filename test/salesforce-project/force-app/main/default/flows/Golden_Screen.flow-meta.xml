@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <environments>Default</environments>
+    <interviewLabel>Golden Screen {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Golden Screen</label>
+    <processType>Flow</processType>
+    <screens>
+        <name>Welcome</name>
+        <label>Welcome</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <fields>
+            <name>Message</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>Hello</fieldText>
+        </fields>
+    </screens>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Welcome</targetReference>
+        </connector>
+    </start>
+    <status>Draft</status>
+</Flow>
