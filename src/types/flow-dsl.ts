@@ -1,15 +1,22 @@
-/**
- * Canonical FlowIR types. v2 adds explicit Flow family and trigger metadata while
- * retaining the v1 `processType` field as a compatibility alias.
- */
+/** Canonical FlowIR v2 types. */
 import {
   DEFAULT_API_VERSION,
   DEFAULT_FLOW_STATUS,
   FlowKind,
   FlowStatus,
 } from './flow-kind';
+import { FlowCondition, FlowOperator, FlowValueLike } from './flow-value';
 
 export { DEFAULT_API_VERSION, DEFAULT_FLOW_STATUS, FlowKind, FlowStatus } from './flow-kind';
+export {
+  FlowCondition,
+  FlowOperator,
+  FlowValue,
+  FlowValueLike,
+  normalizeFlowValue,
+  parseConditionExpression,
+  reference,
+} from './flow-value';
 
 export type ElementType =
   | 'Start'
@@ -43,22 +50,16 @@ export interface BaseElement {
   layout?: { x: number; y: number };
 }
 
-export interface StartElement extends BaseElement {
-  type: 'Start';
-}
-
-export interface EndElement extends BaseElement {
-  type: 'End';
-}
+export interface StartElement extends BaseElement { type: 'Start' }
+export interface EndElement extends BaseElement { type: 'End' }
 
 export interface AssignmentElement extends BaseElement {
   type: 'Assignment';
   assignments: Assignment[];
 }
-
 export interface Assignment {
   variable: string;
-  value: string;
+  value: FlowValueLike;
 }
 
 export interface DecisionElement extends BaseElement {
@@ -66,10 +67,12 @@ export interface DecisionElement extends BaseElement {
   outcomes: DecisionOutcome[];
   conditionLogic?: string;
 }
-
 export interface DecisionOutcome {
   name: string;
+  /** v1 compatibility input; v2 uses `conditions`. */
   condition?: string;
+  conditions?: FlowCondition[];
+  conditionLogic?: 'and' | 'or' | string;
   isDefault?: boolean;
   next: string;
 }
@@ -80,7 +83,6 @@ export interface ScreenElement extends BaseElement {
   allowBack?: boolean;
   allowFinish?: boolean;
 }
-
 export interface ScreenComponent {
   type: 'Field' | 'DisplayText' | 'DisplayImage';
   name: string;
@@ -92,14 +94,14 @@ export interface ScreenComponent {
 
 export interface RecordFilter {
   field: string;
-  operator: 'EqualTo' | 'NotEqualTo' | 'GreaterThan' | 'LessThan';
-  value: string;
+  operator: FlowOperator;
+  value: FlowValueLike;
 }
 
 export interface RecordCreateElement extends BaseElement {
   type: 'RecordCreate';
   object: string;
-  fields: Record<string, string>;
+  fields: Record<string, FlowValueLike>;
   storeOutputAutomatically?: boolean;
   assignRecordIdToReference?: string;
 }
@@ -107,7 +109,7 @@ export interface RecordCreateElement extends BaseElement {
 export interface RecordUpdateElement extends BaseElement {
   type: 'RecordUpdate';
   object: string;
-  fields: Record<string, string>;
+  fields: Record<string, FlowValueLike>;
   filters?: RecordFilter[];
   updateMode?: 'single' | 'all';
   filterLogic?: string;
@@ -119,10 +121,9 @@ export interface SubflowElement extends BaseElement {
   inputAssignments?: VariableMapping[];
   outputAssignments?: VariableMapping[];
 }
-
 export interface VariableMapping {
   name: string;
-  value: string;
+  value: FlowValueLike;
 }
 
 export interface LoopElement extends BaseElement {
@@ -151,10 +152,7 @@ export interface GetRecordsElement extends BaseElement {
   next?: string;
 }
 
-export interface FaultElement extends BaseElement {
-  type: 'Fault';
-  next?: string;
-}
+export interface FaultElement extends BaseElement { type: 'Fault'; next?: string }
 
 export type FlowElement =
   | StartElement
@@ -172,7 +170,6 @@ export type FlowElement =
 
 /** @deprecated Use FlowKind. Kept for v1 compatibility. */
 export type ProcessType = FlowKind;
-
 export type RecordTriggerType = 'Create' | 'Update' | 'CreateAndUpdate';
 export type RecordTriggerExecution = 'RecordBeforeSave' | 'RecordAfterSave';
 
@@ -189,9 +186,7 @@ export interface FlowDSL {
   version: number;
   flowApiName: string;
   label: string;
-  /** Canonical Flow family for v2. */
   flowKind?: FlowKind;
-  /** Compatibility alias used by v1 callers. */
   processType: ProcessType;
   apiVersion?: string;
   status?: FlowStatus;
@@ -222,21 +217,9 @@ export function withFlowDefaults(dsl: FlowDSL): FlowDSL {
   };
 }
 
-export function isScreenElement(element: FlowElement): element is ScreenElement {
-  return element.type === 'Screen';
-}
-export function isRecordCreateElement(element: FlowElement): element is RecordCreateElement {
-  return element.type === 'RecordCreate';
-}
-export function isRecordUpdateElement(element: FlowElement): element is RecordUpdateElement {
-  return element.type === 'RecordUpdate';
-}
-export function isSubflowElement(element: FlowElement): element is SubflowElement {
-  return element.type === 'Subflow';
-}
-export function isAssignmentElement(element: FlowElement): element is AssignmentElement {
-  return element.type === 'Assignment';
-}
-export function isDecisionElement(element: FlowElement): element is DecisionElement {
-  return element.type === 'Decision';
-}
+export function isScreenElement(element: FlowElement): element is ScreenElement { return element.type === 'Screen' }
+export function isRecordCreateElement(element: FlowElement): element is RecordCreateElement { return element.type === 'RecordCreate' }
+export function isRecordUpdateElement(element: FlowElement): element is RecordUpdateElement { return element.type === 'RecordUpdate' }
+export function isSubflowElement(element: FlowElement): element is SubflowElement { return element.type === 'Subflow' }
+export function isAssignmentElement(element: FlowElement): element is AssignmentElement { return element.type === 'Assignment' }
+export function isDecisionElement(element: FlowElement): element is DecisionElement { return element.type === 'Decision' }
