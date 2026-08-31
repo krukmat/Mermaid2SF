@@ -40,7 +40,7 @@ flowchart TD
     Assign1[ASSIGNMENT: Initialize Variables\\nset: isNew = true]
     Decision1{DECISION: Customer Type}
     CreateNew[CREATE: Create New Account\\nobject: Account\\nfield: Name = "Demo Account"]
-    UpdateExisting[UPDATE: Update Existing Account\\nobject: Account\\nfilter: Id = {!accountId}\\nfield: Name = "Updated Account"]
+    UpdateExisting[UPDATE: Update Existing Account\\nobject: Account\\nfilter: Id = ref:accountId\\nfield: Name = "Updated Account"]
     Subflow1[[SUBFLOW: Send Welcome Email\\nflow: Send_Welcome_Email]]
     Screen2[SCREEN: Show Confirmation]
     End([END: Process Complete])
@@ -77,7 +77,7 @@ flowchart TD
 flowchart TD
     Start([START: Records\\nflow: autolaunched\\nvariable: accountId String])
     Create[CREATE: New Account\\nobject: Account\\nfield: Name = "Acme"\\nfield: AnnualRevenue = 42]
-    Update[UPDATE: Account Status\\nobject: Account\\nfilter: Id = {!accountId}\\nfield: Active__c = true]
+    Update[UPDATE: Account Status\\nobject: Account\\nfilter: Id = ref:accountId\\nfield: Active__c = true]
     End([END: Done])
     Start --> Create
     Create --> Update
