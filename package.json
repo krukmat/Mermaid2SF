@@ -27,14 +27,9 @@
     "coverage-upload": "npx codecov",
     "prepare": "husky install"
   },
-  "keywords": [
-    "mermaid",
-    "salesforce",
-    "flow",
-    "compiler"
-  ],
+  "keywords": ["mermaid", "salesforce", "flow", "compiler"],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "@types/jest": "^30.0.0",
@@ -66,9 +61,6 @@
     "winston": "^3.18.3"
   },
   "lint-staged": {
-    "*.{ts,js,md}": [
-      "prettier --write",
-      "eslint"
-    ]
+    "*.{ts,js,md}": ["prettier --write", "eslint"]
   }
 }
