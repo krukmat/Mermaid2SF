@@ -163,7 +163,16 @@ node web/server/index.js
 # http://localhost:4000
 ```
 
+![Flow Visualizer](docs/assets/web-visualizer-viewport.png)
+
 The web surface is useful for demos and authoring, but compiler-core correctness takes priority over UI expansion during the current hardening cycle.
+
+Screenshots are regenerated with:
+
+```bash
+node web/server/index.js &
+node scripts/capture-web.js
+```
 
 ## Testing
 
