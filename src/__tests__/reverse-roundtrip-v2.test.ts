@@ -23,7 +23,7 @@ describe('M5 semantic reverse fidelity', () => {
         { id: 'Assign', type: 'Assignment', label: 'Set Flag', assignments: [{ variable: 'flag', value: true }], next: 'Decision' },
         {
           id: 'Decision', type: 'Decision', label: 'Route', outcomes: [
-            { name: 'Create', conditions: [{ left: { kind: 'reference', name: 'flag' }, operator: 'EqualTo', right: true }], next: 'Create' },
+            { name: 'Create', conditions: [{ left: { kind: 'reference', name: 'flag' }, operator: 'EqualTo', right: { kind: 'boolean', value: true } }], next: 'Create' },
             { name: 'Lookup', isDefault: true, next: 'Lookup' },
           ],
         },
@@ -38,6 +38,7 @@ describe('M5 semantic reverse fidelity', () => {
     const xml = new FlowXmlGenerator().generate(dsl);
     const imported = parseFlowXmlText(xml, dsl.flowApiName);
     const diff = semanticDiff(dsl, imported);
+    expect(diff.actual).toEqual(diff.expected);
     expect(diff.equal).toBe(true);
   });
 
@@ -58,6 +59,8 @@ describe('M5 semantic reverse fidelity', () => {
       ],
     };
     const imported = parseFlowXmlText(new FlowXmlGenerator().generate(dsl), dsl.flowApiName);
-    expect(semanticDiff(dsl, imported).equal).toBe(true);
+    const diff = semanticDiff(dsl, imported);
+    expect(diff.actual).toEqual(diff.expected);
+    expect(diff.equal).toBe(true);
   });
 });
