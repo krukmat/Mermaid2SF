@@ -1,6 +1,16 @@
 /**
- * Supported Flow element types in v1
+ * Canonical FlowIR types. v2 adds explicit Flow family and trigger metadata while
+ * retaining the v1 `processType` field as a compatibility alias.
  */
+import {
+  DEFAULT_API_VERSION,
+  DEFAULT_FLOW_STATUS,
+  FlowKind,
+  FlowStatus,
+} from './flow-kind';
+
+export { DEFAULT_API_VERSION, DEFAULT_FLOW_STATUS, FlowKind, FlowStatus } from './flow-kind';
+
 export type ElementType =
   | 'Start'
   | 'End'
@@ -15,228 +25,137 @@ export type ElementType =
   | 'GetRecords'
   | 'Fault';
 
-/**
- * Flow variable definition
- */
 export interface FlowVariable {
   name: string;
   dataType: string;
   isCollection: boolean;
   isInput: boolean;
   isOutput: boolean;
+  objectType?: string;
 }
 
-/**
- * Base interface for all Flow elements
- */
 export interface BaseElement {
-  /** Unique ID in the DSL */
   id: string;
-  /** Type of element */
   type: ElementType;
-  /** Salesforce API name */
   apiName?: string;
-  /** Display label */
   label?: string;
-  /** Next element ID (for linear flow) */
   next?: string;
-  /** TASK F5.1: Layout coordinates from Salesforce Flow Builder */
-  layout?: {
-    x: number;
-    y: number;
-  };
+  layout?: { x: number; y: number };
 }
 
-/**
- * Start element - beginning of the Flow
- */
 export interface StartElement extends BaseElement {
   type: 'Start';
 }
 
-/**
- * End element - termination of the Flow
- */
 export interface EndElement extends BaseElement {
   type: 'End';
 }
 
-/**
- * Assignment element - sets variable values
- */
 export interface AssignmentElement extends BaseElement {
   type: 'Assignment';
-  /** List of variable assignments */
   assignments: Assignment[];
 }
 
 export interface Assignment {
-  /** Variable name to assign to */
   variable: string;
-  /** Value or expression */
   value: string;
 }
 
-/**
- * Decision element - conditional branching
- */
 export interface DecisionElement extends BaseElement {
   type: 'Decision';
-  /** List of possible outcomes */
   outcomes: DecisionOutcome[];
-  /** TASK F5.2: Condition logic combining multiple conditions ('and'/'or') */
   conditionLogic?: string;
 }
 
 export interface DecisionOutcome {
-  /** Outcome name (e.g., "Yes", "No") */
   name: string;
-  /** Condition formula (optional if default) */
   condition?: string;
-  /** Whether this is the default outcome */
   isDefault?: boolean;
-  /** Next element ID for this outcome */
   next: string;
 }
 
-/**
- * Screen element - displays UI to users
- */
 export interface ScreenElement extends BaseElement {
   type: 'Screen';
-  /** Screen components (fields, displays, etc.) */
   components: ScreenComponent[];
-  /** Allow back navigation */
   allowBack?: boolean;
-  /** Allow finish button */
   allowFinish?: boolean;
 }
 
 export interface ScreenComponent {
-  /** Component type */
   type: 'Field' | 'DisplayText' | 'DisplayImage';
-  /** Component name */
   name: string;
-  /** Data type for Field components */
   dataType?: string;
-  /** Target binding (e.g., $Record.Field__c) */
   target?: string;
-  /** Display text content */
   text?: string;
-  /** Required field */
   required?: boolean;
 }
 
-/**
- * RecordCreate element - creates Salesforce records
- */
-export interface RecordCreateElement extends BaseElement {
-  type: 'RecordCreate';
-  /** Object API name */
-  object: string;
-  /** Field assignments */
-  fields: Record<string, string>;
-  /** Store output automatically */
-  storeOutputAutomatically?: boolean;
-  /** Variable to store created record ID */
-  assignRecordIdToReference?: string;
-}
-
-/**
- * RecordUpdate element - updates Salesforce records
- */
-export interface RecordUpdateElement extends BaseElement {
-  type: 'RecordUpdate';
-  /** Object API name */
-  object: string;
-  /** Field updates */
-  fields: Record<string, string>;
-  /** Filter conditions */
-  filters?: RecordFilter[];
-  /** Update mode: 'single' or 'all' */
-  updateMode?: 'single' | 'all';
-  /** TASK F5.3: Filter logic combining multiple filter conditions ('and'/'or') */
-  filterLogic?: string;
-}
-
 export interface RecordFilter {
-  /** Field name */
   field: string;
-  /** Operator */
   operator: 'EqualTo' | 'NotEqualTo' | 'GreaterThan' | 'LessThan';
-  /** Value */
   value: string;
 }
 
-/**
- * Subflow element - invokes another flow
- */
+export interface RecordCreateElement extends BaseElement {
+  type: 'RecordCreate';
+  object: string;
+  fields: Record<string, string>;
+  storeOutputAutomatically?: boolean;
+  assignRecordIdToReference?: string;
+}
+
+export interface RecordUpdateElement extends BaseElement {
+  type: 'RecordUpdate';
+  object: string;
+  fields: Record<string, string>;
+  filters?: RecordFilter[];
+  updateMode?: 'single' | 'all';
+  filterLogic?: string;
+}
+
 export interface SubflowElement extends BaseElement {
   type: 'Subflow';
-  /** Flow API name to invoke */
   flowName: string;
-  /** Input variable mappings */
   inputAssignments?: VariableMapping[];
-  /** Output variable mappings */
   outputAssignments?: VariableMapping[];
 }
 
 export interface VariableMapping {
-  /** Target variable name */
   name: string;
-  /** Source value or reference */
   value: string;
 }
 
 export interface LoopElement extends BaseElement {
   type: 'Loop';
-  /** Collection variable to iterate */
   collection: string;
-  /** Next element when loop body runs */
   next?: string;
 }
 
 export interface WaitElement extends BaseElement {
   type: 'Wait';
-  /** Wait mode */
   waitType?: 'condition' | 'duration' | 'event';
-  /** Condition logic (for condition/event waits) */
   condition?: string;
-  /** Duration value (numeric) */
   durationValue?: number;
-  /** Duration unit */
   durationUnit?: 'Seconds' | 'Minutes' | 'Hours' | 'Days';
-  /** Platform event API name for event waits */
   eventName?: string;
-  /** Next element after wait */
   next?: string;
 }
 
 export interface GetRecordsElement extends BaseElement {
   type: 'GetRecords';
-  /** Object API name */
   object: string;
-  /** Filters for query */
   filters?: RecordFilter[];
-  /** Fields to return */
   fields?: string[];
-  /** Sort field API name */
   sortField?: string;
-  /** Sort direction */
   sortDirection?: 'Ascending' | 'Descending';
-  /** Next element */
   next?: string;
 }
 
 export interface FaultElement extends BaseElement {
   type: 'Fault';
-  /** Target element for fault handling */
   next?: string;
 }
 
-/**
- * Union type of all Flow elements
- */
 export type FlowElement =
   | StartElement
   | EndElement
@@ -251,61 +170,73 @@ export type FlowElement =
   | GetRecordsElement
   | FaultElement;
 
-/**
- * Process type for the Flow
- */
-export type ProcessType = 'Autolaunched' | 'RecordTriggered' | 'Screen';
+/** @deprecated Use FlowKind. Kept for v1 compatibility. */
+export type ProcessType = FlowKind;
 
-/**
- * Complete Flow DSL structure
- */
+export type RecordTriggerType = 'Create' | 'Update' | 'CreateAndUpdate';
+export type RecordTriggerExecution = 'RecordBeforeSave' | 'RecordAfterSave';
+
+export interface RecordTriggerConfig {
+  object: string;
+  triggerType: RecordTriggerExecution;
+  recordTriggerType: RecordTriggerType;
+  filters?: RecordFilter[];
+  filterLogic?: string;
+  doesRequireRecordChangedToMeetCriteria?: boolean;
+}
+
 export interface FlowDSL {
-  /** DSL schema version */
   version: number;
-  /** Salesforce Flow API name */
   flowApiName: string;
-  /** Display label */
   label: string;
-  /** Type of Flow process */
+  /** Canonical Flow family for v2. */
+  flowKind?: FlowKind;
+  /** Compatibility alias used by v1 callers. */
   processType: ProcessType;
-  /** Salesforce API version (e.g., 60.0) */
   apiVersion?: string;
-  /** ID of the start element */
+  status?: FlowStatus;
+  trigger?: RecordTriggerConfig;
   startElement: string;
-  /** Flow variables (optional) */
   variables?: FlowVariable[];
-  /** All Flow elements */
   elements: FlowElement[];
 }
 
-/**
- * Default API version for Salesforce
- */
-export const DEFAULT_API_VERSION = '60.0';
+export interface FlowBuildOptions {
+  flowKind?: FlowKind;
+  apiVersion?: string;
+  status?: FlowStatus;
+  trigger?: RecordTriggerConfig;
+  variables?: FlowVariable[];
+}
 
-/**
- * Type guards for Flow elements
- */
+export function resolveFlowKind(dsl: Pick<FlowDSL, 'flowKind' | 'processType'>): FlowKind {
+  return dsl.flowKind || dsl.processType;
+}
+
+export function withFlowDefaults(dsl: FlowDSL): FlowDSL {
+  return {
+    ...dsl,
+    apiVersion: dsl.apiVersion || DEFAULT_API_VERSION,
+    status: dsl.status || DEFAULT_FLOW_STATUS,
+    flowKind: resolveFlowKind(dsl),
+  };
+}
+
 export function isScreenElement(element: FlowElement): element is ScreenElement {
   return element.type === 'Screen';
 }
-
 export function isRecordCreateElement(element: FlowElement): element is RecordCreateElement {
   return element.type === 'RecordCreate';
 }
-
 export function isRecordUpdateElement(element: FlowElement): element is RecordUpdateElement {
   return element.type === 'RecordUpdate';
 }
-
 export function isSubflowElement(element: FlowElement): element is SubflowElement {
   return element.type === 'Subflow';
 }
-
 export function isAssignmentElement(element: FlowElement): element is AssignmentElement {
   return element.type === 'Assignment';
 }
-
 export function isDecisionElement(element: FlowElement): element is DecisionElement {
   return element.type === 'Decision';
 }
