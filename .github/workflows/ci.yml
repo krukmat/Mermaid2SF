@@ -19,6 +19,7 @@ jobs:
       - name: Unit and integration tests
         run: npm test -- --runInBand
       - name: TypeScript build
+        if: always()
         run: npm run build
 
   legacy-style-debt:
