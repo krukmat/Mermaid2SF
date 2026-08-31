@@ -1,10 +1,10 @@
 flowchart TD
-    Start([START: Flow Start])
-    Assign[ASSIGNMENT: Set Flag]
+    Start([START: Flow Start\nflow: autolaunched\nvariable: flag Boolean])
+    Assign[ASSIGNMENT: Set Flag\nset: flag = true]
     Decision{DECISION: Check Flag}
     End1([END: Success])
     End2([END: Failure])
     Start --> Assign
     Assign --> Decision
-    Decision -->|Yes| End1
+    Decision -->|Yes if flag = true| End1
     Decision -->|No default| End2
