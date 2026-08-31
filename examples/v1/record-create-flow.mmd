@@ -1,7 +1,7 @@
 flowchart TD
-    Start([START: Create Account Flow])
-    Assign[ASSIGNMENT: Set Account Values]
-    Create[CREATE: Create Account Record]
+    Start([START: Create Account Flow\nflow: autolaunched\nvariable: accountName String])
+    Assign[ASSIGNMENT: Set Account Values\nset: accountName = "Demo Account"]
+    Create[CREATE: Create Account Record\nobject: Account\nfield: Name = {!accountName}]
     End([END: Account Created])
 
     Start --> Assign
