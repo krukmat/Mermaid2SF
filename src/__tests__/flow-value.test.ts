@@ -12,6 +12,7 @@ describe('FlowIR typed values', () => {
     expect(normalizeFlowValue('42')).toEqual({ kind: 'number', value: 42 });
     expect(normalizeFlowValue("'Acme'")).toEqual({ kind: 'string', value: 'Acme' });
     expect(normalizeFlowValue('{!AccountId}')).toEqual({ kind: 'reference', name: 'AccountId' });
+    expect(normalizeFlowValue('ref:AccountId')).toEqual({ kind: 'reference', name: 'AccountId' });
     expect(normalizeFlowValue('$Record.Id')).toEqual({ kind: 'reference', name: '$Record.Id' });
   });
 
@@ -32,6 +33,9 @@ describe('FlowIR typed values', () => {
     expect(serializeFlowValueXml(true, escapeXml, 0)).toEqual(['<booleanValue>true</booleanValue>']);
     expect(serializeFlowValueXml(3.5, escapeXml, 0)).toEqual(['<numberValue>3.5</numberValue>']);
     expect(serializeFlowValueXml('{!AccountId}', escapeXml, 0)).toEqual([
+      '<elementReference>AccountId</elementReference>',
+    ]);
+    expect(serializeFlowValueXml('ref:AccountId', escapeXml, 0)).toEqual([
       '<elementReference>AccountId</elementReference>',
     ]);
     expect(serializeFlowValueXml('hello', escapeXml, 0)).toEqual(['<stringValue>hello</stringValue>']);
