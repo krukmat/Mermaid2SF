@@ -27,6 +27,9 @@ export class GetRecordsStrategy implements ElementStrategy<GetRecordsElement> {
       lines.push(`        <sortField>${context.escapeXml(element.sortField)}</sortField>`);
       lines.push(`        <sortOrder>${element.sortDirection || 'Ascending'}</sortOrder>`);
     }
+    for (const field of [...(element.fields || [])].sort()) {
+      lines.push(`        <queriedFields>${context.escapeXml(field)}</queriedFields>`);
+    }
     if (element.next) lines.push(...context.generateConnectorLines(element.next, 8));
     lines.push(`        <object>${context.escapeXml(element.object)}</object>`);
     lines.push('        <storeOutputAutomatically>true</storeOutputAutomatically>');
