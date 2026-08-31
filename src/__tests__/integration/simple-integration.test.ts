@@ -23,42 +23,39 @@ describe('Simple Integration Tests', () => {
   });
 
   describe('Basic Integration', () => {
-    it('should create XML generator successfully', () => {
+    it('creates compiler components successfully', () => {
       expect(xmlGenerator).toBeDefined();
       expect(typeof xmlGenerator.generate).toBe('function');
-    });
-
-    it('should create other components successfully', () => {
       expect(docsGenerator).toBeDefined();
       expect(metadataExtractor).toBeDefined();
       expect(validator).toBeDefined();
       expect(parser).toBeDefined();
     });
 
-    it('should parse simple Mermaid flow', () => {
-      const simpleMermaid = ['flowchart TD', 'A([START: Start])', 'B([END: End])', 'A --> B'].join(
-        '\n',
-      );
-      const graph = parser.parse(simpleMermaid);
-      expect(graph).toBeDefined();
-      expect(graph.nodes).toBeDefined();
+    it('parses a simple Mermaid flow', () => {
+      const graph = parser.parse(['flowchart TD', 'A([START: Start])', 'B([END: End])', 'A --> B'].join('\n'));
       expect(Array.isArray(graph.nodes)).toBe(true);
+      expect(graph.nodes).toHaveLength(2);
     });
 
-    it('should handle XML parsing functions', () => {
-      const mockXml = '<?xml version="1.0"?><Flow><Name>Test</Name></Flow>';
-      const result = parseFlowXmlText(mockXml);
-      expect(result).toBeDefined();
-      expect(result.version).toBeDefined();
+    it('parses structurally valid Salesforce Flow metadata', () => {
+      const result = parseFlowXmlText(`<?xml version="1.0"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+  <apiVersion>67.0</apiVersion><label>Test</label><processType>AutoLaunchedFlow</processType>
+  <start/><status>Draft</status>
+</Flow>`);
+      expect(result.version).toBe(2);
+      expect(result.flowKind).toBe('Autolaunched');
     });
   });
 
   describe('Pattern Validation', () => {
-    it('should validate flow with visitor pattern', () => {
+    it('validates a minimal FlowIR graph', () => {
       const mockDsl: FlowDSL = {
-        version: 1,
+        version: 2,
         flowApiName: 'test-flow',
         label: 'Test Flow',
+        flowKind: 'Autolaunched',
         processType: 'Autolaunched',
         startElement: 'Start',
         elements: [
@@ -66,22 +63,12 @@ describe('Simple Integration Tests', () => {
           { id: 'End', type: 'End', apiName: 'End' },
         ],
       };
-
-      const result = validator.validate(mockDsl);
-      expect(result).toBeDefined();
-      expect(result.valid).toBeDefined();
+      expect(validator.validate(mockDsl).valid).toBe(true);
     });
 
-    it('should extract metadata with chain of responsibility', () => {
-      const mockElement: MermaidNode = {
-        id: 'screen1',
-        label: 'SCREEN: Test Screen',
-        shape: 'square',
-      };
-
-      const result = metadataExtractor.extract(mockElement);
-      expect(result).toBeDefined();
-      expect(result.type).toBe('Screen');
+    it('extracts metadata through the strategy chain', () => {
+      const mockElement: MermaidNode = { id: 'screen1', label: 'SCREEN: Test Screen', shape: 'square' };
+      expect(metadataExtractor.extract(mockElement).type).toBe('Screen');
     });
   });
 });
