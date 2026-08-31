@@ -43,6 +43,8 @@ export function reference(name: string): ReferenceFlowValue {
 
 export function normalizeReferenceName(value: string): string {
   const trimmed = value.trim();
+  const explicit = trimmed.match(/^ref:\s*(.+)$/i);
+  if (explicit) return explicit[1].trim();
   const merge = trimmed.match(/^\{!([^}]+)\}$/);
   return merge ? merge[1].trim() : trimmed;
 }
@@ -59,6 +61,7 @@ export function normalizeFlowValue(value: FlowValueLike): FlowValue {
   if (/^-?(?:\d+\.?\d*|\.\d+)$/.test(trimmed)) return { kind: 'number', value: Number(trimmed) };
   if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return { kind: 'date', value: trimmed };
   if (/^\d{4}-\d{2}-\d{2}T/.test(trimmed)) return { kind: 'datetime', value: trimmed };
+  if (/^ref:\s*.+$/i.test(trimmed)) return reference(trimmed);
   if (/^\{![^}]+\}$/.test(trimmed) || /^\$[A-Za-z]/.test(trimmed)) return reference(trimmed);
 
   const quoted = trimmed.match(/^(['"])([\s\S]*)\1$/);
