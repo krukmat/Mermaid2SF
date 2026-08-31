@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Mermaid2SF FlowIR v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "flowApiName", "label", "processType", "startElement", "elements"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 2 },
+    "flowApiName": { "type": "string", "minLength": 1 },
+    "label": { "type": "string", "minLength": 1 },
+    "flowKind": { "$ref": "#/definitions/FlowKind" },
+    "processType": { "$ref": "#/definitions/FlowKind" },
+    "apiVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+$" },
+    "status": { "type": "string", "enum": ["Draft", "Active", "Obsolete"] },
+    "trigger": { "$ref": "#/definitions/RecordTrigger" },
+    "startElement": { "type": "string", "minLength": 1 },
+    "variables": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/FlowVariable" }
+    },
+    "elements": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/FlowElement" }
+    }
+  },
+  "definitions": {
+    "FlowKind": { "type": "string", "enum": ["Autolaunched", "RecordTriggered", "Screen"] },
+    "FlowValue": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["kind"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "null" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "value"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "enum": ["string", "date", "datetime"] },
+            "value": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "value"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "boolean" },
+            "value": { "type": "boolean" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "value"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "number" },
+            "value": { "type": "number" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "name"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "reference" },
+            "name": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "FlowVariable": {
+      "type": "object",
+      "required": ["name", "dataType", "isCollection", "isInput", "isOutput"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+        "dataType": { "type": "string", "minLength": 1 },
+        "isCollection": { "type": "boolean" },
+        "isInput": { "type": "boolean" },
+        "isOutput": { "type": "boolean" },
+        "objectType": { "type": "string" }
+      }
+    },
+    "RecordFilter": {
+      "type": "object",
+      "required": ["field", "operator", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "field": { "type": "string", "minLength": 1 },
+        "operator": {
+          "type": "string",
+          "enum": ["EqualTo", "NotEqualTo", "GreaterThan", "GreaterThanOrEqualTo", "LessThan", "LessThanOrEqualTo", "IsNull"]
+        },
+        "value": { "$ref": "#/definitions/FlowValue" }
+      }
+    },
+    "RecordTrigger": {
+      "type": "object",
+      "required": ["object", "triggerType", "recordTriggerType"],
+      "additionalProperties": false,
+      "properties": {
+        "object": { "type": "string" },
+        "triggerType": { "type": "string", "enum": ["RecordBeforeSave", "RecordAfterSave"] },
+        "recordTriggerType": { "type": "string", "enum": ["Create", "Update", "CreateAndUpdate"] },
+        "filters": { "type": "array", "items": { "$ref": "#/definitions/RecordFilter" } },
+        "filterLogic": { "type": "string" },
+        "doesRequireRecordChangedToMeetCriteria": { "type": "boolean" }
+      }
+    },
+    "FlowElement": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9_]+$" },
+        "type": {
+          "type": "string",
+          "enum": ["Start", "End", "Assignment", "Decision", "Screen", "RecordCreate", "RecordUpdate", "Subflow", "Loop", "Wait", "GetRecords", "Fault"]
+        },
+        "apiName": { "type": "string" },
+        "label": { "type": "string" },
+        "next": { "type": "string" },
+        "layout": {
+          "type": "object",
+          "required": ["x", "y"],
+          "additionalProperties": false,
+          "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}
