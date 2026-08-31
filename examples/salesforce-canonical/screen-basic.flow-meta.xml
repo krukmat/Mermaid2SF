@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <label>Screen Basic</label>
+    <processType>Flow</processType>
+    <screens>
+        <name>Welcome</name>
+        <label>Welcome</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+    </screens>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector><targetReference>Welcome</targetReference></connector>
+    </start>
+    <status>Draft</status>
+</Flow>
