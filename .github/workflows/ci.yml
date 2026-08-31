@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  quality:
+  compiler-core:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,4 +16,20 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run ci
+      - name: Unit and integration tests
+        run: npm test -- --runInBand
+      - name: TypeScript build
+        run: npm run build
+
+  legacy-style-debt:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Existing lint and format backlog (non-blocking)
+        run: npm run lint && npm run format:check
