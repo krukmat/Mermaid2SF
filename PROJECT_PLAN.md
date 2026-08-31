@@ -1,99 +1,138 @@
 # Mermaid2SF — Project Plan
 
-## Current objective
+## Status
 
-Harden the compiler core so that Mermaid2SF can make narrow, evidence-backed Salesforce compatibility claims instead of broad PoC claims.
+**Compiler-correctness hardening plan: COMPLETE.**
+
+The implementation now has a canonical FlowIR v2, Salesforce semantic validation, deterministic Salesforce XML generation, normalized golden fixtures, semantic round-trip gates, and an XML-tree reverse adapter for the guaranteed subset.
+
+The project remains a **correctness-hardened demo/PoC**, not an org-verified Salesforce compiler, until the authenticated `sf project deploy validate` job runs with `SF_AUTH_URL` configured.
 
 Canonical architecture:
 
 ```text
-Authoring / Import
-      ↓
-Canonical FlowIR
-      ↓
-Salesforce Semantic Validator
-      ↓
-Salesforce Metadata Adapter
-      ↓
-Golden / Round-trip / Deploy Validation
+Mermaid / Salesforce XML / Web UI
+            ↓
+      Canonical FlowIR v2
+            ↓
+ Salesforce Semantic Validator
+            ↓
+ Salesforce Metadata Adapter
+            ↓
+       Flow Metadata XML
+            ↓
+ Golden + semantic round-trip gates
+            ↓
+ sf project deploy validate (when authenticated)
 ```
 
-Detailed execution order: `docs/planning/compiler-correctness-execution.md`.
+Detailed execution record: `docs/planning/compiler-correctness-execution.md`.
 
 ## Milestones
 
-### M0 — Repository baseline — Complete
+### M0 — Repository baseline — ✅ Complete
 
-- [x] Canonical validator selected (`src/validator/FlowValidator`).
-- [x] Legacy visual validation retained only as a compatibility facade.
-- [x] Duplicate extractor/validator/reverse-parser source copies removed from production paths.
-- [x] README rewritten around actual PoC/correctness status.
-- [x] MIT license normalized.
-- [x] `SUPPORTED_FEATURES.md` introduced.
-- [x] Blanket zero-loss/full-deployability claims removed from the primary documentation.
+- Canonical validator selected and legacy facade isolated.
+- Duplicate production copies removed.
+- README and fidelity contract aligned with actual behavior.
+- MIT license normalized at the package/repository level.
+- Blanket lossless/deployability claims removed.
 
-### M1 — Salesforce correctness baseline — In progress
+### M1 — Salesforce correctness baseline — ✅ Complete
 
-- [ ] Canonical Salesforce fixtures for Screen, Autolaunched and Record-Triggered flows.
-- [ ] Internal FlowKind -> Salesforce `processType` mapping.
-- [ ] Correct Start metadata for record-triggered flows.
-- [ ] End/Terminal never emits a dangling connector.
-- [ ] Salesforce API version centralized/configurable; baseline v67.0.
-- [ ] Supported element serializers aligned to canonical fixtures.
+- API baseline centralized at `67.0` and overrideable.
+- Internal `FlowKind` separated from Salesforce `processType`.
+- Screen, Autolaunched and Record-Triggered Start semantics modeled explicitly.
+- End is an authoring/IR terminal and never serializes as a fictitious target.
+- Canonical Salesforce golden fixtures exist for the three baseline Flow families.
+- Supported serializers are exercised against normalized fixtures.
 
-Gate: generated fixtures pass internal golden tests; authenticated org validation is the external release gate.
+### M2 — FlowIR v2 — ✅ Complete
 
-### M2 — FlowIR v2 — Planned
+- Typed `FlowValue`: String, Boolean, Number, Date, DateTime, Reference and Null.
+- Structured conditions with typed operands/operators.
+- Explicit typed variables/resources.
+- Record-trigger configuration represented in the canonical model.
+- Supported Mermaid and Salesforce XML paths normalize into FlowIR v2.
+- Mermaid authoring supports delimiter-safe references through `ref:<resource>`.
 
-- [ ] Typed FlowValue.
-- [ ] Structured conditions.
-- [ ] Explicit typed resources.
-- [ ] Semantic connectors/terminal behavior.
-- [ ] Supported authoring/import paths normalized into the canonical model.
+### M3 — Salesforce semantic validator — ✅ Complete
 
-### M3 — Salesforce semantic validator — Planned
+- Stable `M2SF-SF-*` errors.
+- Required object/subflow/trigger metadata checks.
+- Flow-family compatibility checks.
+- API-name and resource/reference validation.
+- Non-default Decision outcomes require real conditions.
+- XML generation fails before serialization on semantic errors.
 
-- [ ] Required Salesforce metadata checks.
-- [ ] Stable `M2SF-SF-*` error codes.
-- [ ] Flow-kind/element compatibility rules.
-- [ ] Resource/reference checks.
-- [ ] XML generation fails before serialization when semantic validation fails.
+### M4 — Correctness gates — ✅ Complete
 
-### M4 — Correctness tests — Planned
+- Normalized XML tree comparison.
+- Golden Salesforce metadata tests.
+- Canonical FlowIR semantic comparator.
+- Semantic round-trip tests for the guaranteed subset.
+- Blocking GitHub Actions `compiler-core` gate: tests + TypeScript build.
+- Conditional authenticated Salesforce org gate implemented.
 
-- [ ] Golden normalized Salesforce metadata tests.
-- [ ] Semantic FlowIR comparator.
-- [ ] Semantic round-trip tests for guaranteed features.
-- [ ] GitHub Actions CI for lint/test/build.
-- [ ] Optional authenticated Salesforce deployment-validation job.
+Current evidence at plan close:
 
-### M5 — Reverse parser — Planned
+```text
+Test suites: 44 / 44 passed
+Tests:       287 / 287 passed
+TypeScript:  build passed
+Golden XML:  passed
+Round-trip:  passed for guaranteed subset
+Org deploy:  gate ready; skipped until SF_AUTH_URL is configured
+```
 
-- [ ] Replace regex/string parsing with an XML tree parser.
-- [ ] Map Salesforce XML AST into canonical FlowIR.
-- [ ] Enforce a feature-scoped fidelity matrix.
+### M5 — Reverse parser and fidelity — ✅ Complete for guaranteed subset
 
-### M6 — Product expansion — Frozen until core gates stabilize
+- Regex/string extraction replaced by an XML-tree parser/adapter.
+- Salesforce XML maps into FlowIR v2.
+- Typed Assignment values, Decision conditions, Screen basics, record operations, Get Records and Subflow metadata are covered by semantic tests.
+- Fidelity is feature-scoped; unsupported metadata is not advertised as lossless.
 
-Candidate work after M0-M5:
+Loop, Wait and Fault remain experimental and are intentionally outside the guaranteed round-trip contract.
 
-- Loop/Wait maturation.
-- Advanced Screen components.
-- Apex Actions / HTTP Callouts.
-- Additional Flow families.
-- Web visualizer polish.
-- AI-assisted authoring.
+### M6 — Product expansion — ✅ Unblocked
+
+The correctness freeze is lifted. Future product work may resume, but every feature must traverse the same compiler contract:
+
+```text
+Authoring/Parser
+      → FlowIR
+      → Semantic Validator
+      → Salesforce Adapter
+      → Golden / Round-trip tests
+      → authenticated org gate when claiming deploy compatibility
+```
+
+Prioritized post-hardening work is documented in `docs/planning/post-hardening-backlog.md`.
 
 ## Release definition
 
-The phrase **Salesforce-correct compiler core** is reserved for a release where:
+### What can be claimed now
 
-- supported Mermaid -> FlowIR is deterministic,
-- supported FlowIR -> XML is deterministic,
-- values and decision conditions are semantic/typed,
-- terminal paths do not serialize fictitious End targets,
-- invalid Salesforce semantics fail before serialization,
-- canonical fixtures and golden tests are green,
-- and representative metadata has passed a real `sf project deploy validate` against an authenticated org.
+- deterministic compiler core for the documented subset,
+- typed/structured Salesforce semantics,
+- normalized golden equivalence,
+- semantic round-trip guarantees for the documented subset,
+- pre-serialization rejection of known-invalid semantics.
 
-Until the last external gate is available, the project remains a correctness-hardened demo/PoC.
+### What must NOT be claimed yet
+
+Do not describe the project as **Salesforce deployment verified** or universally **Salesforce-correct** until representative generated metadata passes the authenticated CI org gate:
+
+```text
+FlowIR → Flow XML → sf project deploy validate → SUCCESS
+```
+
+## Known residual debt
+
+These items are intentionally outside the completed hardening plan and must remain visible:
+
+- authenticated org evidence is pending `SF_AUTH_URL` configuration;
+- legacy repository lint/format backlog is non-blocking and still red;
+- dependency audit currently reports legacy vulnerabilities and requires a separate modernization pass;
+- `package-lock.json` still carries stale ISC root-license metadata although `package.json`/`LICENSE` are MIT;
+- Loop, Wait, Fault, advanced Screens, Apex Actions, HTTP Callouts and additional Flow families are not guaranteed.
