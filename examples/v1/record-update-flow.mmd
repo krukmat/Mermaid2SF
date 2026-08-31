@@ -1,8 +1,8 @@
 flowchart TD
     Start([START: Update Account Status\nflow: autolaunched\nvariable: accountType String input\nvariable: accountId String input])
     Decision{DECISION: Check Account Type}
-    Update1[UPDATE: Update Enterprise Account\nobject: Account\nfilter: Id = {!accountId}\nfield: Name = "Enterprise Account"]
-    Update2[UPDATE: Update Standard Account\nobject: Account\nfilter: Id = {!accountId}\nfield: Name = "Standard Account"]
+    Update1[UPDATE: Update Enterprise Account\nobject: Account\nfilter: Id = ref:accountId\nfield: Name = "Enterprise Account"]
+    Update2[UPDATE: Update Standard Account\nobject: Account\nfilter: Id = ref:accountId\nfield: Name = "Standard Account"]
     End([END: Updated])
 
     Start --> Decision
