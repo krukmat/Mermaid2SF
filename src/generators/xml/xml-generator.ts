@@ -1,4 +1,5 @@
 import { FlowDSL, FlowElement, resolveFlowKind } from '../../types/flow-dsl';
+import { serializeFlowValueXml } from '../../types/flow-value';
 import { ElementGenerator } from './components/element-generator';
 import { HeaderGenerator } from './components/header-generator';
 import { FooterGenerator } from './components/footer-generator';
@@ -18,7 +19,6 @@ export class XMLGenerator {
     const lines: string[] = [];
     const idToApiName = this.buildIdToApiName(dsl.elements);
     const terminalIds = new Set(dsl.elements.filter((element) => element.type === 'End').map((element) => element.id));
-
     const context: XMLGeneratorContext = {
       idToApiName,
       escapeXml: (text) => this.escapeXml(text),
@@ -32,19 +32,13 @@ export class XMLGenerator {
     };
 
     lines.push(...this.headerGenerator.generate(dsl, context.escapeXml));
-
-    const sortedElements = [...dsl.elements].sort((a, b) => {
-      const aName = a.apiName || a.id;
-      const bName = b.apiName || b.id;
-      return aName.localeCompare(bName);
-    });
-
+    const sortedElements = [...dsl.elements].sort((a, b) => (a.apiName || a.id).localeCompare(b.apiName || b.id));
     for (const element of sortedElements) {
       if (element.type === 'Start' || element.type === 'End') continue;
       lines.push(...this.elementGenerator.generate(element, context));
     }
-
     lines.push(...this.generateStartBlock(dsl, context));
+    lines.push(...this.generateVariables(dsl, context));
     lines.push(...this.footerGenerator.generate(dsl));
     return lines.join('\n');
   }
@@ -52,9 +46,7 @@ export class XMLGenerator {
   private generateStartBlock(dsl: FlowDSL, context: XMLGeneratorContext): string[] {
     const lines = ['    <start>', '        <locationX>0</locationX>', '        <locationY>0</locationY>'];
     const startElement = dsl.elements.find((element) => element.id === dsl.startElement);
-    if (startElement && 'next' in startElement && startElement.next) {
-      lines.push(...context.generateConnectorLines(startElement.next, 8));
-    }
+    if (startElement && 'next' in startElement && startElement.next) lines.push(...context.generateConnectorLines(startElement.next, 8));
 
     if (resolveFlowKind(dsl) === 'RecordTriggered' && dsl.trigger) {
       const trigger = dsl.trigger;
@@ -67,7 +59,7 @@ export class XMLGenerator {
         lines.push(`            <field>${context.escapeXml(filter.field)}</field>`);
         lines.push(`            <operator>${filter.operator}</operator>`);
         lines.push('            <value>');
-        lines.push(`                <stringValue>${context.escapeXml(filter.value)}</stringValue>`);
+        lines.push(...serializeFlowValueXml(filter.value, context.escapeXml, 16));
         lines.push('            </value>');
         lines.push('        </filters>');
       }
@@ -75,18 +67,27 @@ export class XMLGenerator {
       lines.push(`        <recordTriggerType>${trigger.recordTriggerType}</recordTriggerType>`);
       lines.push(`        <triggerType>${trigger.triggerType}</triggerType>`);
     }
-
     lines.push('    </start>');
     return lines;
   }
 
+  private generateVariables(dsl: FlowDSL, context: XMLGeneratorContext): string[] {
+    const lines: string[] = [];
+    for (const variable of [...(dsl.variables || [])].sort((a, b) => a.name.localeCompare(b.name))) {
+      lines.push('    <variables>');
+      lines.push(`        <name>${context.escapeXml(variable.name)}</name>`);
+      lines.push(`        <dataType>${context.escapeXml(variable.dataType)}</dataType>`);
+      lines.push(`        <isCollection>${variable.isCollection}</isCollection>`);
+      lines.push(`        <isInput>${variable.isInput}</isInput>`);
+      lines.push(`        <isOutput>${variable.isOutput}</isOutput>`);
+      if (variable.objectType) lines.push(`        <objectType>${context.escapeXml(variable.objectType)}</objectType>`);
+      lines.push('    </variables>');
+    }
+    return lines;
+  }
+
   private escapeXml(text: string): string {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
   }
 
   private buildIdToApiName(elements: FlowElement[]): Map<string, string> {
@@ -95,11 +96,7 @@ export class XMLGenerator {
     return map;
   }
 
-  private resolveTargetReference(
-    targetId: string | undefined,
-    idToApiName: Map<string, string>,
-    terminalIds: Set<string>,
-  ): string | undefined {
+  private resolveTargetReference(targetId: string | undefined, idToApiName: Map<string, string>, terminalIds: Set<string>): string | undefined {
     if (!targetId || terminalIds.has(targetId)) return undefined;
     return idToApiName.get(targetId) || targetId;
   }
@@ -107,10 +104,5 @@ export class XMLGenerator {
 
 export const createXMLGenerator = (): XMLGenerator => {
   const factory = new GeneratorFactory();
-  return new XMLGenerator(
-    factory.createHeaderGenerator(),
-    factory.createElementGenerator(),
-    factory.createConnectorGenerator(),
-    factory.createFooterGenerator(),
-  );
+  return new XMLGenerator(factory.createHeaderGenerator(), factory.createElementGenerator(), factory.createConnectorGenerator(), factory.createFooterGenerator());
 };
