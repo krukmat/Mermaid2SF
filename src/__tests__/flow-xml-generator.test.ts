@@ -3,7 +3,7 @@ import { FlowDSL } from '../types/flow-dsl';
 import { yamlStringify } from '../cli/commands/compile';
 
 describe('FlowXmlGenerator', () => {
-  it('resolves connectors to element API names when IDs differ', () => {
+  it('resolves live connectors to element API names and omits terminal connectors', () => {
     const dsl: FlowDSL = {
       version: 1,
       flowApiName: 'TestFlow',
@@ -25,11 +25,9 @@ describe('FlowXmlGenerator', () => {
       ],
     };
 
-    const generator = new FlowXmlGenerator();
-    const xml = generator.generate(dsl);
-
+    const xml = new FlowXmlGenerator().generate(dsl);
     expect(xml).toContain('<targetReference>Assign_Api</targetReference>');
-    expect(xml).toContain('<targetReference>End_Api</targetReference>');
+    expect(xml).not.toContain('<targetReference>End_Api</targetReference>');
   });
 
   it('generates XML for advanced element options and optional branches', () => {
@@ -66,13 +64,7 @@ describe('FlowXmlGenerator', () => {
           type: 'Screen',
           label: 'Form',
           components: [
-            {
-              type: 'Field',
-              name: 'Name',
-              dataType: 'String',
-              target: '{!varName}',
-              required: true,
-            },
+            { type: 'Field', name: 'Name', dataType: 'String', target: '{!varName}', required: true },
             { type: 'DisplayText', name: 'Msg', text: 'Hello <world>' },
           ],
           next: 'RU1',
@@ -102,14 +94,7 @@ describe('FlowXmlGenerator', () => {
           next: 'L1',
         },
         { id: 'L1', type: 'Loop', collection: 'coll_Items', next: 'W1' },
-        {
-          id: 'W1',
-          type: 'Wait',
-          waitType: 'duration',
-          durationValue: 5,
-          durationUnit: 'Minutes',
-          next: 'G1',
-        },
+        { id: 'W1', type: 'Wait', waitType: 'duration', durationValue: 5, durationUnit: 'Minutes', next: 'G1' },
         {
           id: 'G1',
           type: 'GetRecords',
@@ -126,7 +111,6 @@ describe('FlowXmlGenerator', () => {
     };
 
     const xml = new FlowXmlGenerator().generate(dsl);
-
     expect(xml).toContain('<assignmentItems>');
     expect(xml).toContain('<defaultConnector>');
     expect(xml).toContain('<defaultConnectorLabel>Default</defaultConnectorLabel>');
@@ -153,19 +137,11 @@ describe('FlowXmlGenerator', () => {
       startElement: 'Start',
       elements: [
         { id: 'Start', type: 'Start', next: 'WEvent' },
-        {
-          id: 'WEvent',
-          type: 'Wait',
-          waitType: 'event',
-          eventName: 'Order_Event__e',
-          condition: '{!flag} = true',
-          next: 'WCond',
-        },
+        { id: 'WEvent', type: 'Wait', waitType: 'event', eventName: 'Order_Event__e', condition: '{!flag} = true', next: 'WCond' },
         { id: 'WCond', type: 'Wait', condition: '{!x} > 0', next: 'End' },
         { id: 'End', type: 'End' },
       ],
     };
-
     const xml = new FlowXmlGenerator().generate(dsl);
     expect(xml).toContain('<platformEventName>Order_Event__e</platformEventName>');
     expect(xml).toContain('<conditionLogic>{!flag} = true</conditionLogic>');
@@ -179,12 +155,8 @@ describe('FlowXmlGenerator', () => {
       label: 'Unknown Type Flow',
       processType: 'Autolaunched',
       startElement: 'Start',
-      elements: [
-        { id: 'Start', type: 'Start', next: 'U1' },
-        { id: 'U1', type: 'UnknownType' as any },
-      ] as any,
+      elements: [{ id: 'Start', type: 'Start', next: 'U1' }, { id: 'U1', type: 'UnknownType' as any }] as any,
     };
-
     const xml = new FlowXmlGenerator().generate(dsl);
     expect(xml).toContain('<Flow xmlns="http://soap.sforce.com/2006/04/metadata">');
   });
@@ -193,7 +165,6 @@ describe('FlowXmlGenerator', () => {
 describe('yamlStringify', () => {
   it('emits YAML when yaml format is requested', () => {
     const yaml = yamlStringify({ name: 'Flow', steps: ['one', 'two'] });
-
     expect(yaml.includes('{')).toBe(false);
     expect(yaml).toContain('name: Flow');
     expect(yaml).toContain('- one');
