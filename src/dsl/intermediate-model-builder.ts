@@ -4,6 +4,9 @@ import {
   FlowElement,
   FlowVariable,
   DEFAULT_API_VERSION,
+  DEFAULT_FLOW_STATUS,
+  FlowBuildOptions,
+  FlowKind,
   StartElement,
   EndElement,
   AssignmentElement,
@@ -17,64 +20,56 @@ import {
 import { ExtractedMetadata } from '../types/metadata';
 
 export class IntermediateModelBuilder {
-  /**
-   * Build Flow DSL from Mermaid graph and extracted metadata
-   * @param graph - Parsed Mermaid graph
-   * @param metadataMap - Map of node ID to extracted metadata
-   * @param flowApiName - API name for the Flow
-   * @param flowLabel - Display label for the Flow
-   * @returns Flow DSL
-   */
   build(
     graph: MermaidGraph,
     metadataMap: Map<string, ExtractedMetadata>,
     flowApiName: string,
     flowLabel: string,
+    options: FlowBuildOptions = {},
   ): FlowDSL {
     const elements = this.buildElements(graph, metadataMap);
     const startElement = this.findStartElement(elements);
-    const variables = this.inferVariables(elements);
+    const flowKind = options.flowKind || this.inferFlowKind(elements);
+    const variables = options.variables || this.inferLegacyVariables(elements);
 
     return {
-      version: 1,
+      version: 2,
       flowApiName,
       label: flowLabel,
-      processType: 'Autolaunched',
-      apiVersion: DEFAULT_API_VERSION,
+      flowKind,
+      processType: flowKind,
+      apiVersion: options.apiVersion || DEFAULT_API_VERSION,
+      status: options.status || DEFAULT_FLOW_STATUS,
+      trigger: options.trigger,
       startElement,
       variables: variables.length > 0 ? variables : undefined,
       elements,
     };
   }
 
+  private inferFlowKind(elements: FlowElement[]): FlowKind {
+    return elements.some((element) => element.type === 'Screen') ? 'Screen' : 'Autolaunched';
+  }
+
   private buildElements(
     graph: MermaidGraph,
     metadataMap: Map<string, ExtractedMetadata>,
   ): FlowElement[] {
-    const elements: FlowElement[] = [];
     const edgeMap = this.buildEdgeMap(graph.edges);
-
-    for (const node of graph.nodes) {
+    const elements = graph.nodes.map((node) => {
       const metadata = metadataMap.get(node.id);
-      if (!metadata) {
-        throw new Error(`No metadata found for node: ${node.id}`);
-      }
-
-      const element = this.createElementFromMetadata(node.id, metadata, edgeMap);
-      elements.push(element);
-    }
-
-    // Sort elements by ID for deterministic output
+      if (!metadata) throw new Error(`No metadata found for node: ${node.id}`);
+      return this.createElementFromMetadata(node.id, metadata, edgeMap);
+    });
     return elements.sort((a, b) => a.id.localeCompare(b.id));
   }
 
   private buildEdgeMap(edges: MermaidEdge[]): Map<string, MermaidEdge[]> {
     const map = new Map<string, MermaidEdge[]>();
     for (const edge of edges) {
-      if (!map.has(edge.from)) {
-        map.set(edge.from, []);
-      }
-      map.get(edge.from)!.push(edge);
+      const list = map.get(edge.from) || [];
+      list.push(edge);
+      map.set(edge.from, list);
     }
     return map;
   }
@@ -84,103 +79,50 @@ export class IntermediateModelBuilder {
     metadata: ExtractedMetadata,
     edgeMap: Map<string, MermaidEdge[]>,
   ): FlowElement {
-    const base = {
-      id: nodeId,
-      type: metadata.type,
-      apiName: metadata.apiName,
-      label: metadata.label,
-    };
-
+    const base = { id: nodeId, type: metadata.type, apiName: metadata.apiName, label: metadata.label };
     switch (metadata.type) {
-      case 'Start':
-        return this.createStartElement(base, edgeMap);
-      case 'End':
-        return this.createEndElement(base);
-      case 'Assignment':
-        return this.createAssignmentElement(base, metadata, edgeMap);
-      case 'Decision':
-        return this.createDecisionElement(base, metadata, edgeMap);
-      case 'Screen':
-        return this.createScreenElement(base, metadata, edgeMap);
-      case 'RecordCreate':
-        return this.createRecordCreateElement(base, metadata, edgeMap);
-      case 'RecordUpdate':
-        return this.createRecordUpdateElement(base, metadata, edgeMap);
-      case 'Subflow':
-        return this.createSubflowElement(base, metadata, edgeMap);
-      case 'Loop':
-        return this.createLoopElement(base, metadata, edgeMap);
-      case 'Wait':
-        return this.createWaitElement(base, metadata, edgeMap);
-      case 'GetRecords':
-        return this.createGetRecordsElement(base, metadata, edgeMap);
-      case 'Fault':
-        return this.createFaultElement(base, edgeMap);
-      default:
-        throw new Error(`Unsupported element type: ${metadata.type}`);
+      case 'Start': return this.createStartElement(base, edgeMap);
+      case 'End': return this.createEndElement(base);
+      case 'Assignment': return this.createAssignmentElement(base, metadata, edgeMap);
+      case 'Decision': return this.createDecisionElement(base, edgeMap);
+      case 'Screen': return this.createScreenElement(base, metadata, edgeMap);
+      case 'RecordCreate': return this.createRecordCreateElement(base, metadata, edgeMap);
+      case 'RecordUpdate': return this.createRecordUpdateElement(base, metadata, edgeMap);
+      case 'Subflow': return this.createSubflowElement(base, metadata, edgeMap);
+      case 'Loop': return this.createLoopElement(base, metadata, edgeMap);
+      case 'Wait': return this.createWaitElement(base, metadata, edgeMap);
+      case 'GetRecords': return this.createGetRecordsElement(base, metadata, edgeMap);
+      case 'Fault': return this.createFaultElement(base, edgeMap);
     }
   }
 
   private createStartElement(base: any, edgeMap: Map<string, MermaidEdge[]>): StartElement {
-    const edges = edgeMap.get(base.id) || [];
-    return {
-      ...base,
-      type: 'Start',
-      next: edges[0]?.to,
-    };
+    return { ...base, type: 'Start', next: (edgeMap.get(base.id) || [])[0]?.to };
   }
 
   private createEndElement(base: any): EndElement {
-    return {
-      ...base,
-      type: 'End',
-    };
+    return { ...base, type: 'End' };
   }
 
-  private createAssignmentElement(
-    base: any,
-    metadata: ExtractedMetadata,
-    edgeMap: Map<string, MermaidEdge[]>,
-  ): AssignmentElement {
-    const edges = edgeMap.get(base.id) || [];
-    return {
-      ...base,
-      type: 'Assignment',
-      assignments: metadata.properties.assignments || [],
-      next: edges[0]?.to,
-    };
+  private createAssignmentElement(base: any, metadata: ExtractedMetadata, edgeMap: Map<string, MermaidEdge[]>): AssignmentElement {
+    return { ...base, type: 'Assignment', assignments: metadata.properties.assignments || [], next: (edgeMap.get(base.id) || [])[0]?.to };
   }
 
-  private createDecisionElement(
-    base: any,
-    metadata: ExtractedMetadata,
-    edgeMap: Map<string, MermaidEdge[]>,
-  ): DecisionElement {
-    const edges = edgeMap.get(base.id) || [];
-    const outcomes = this.buildOutcomes(edges);
-
-    return {
-      ...base,
-      type: 'Decision',
-      outcomes,
-    };
+  private createDecisionElement(base: any, edgeMap: Map<string, MermaidEdge[]>): DecisionElement {
+    return { ...base, type: 'Decision', outcomes: this.buildOutcomes(edgeMap.get(base.id) || []) };
   }
 
   private buildOutcomes(edges: MermaidEdge[]): DecisionOutcome[] {
-    const outcomes: DecisionOutcome[] = [];
-
-    for (const edge of edges) {
-      const isDefault = edge.label?.toLowerCase().includes('default') || false;
-
-      outcomes.push({
-        name: edge.label || 'Outcome',
-        condition: isDefault ? undefined : edge.label,
+    const outcomes = edges.map((edge) => {
+      const rawLabel = edge.label?.trim() || 'Outcome';
+      const isDefault = rawLabel.toLowerCase().includes('default');
+      return {
+        name: rawLabel,
+        condition: isDefault ? undefined : rawLabel,
         isDefault,
         next: edge.to,
-      });
-    }
-
-    // Sort outcomes: non-default alphabetically, default last
+      };
+    });
     return outcomes.sort((a, b) => {
       if (a.isDefault && !b.isDefault) return 1;
       if (!a.isDefault && b.isDefault) return -1;
@@ -189,165 +131,56 @@ export class IntermediateModelBuilder {
   }
 
   private findStartElement(elements: FlowElement[]): string {
-    const startElement = elements.find((el) => el.type === 'Start');
-    return startElement ? startElement.id : '';
+    return elements.find((element) => element.type === 'Start')?.id || '';
   }
 
-  private inferVariables(elements: FlowElement[]): FlowVariable[] {
-    const variableSet = new Set<string>();
-
-    // Collect variables from Assignments
+  /**
+   * Compatibility only: v1 Mermaid has no resource declaration syntax. We no
+   * longer guess Boolean/Number from names; implicit resources default to String.
+   */
+  private inferLegacyVariables(elements: FlowElement[]): FlowVariable[] {
+    const names = new Set<string>();
     for (const element of elements) {
-      if (element.type === 'Assignment') {
-        for (const assignment of element.assignments) {
-          variableSet.add(assignment.variable);
-        }
+      if (element.type !== 'Assignment') continue;
+      for (const assignment of element.assignments) {
+        if (/^[A-Za-z][A-Za-z0-9_]*$/.test(assignment.variable)) names.add(assignment.variable);
       }
     }
-
-    // Convert to FlowVariable array
-    const variables: FlowVariable[] = Array.from(variableSet).map((name) => ({
-      name,
-      dataType: this.inferDataType(name),
-      isCollection: false,
-      isInput: false,
-      isOutput: false,
-    }));
-
-    // Sort variables alphabetically for determinism
-    return variables.sort((a, b) => a.name.localeCompare(b.name));
+    return Array.from(names)
+      .sort()
+      .map((name) => ({ name, dataType: 'String', isCollection: false, isInput: false, isOutput: false }));
   }
 
-  private inferDataType(variableName: string): string {
-    // Simple heuristic: v_Flag -> Boolean, v_Count -> Number, etc.
-    if (variableName.toLowerCase().includes('flag')) return 'Boolean';
-    if (variableName.toLowerCase().includes('count')) return 'Number';
-    return 'String';
+  private createScreenElement(base: any, metadata: ExtractedMetadata, edgeMap: Map<string, MermaidEdge[]>): ScreenElement {
+    return { ...base, type: 'Screen', components: metadata.properties.components || [], next: (edgeMap.get(base.id) || [])[0]?.to };
   }
 
-  private createScreenElement(
-    base: any,
-    metadata: ExtractedMetadata,
-    edgeMap: Map<string, MermaidEdge[]>,
-  ): ScreenElement {
-    const edges = edgeMap.get(base.id) || [];
-    return {
-      ...base,
-      type: 'Screen',
-      components: metadata.properties.components || [],
-      next: edges[0]?.to,
-    };
+  private createRecordCreateElement(base: any, metadata: ExtractedMetadata, edgeMap: Map<string, MermaidEdge[]>): RecordCreateElement {
+    return { ...base, type: 'RecordCreate', object: metadata.properties.object || '', fields: metadata.properties.fields || {}, next: (edgeMap.get(base.id) || [])[0]?.to };
   }
 
-  private createRecordCreateElement(
-    base: any,
-    metadata: ExtractedMetadata,
-    edgeMap: Map<string, MermaidEdge[]>,
-  ): RecordCreateElement {
-    const edges = edgeMap.get(base.id) || [];
-    return {
-      ...base,
-      type: 'RecordCreate',
-      object: metadata.properties.object || '',
-      fields: metadata.properties.fields || {},
-      next: edges[0]?.to,
-    };
+  private createRecordUpdateElement(base: any, metadata: ExtractedMetadata, edgeMap: Map<string, MermaidEdge[]>): RecordUpdateElement {
+    return { ...base, type: 'RecordUpdate', object: metadata.properties.object || '', fields: metadata.properties.fields || {}, filters: metadata.properties.filters || [], next: (edgeMap.get(base.id) || [])[0]?.to };
   }
 
-  private createRecordUpdateElement(
-    base: any,
-    metadata: ExtractedMetadata,
-    edgeMap: Map<string, MermaidEdge[]>,
-  ): RecordUpdateElement {
-    const edges = edgeMap.get(base.id) || [];
-    return {
-      ...base,
-      type: 'RecordUpdate',
-      object: metadata.properties.object || '',
-      fields: metadata.properties.fields || {},
-      filters: metadata.properties.filters || [],
-      next: edges[0]?.to,
-    };
+  private createSubflowElement(base: any, metadata: ExtractedMetadata, edgeMap: Map<string, MermaidEdge[]>): SubflowElement {
+    return { ...base, type: 'Subflow', flowName: metadata.properties.flowName || '', inputAssignments: metadata.properties.inputAssignments || [], outputAssignments: metadata.properties.outputAssignments || [], next: (edgeMap.get(base.id) || [])[0]?.to };
   }
 
-  private createSubflowElement(
-    base: any,
-    metadata: ExtractedMetadata,
-    edgeMap: Map<string, MermaidEdge[]>,
-  ): SubflowElement {
-    const edges = edgeMap.get(base.id) || [];
-    return {
-      ...base,
-      type: 'Subflow',
-      flowName: metadata.properties.flowName || '',
-      inputAssignments: metadata.properties.inputAssignments || [],
-      outputAssignments: metadata.properties.outputAssignments || [],
-      next: edges[0]?.to,
-    };
+  private createLoopElement(base: any, metadata: ExtractedMetadata, edgeMap: Map<string, MermaidEdge[]>) {
+    return { ...base, type: 'Loop' as const, collection: metadata.properties.collection || '', next: (edgeMap.get(base.id) || [])[0]?.to };
   }
 
-  private createLoopElement(
-    base: any,
-    metadata: ExtractedMetadata,
-    edgeMap: Map<string, MermaidEdge[]>,
-  ) {
-    const edges = edgeMap.get(base.id) || [];
-    return {
-      ...base,
-      type: 'Loop',
-      collection: metadata.properties.collection || '',
-      next: edges[0]?.to,
-    };
+  private createWaitElement(base: any, metadata: ExtractedMetadata, edgeMap: Map<string, MermaidEdge[]>) {
+    const waitType = metadata.properties.waitType || (metadata.properties.eventName ? 'event' : metadata.properties.durationValue ? 'duration' : 'condition');
+    return { ...base, type: 'Wait' as const, waitType, condition: metadata.properties.condition, durationValue: metadata.properties.durationValue, durationUnit: metadata.properties.durationUnit, eventName: metadata.properties.eventName, next: (edgeMap.get(base.id) || [])[0]?.to };
   }
 
-  private createWaitElement(
-    base: any,
-    metadata: ExtractedMetadata,
-    edgeMap: Map<string, MermaidEdge[]>,
-  ) {
-    const edges = edgeMap.get(base.id) || [];
-    const waitType =
-      (metadata.properties.waitType as any) ||
-      (metadata.properties.eventName ? 'event' : undefined) ||
-      (metadata.properties.durationValue ? 'duration' : undefined) ||
-      (metadata.properties.condition ? 'condition' : undefined) ||
-      'condition';
-    return {
-      ...base,
-      type: 'Wait',
-      waitType,
-      condition: metadata.properties.condition,
-      durationValue: metadata.properties.durationValue,
-      durationUnit: metadata.properties.durationUnit,
-      eventName: metadata.properties.eventName,
-      next: edges[0]?.to,
-    };
-  }
-
-  private createGetRecordsElement(
-    base: any,
-    metadata: ExtractedMetadata,
-    edgeMap: Map<string, MermaidEdge[]>,
-  ) {
-    const edges = edgeMap.get(base.id) || [];
-    return {
-      ...base,
-      type: 'GetRecords',
-      object: metadata.properties.object || '',
-      filters: metadata.properties.filters || [],
-      fields: metadata.properties.fields || [],
-      sortField: metadata.properties.sortField,
-      sortDirection: metadata.properties.sortDirection,
-      next: edges[0]?.to,
-    };
+  private createGetRecordsElement(base: any, metadata: ExtractedMetadata, edgeMap: Map<string, MermaidEdge[]>) {
+    return { ...base, type: 'GetRecords' as const, object: metadata.properties.object || '', filters: metadata.properties.filters || [], fields: metadata.properties.fields || [], sortField: metadata.properties.sortField, sortDirection: metadata.properties.sortDirection, next: (edgeMap.get(base.id) || [])[0]?.to };
   }
 
   private createFaultElement(base: any, edgeMap: Map<string, MermaidEdge[]>) {
-    const edges = edgeMap.get(base.id) || [];
-    return {
-      ...base,
-      type: 'Fault',
-      next: edges[0]?.to,
-    };
+    return { ...base, type: 'Fault' as const, next: (edgeMap.get(base.id) || [])[0]?.to };
   }
 }
