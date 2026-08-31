@@ -1,4 +1,4 @@
-import { FlowDSL, FlowElement } from '../../types/flow-dsl';
+import { FlowDSL, FlowElement, resolveFlowKind } from '../../types/flow-dsl';
 import { ElementGenerator } from './components/element-generator';
 import { HeaderGenerator } from './components/header-generator';
 import { FooterGenerator } from './components/footer-generator';
@@ -17,14 +17,15 @@ export class XMLGenerator {
   generate(dsl: FlowDSL): string {
     const lines: string[] = [];
     const idToApiName = this.buildIdToApiName(dsl.elements);
+    const terminalIds = new Set(dsl.elements.filter((element) => element.type === 'End').map((element) => element.id));
 
     const context: XMLGeneratorContext = {
       idToApiName,
       escapeXml: (text) => this.escapeXml(text),
-      resolveTargetReference: (targetId) => this.resolveTargetReference(targetId, idToApiName),
+      resolveTargetReference: (targetId) => this.resolveTargetReference(targetId, idToApiName, terminalIds),
       generateConnectorLines: (targetId, indentLevel, tagName) =>
         this.connectorGenerator.generateConnectorLines(
-          this.resolveTargetReference(targetId, idToApiName),
+          this.resolveTargetReference(targetId, idToApiName, terminalIds),
           indentLevel,
           tagName,
         ),
@@ -39,30 +40,43 @@ export class XMLGenerator {
     });
 
     for (const element of sortedElements) {
-      if (element.type === 'Start' || element.type === 'End') {
-        continue;
-      }
+      if (element.type === 'Start' || element.type === 'End') continue;
       lines.push(...this.elementGenerator.generate(element, context));
     }
 
     lines.push(...this.generateStartBlock(dsl, context));
-    lines.push(...this.footerGenerator.generate());
-
+    lines.push(...this.footerGenerator.generate(dsl));
     return lines.join('\n');
   }
 
   private generateStartBlock(dsl: FlowDSL, context: XMLGeneratorContext): string[] {
-    const lines: string[] = [];
-    lines.push(`    <start>`);
-    lines.push(`        <locationX>0</locationX>`);
-    lines.push(`        <locationY>0</locationY>`);
-
-    const startElement = dsl.elements.find((e) => e.id === dsl.startElement);
+    const lines = ['    <start>', '        <locationX>0</locationX>', '        <locationY>0</locationY>'];
+    const startElement = dsl.elements.find((element) => element.id === dsl.startElement);
     if (startElement && 'next' in startElement && startElement.next) {
       lines.push(...context.generateConnectorLines(startElement.next, 8));
     }
 
-    lines.push(`    </start>`);
+    if (resolveFlowKind(dsl) === 'RecordTriggered' && dsl.trigger) {
+      const trigger = dsl.trigger;
+      if (trigger.doesRequireRecordChangedToMeetCriteria !== undefined) {
+        lines.push(`        <doesRequireRecordChangedToMeetCriteria>${trigger.doesRequireRecordChangedToMeetCriteria}</doesRequireRecordChangedToMeetCriteria>`);
+      }
+      if (trigger.filterLogic) lines.push(`        <filterLogic>${context.escapeXml(trigger.filterLogic)}</filterLogic>`);
+      for (const filter of trigger.filters || []) {
+        lines.push('        <filters>');
+        lines.push(`            <field>${context.escapeXml(filter.field)}</field>`);
+        lines.push(`            <operator>${filter.operator}</operator>`);
+        lines.push('            <value>');
+        lines.push(`                <stringValue>${context.escapeXml(filter.value)}</stringValue>`);
+        lines.push('            </value>');
+        lines.push('        </filters>');
+      }
+      lines.push(`        <object>${context.escapeXml(trigger.object)}</object>`);
+      lines.push(`        <recordTriggerType>${trigger.recordTriggerType}</recordTriggerType>`);
+      lines.push(`        <triggerType>${trigger.triggerType}</triggerType>`);
+    }
+
+    lines.push('    </start>');
     return lines;
   }
 
@@ -77,17 +91,16 @@ export class XMLGenerator {
 
   private buildIdToApiName(elements: FlowElement[]): Map<string, string> {
     const map = new Map<string, string>();
-    for (const element of elements) {
-      map.set(element.id, element.apiName || element.id);
-    }
+    for (const element of elements) map.set(element.id, element.apiName || element.id);
     return map;
   }
 
   private resolveTargetReference(
     targetId: string | undefined,
     idToApiName: Map<string, string>,
+    terminalIds: Set<string>,
   ): string | undefined {
-    if (!targetId) return targetId;
+    if (!targetId || terminalIds.has(targetId)) return undefined;
     return idToApiName.get(targetId) || targetId;
   }
 }
