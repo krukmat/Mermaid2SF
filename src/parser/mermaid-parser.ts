@@ -35,7 +35,6 @@ export class MermaidParser {
   }
 
   private preprocessText(text: string): string[] {
-    // Remove comments, trim lines, filter empty
     return text
       .split('\n')
       .map((line) => line.trim())
@@ -55,42 +54,50 @@ export class MermaidParser {
     const nodeMap = new Map<string, MermaidNode>();
 
     for (const line of lines) {
-      // Match node definitions: ID[Label], ID([Label]), ID{Label}, etc.
-      // Handle multi-line labels by collecting consecutive lines
-      // eslint-disable-next-line no-useless-escape
-      const nodeRegex = /(\w+)([\[\(\{]+)([^\]\)\}]+)([\]\)\}]+)/g;
-      let match;
-
-      while ((match = nodeRegex.exec(line)) !== null) {
-        const [, id, openBracket, label, closeBracket] = match;
-        const shape = this.detectShape(openBracket, closeBracket);
-
+      // Canonical Mermaid2SF output emits one complete node per line. Parse that
+      // form first so metadata escaped inside a label cannot confuse the legacy
+      // permissive matcher.
+      const canonical = line.match(/^(\w+)(\(\[|\[\[|\[|\{)(.*)(\]\)|\]\]|\]|\})$/);
+      if (canonical) {
+        const [, id, openBracket, label, closeBracket] = canonical;
         if (!nodeMap.has(id)) {
           nodeMap.set(id, {
             id,
             label: label.trim(),
-            shape,
+            shape: this.detectShape(openBracket, closeBracket),
+          });
+        }
+        continue;
+      }
+
+      // Compatibility path for older Mermaid where multiple declarations may
+      // appear on a line.
+      // eslint-disable-next-line no-useless-escape
+      const nodeRegex = /(\w+)([\[\(\{]+)([^\]\)\}]+)([\]\)\}]+)/g;
+      let match;
+      while ((match = nodeRegex.exec(line)) !== null) {
+        const [, id, openBracket, label, closeBracket] = match;
+        if (!nodeMap.has(id)) {
+          nodeMap.set(id, {
+            id,
+            label: label.trim(),
+            shape: this.detectShape(openBracket, closeBracket),
           });
         }
       }
     }
 
-    // Sort nodes by ID for deterministic output
     return Array.from(nodeMap.values()).sort((a, b) => a.id.localeCompare(b.id));
   }
 
   private detectShape(open: string, close: string): NodeShape {
     const combined = open + close;
-
-    // Handle different bracket combinations
     if (combined === '([])') return 'round';
     if (combined === '[]') return 'square';
     if (combined === '{}') return 'diamond';
     if (combined === '[[]]') return 'subroutine';
     if (combined === '[()]') return 'cylinder';
     if (combined === '(())') return 'circle';
-
-    // Default to square
     return 'square';
   }
 
@@ -98,13 +105,11 @@ export class MermaidParser {
     const edges: MermaidEdge[] = [];
 
     for (const line of lines) {
-      // Match edges: A --> B, A -->|Label| B, etc.
       const edgeRegex = /(\w+)\s*(-->|\.\.>|==>)\s*(?:\|([^|]+)\|)?\s*(\w+)/g;
       let match;
 
       while ((match = edgeRegex.exec(line)) !== null) {
         const [, from, arrowType, label, to] = match;
-
         edges.push({
           from,
           to,
@@ -114,7 +119,6 @@ export class MermaidParser {
       }
     }
 
-    // Sort edges for deterministic output (by from, then to)
     return edges.sort((a, b) => {
       if (a.from !== b.from) return a.from.localeCompare(b.from);
       return a.to.localeCompare(b.to);
