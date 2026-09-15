@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import * as path from 'path';
 import * as fs from 'fs';
 import { parseFlowXml } from '../../reverse/xml-parser';
-import { DocsGenerator } from '../../generators/docs-generator';
+import { MermaidGenerator } from '../../generators/mermaid-generator';
 import { logger } from '../../utils/logger';
 
 export const decompileCommand = new Command('decompile')
@@ -27,8 +27,7 @@ async function runDecompile(options: any) {
   }
 
   const dsl = parseFlowXml(inputPath);
-  const generator = new DocsGenerator();
-  const mermaid = generator.generateMermaidDiagram(dsl);
+  const mermaid = new MermaidGenerator().generate(dsl);
 
   const outputs: string[] = [];
   if (options.outJson) {
