@@ -84,12 +84,18 @@ export class IntermediateModelBuilder {
   }
 
   private createElementFromMetadata(nodeId: string, metadata: ExtractedMetadata, edgeMap: Map<string, MermaidEdge[]>): FlowElement {
-    const base = { id: nodeId, type: metadata.type, apiName: metadata.apiName, label: metadata.label };
+    const base = {
+      id: nodeId,
+      type: metadata.type,
+      apiName: metadata.apiName,
+      label: metadata.label,
+      layout: metadata.properties.layout,
+    };
     switch (metadata.type) {
       case 'Start': return this.createStartElement(base, edgeMap);
       case 'End': return this.createEndElement(base);
       case 'Assignment': return this.createAssignmentElement(base, metadata, edgeMap);
-      case 'Decision': return this.createDecisionElement(base, edgeMap);
+      case 'Decision': return this.createDecisionElement(base, metadata, edgeMap);
       case 'Screen': return this.createScreenElement(base, metadata, edgeMap);
       case 'RecordCreate': return this.createRecordCreateElement(base, metadata, edgeMap);
       case 'RecordUpdate': return this.createRecordUpdateElement(base, metadata, edgeMap);
@@ -115,8 +121,13 @@ export class IntermediateModelBuilder {
     return { ...base, type: 'Assignment', assignments, next: (edgeMap.get(base.id) || [])[0]?.to };
   }
 
-  private createDecisionElement(base: any, edgeMap: Map<string, MermaidEdge[]>): DecisionElement {
-    return { ...base, type: 'Decision', outcomes: this.buildOutcomes(edgeMap.get(base.id) || []) };
+  private createDecisionElement(base: any, metadata: ExtractedMetadata, edgeMap: Map<string, MermaidEdge[]>): DecisionElement {
+    return {
+      ...base,
+      type: 'Decision',
+      outcomes: this.buildOutcomes(edgeMap.get(base.id) || []),
+      conditionLogic: metadata.properties.conditionLogic,
+    };
   }
 
   private buildOutcomes(edges: MermaidEdge[]): DecisionOutcome[] {
@@ -189,7 +200,15 @@ export class IntermediateModelBuilder {
   }
 
   private createRecordUpdateElement(base: any, metadata: ExtractedMetadata, edgeMap: Map<string, MermaidEdge[]>): RecordUpdateElement {
-    return { ...base, type: 'RecordUpdate', object: metadata.properties.object || '', fields: this.normalizeFields(metadata.properties.fields || {}), filters: this.normalizeFilters(metadata.properties.filters || []), next: (edgeMap.get(base.id) || [])[0]?.to };
+    return {
+      ...base,
+      type: 'RecordUpdate',
+      object: metadata.properties.object || '',
+      fields: this.normalizeFields(metadata.properties.fields || {}),
+      filters: this.normalizeFilters(metadata.properties.filters || []),
+      filterLogic: metadata.properties.filterLogic,
+      next: (edgeMap.get(base.id) || [])[0]?.to,
+    };
   }
 
   private createSubflowElement(base: any, metadata: ExtractedMetadata, edgeMap: Map<string, MermaidEdge[]>): SubflowElement {
