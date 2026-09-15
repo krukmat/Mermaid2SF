@@ -17,22 +17,66 @@ import {
 export class MermaidGenerator {
   generate(dsl: FlowDSL): string {
     const lines: string[] = ['flowchart TD'];
+    const elements = this.orderElements(dsl);
 
-    for (const element of dsl.elements) {
+    for (const element of elements) {
       lines.push(this.renderNode(element, dsl));
     }
 
     lines.push('');
-    for (const element of dsl.elements) {
+    for (const element of elements) {
       lines.push(...this.renderEdges(element));
+    }
+
+    const styles = this.generateStyleDefinitions(elements);
+    if (styles.length > 0) {
+      lines.push('');
+      lines.push(...styles);
     }
 
     return lines.filter(Boolean).join('\n');
   }
 
+  private orderElements(dsl: FlowDSL): FlowElement[] {
+    const map = new Map(dsl.elements.map((element) => [element.id, element]));
+    const ordered: FlowElement[] = [];
+    const visited = new Set<string>();
+    const queue: string[] = dsl.startElement ? [dsl.startElement] : [];
+
+    while (queue.length > 0) {
+      const id = queue.shift()!;
+      if (visited.has(id)) continue;
+      const element = map.get(id);
+      if (!element) continue;
+      visited.add(id);
+      ordered.push(element);
+      for (const next of this.collectAdjacencies(element)) {
+        if (!visited.has(next) && !queue.includes(next)) queue.push(next);
+      }
+    }
+
+    dsl.elements
+      .filter((element) => !visited.has(element.id))
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .forEach((element) => ordered.push(element));
+
+    return ordered;
+  }
+
+  private collectAdjacencies(element: FlowElement): string[] {
+    const result: string[] = [];
+    if ('next' in element && element.next) result.push(element.next);
+    if (element.type === 'Decision') {
+      for (const outcome of element.outcomes) result.push(outcome.next);
+    }
+    return result;
+  }
+
   private renderNode(element: FlowElement, dsl: FlowDSL): string {
     const shape = this.getShape(element.type);
-    const content = this.renderContent(element, dsl).join('\\n');
+    const content = this.renderContent(element, dsl)
+      .map((line) => this.escapeLabel(line))
+      .join('\\n');
     return `    ${element.id}${shape.open}${content}${shape.close}`;
   }
 
@@ -67,6 +111,7 @@ export class MermaidGenerator {
         }
         break;
       case 'Decision':
+        if (element.conditionLogic) lines.push(`conditionLogic: ${element.conditionLogic}`);
         break;
       case 'Screen':
         for (const component of element.components) {
@@ -91,20 +136,20 @@ export class MermaidGenerator {
         }
         break;
       case 'RecordUpdate':
-        if (element.filterLogic) {
-          throw new Error(
-            `RecordUpdate ${element.id} uses filterLogic that is not round-trip safe in Mermaid Wave 1.`,
-          );
-        }
         lines.push(`object: ${element.object}`);
-        for (const filter of element.filters || []) lines.push(this.renderFilter(filter.field, filter.operator, filter.value, element.id));
+        if (element.filterLogic) lines.push(`filterLogic: ${element.filterLogic}`);
+        for (const filter of element.filters || []) {
+          lines.push(this.renderFilter(filter.field, filter.operator, filter.value, element.id));
+        }
         for (const field of Object.keys(element.fields).sort()) {
           lines.push(`field: ${field} = ${this.renderValue(element.fields[field])}`);
         }
         break;
       case 'GetRecords':
         lines.push(`object: ${element.object}`);
-        for (const filter of element.filters || []) lines.push(this.renderFilter(filter.field, filter.operator, filter.value, element.id));
+        for (const filter of element.filters || []) {
+          lines.push(this.renderFilter(filter.field, filter.operator, filter.value, element.id));
+        }
         for (const field of [...(element.fields || [])].sort()) lines.push(`field: ${field}`);
         if (element.sortField) {
           lines.push(`sort: ${element.sortField} ${element.sortDirection === 'Descending' ? 'desc' : 'asc'}`);
@@ -136,13 +181,14 @@ export class MermaidGenerator {
         break;
     }
 
+    if (element.layout) lines.push(`layout: pos: ${element.layout.x},${element.layout.y}`);
     return lines;
   }
 
   private renderEdges(element: FlowElement): string[] {
     if (element.type === 'Decision') {
       return element.outcomes.map((outcome) => {
-        if (outcome.isDefault) return `    ${element.id} -->|${outcome.name} default| ${outcome.next}`;
+        if (outcome.isDefault) return `    ${element.id} -->|${this.escapeEdgeLabel(`${outcome.name} default`)}| ${outcome.next}`;
 
         const conditions = outcome.conditions || [];
         if (conditions.length > 1) {
@@ -155,7 +201,7 @@ export class MermaidGenerator {
           ? this.renderCondition(conditions[0])
           : outcome.condition;
         const label = expression ? `${outcome.name} if ${expression}` : outcome.name;
-        return `    ${element.id} -->|${label}| ${outcome.next}`;
+        return `    ${element.id} -->|${this.escapeEdgeLabel(label)}| ${outcome.next}`;
       });
     }
 
@@ -204,6 +250,48 @@ export class MermaidGenerator {
         return ambiguous ? JSON.stringify(normalized.value) : normalized.value;
       }
     }
+  }
+
+  private generateStyleDefinitions(elements: FlowElement[]): string[] {
+    const classMap: Record<string, string> = {
+      Start: 'start', End: 'end', Assignment: 'assignment', Decision: 'decision', Screen: 'screen',
+      RecordCreate: 'recordCreate', RecordUpdate: 'recordUpdate', GetRecords: 'getRecords', Subflow: 'subflow',
+      Loop: 'loop', Wait: 'wait', Fault: 'fault',
+    };
+    const lines = [
+      'classDef start fill:#e8f5ff,stroke:#66e0ff,stroke-width:2;',
+      'classDef end fill:#ffe6e6,stroke:#ff758c,stroke-width:2;',
+      'classDef decision fill:#fff5e0,stroke:#f5a524,stroke-width:2;',
+      'classDef assignment fill:#f1ffed,stroke:#14d88e,stroke-width:2;',
+      'classDef screen fill:#eef4ff,stroke:#2b7fff,stroke-width:2;',
+      'classDef recordCreate fill:#e6f4ff,stroke:#1e88e5,stroke-width:2;',
+      'classDef recordUpdate fill:#fff4e5,stroke:#f57c00,stroke-width:2;',
+      'classDef getRecords fill:#f5f5ff,stroke:#3949ab,stroke-width:2;',
+      'classDef subflow fill:#f0f0f0,stroke:#8e57ff,stroke-width:2;',
+      'classDef loop fill:#f6f6ff,stroke:#4b0082,stroke-width:2;',
+      'classDef wait fill:#eaf7ff,stroke:#00acc1,stroke-width:2;',
+      'classDef fault fill:#ffe0e0,stroke:#d50000,stroke-width:2;',
+    ];
+    for (const element of elements) {
+      const className = classMap[element.type];
+      if (className) lines.push(`    class ${element.id} ${className};`);
+    }
+    return lines;
+  }
+
+  private escapeLabel(text: string): string {
+    return text
+      .replace(/"/g, '#quot;')
+      .replace(/\[/g, '#91;')
+      .replace(/]/g, '#93;')
+      .replace(/\{/g, '#123;')
+      .replace(/\}/g, '#125;')
+      .replace(/\(/g, '#40;')
+      .replace(/\)/g, '#41;');
+  }
+
+  private escapeEdgeLabel(text: string): string {
+    return text.replace(/\|/g, '&#124;');
   }
 
   private getShape(type: string): { open: string; close: string } {
