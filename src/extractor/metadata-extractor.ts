@@ -11,8 +11,23 @@ export class MetadataExtractor {
     return { type, apiName, label, properties };
   }
 
+  private decodeMermaidText(value: string): string {
+    return value
+      .replace(/#quot;/g, '"')
+      .replace(/#91;/g, '[')
+      .replace(/#93;/g, ']')
+      .replace(/#123;/g, '{')
+      .replace(/#125;/g, '}')
+      .replace(/#40;/g, '(')
+      .replace(/#41;/g, ')')
+      .replace(/&#124;/g, '|');
+  }
+
   private lines(label: string): string[] {
-    return label.replace(/\\n/g, '\n').split('\n').map((line) => line.trim());
+    return label
+      .replace(/\\n/g, '\n')
+      .split('\n')
+      .map((line) => this.decodeMermaidText(line.trim()));
   }
 
   private extractType(label: string): ElementType {
@@ -33,7 +48,7 @@ export class MetadataExtractor {
   }
 
   private extractApiName(label: string, nodeId: string): string {
-    const apiMatch = label.match(/api:\s*(\w+)/i);
+    const apiMatch = this.lines(label).join('\n').match(/api:\s*(\w+)/i);
     if (apiMatch) return apiMatch[1];
     const displayLabel = this.extractLabel(label);
     const cleaned = displayLabel.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
@@ -51,19 +66,31 @@ export class MetadataExtractor {
   }
 
   private extractProperties(label: string, type: ElementType): Record<string, any> {
+    let properties: Record<string, any>;
     switch (type) {
-      case 'Start': return this.extractStartProperties(label);
-      case 'Assignment': return this.extractAssignmentProperties(label);
-      case 'Decision': return this.extractDecisionProperties(label);
-      case 'Screen': return this.extractScreenProperties(label);
-      case 'RecordCreate': return this.extractRecordCreateProperties(label);
-      case 'RecordUpdate': return this.extractRecordUpdateProperties(label);
-      case 'Subflow': return this.extractSubflowProperties(label);
-      case 'Loop': return this.extractLoopProperties(label);
-      case 'Wait': return this.extractWaitProperties(label);
-      case 'GetRecords': return this.extractGetRecordsProperties(label);
-      default: return {};
+      case 'Start': properties = this.extractStartProperties(label); break;
+      case 'Assignment': properties = this.extractAssignmentProperties(label); break;
+      case 'Decision': properties = this.extractDecisionProperties(label); break;
+      case 'Screen': properties = this.extractScreenProperties(label); break;
+      case 'RecordCreate': properties = this.extractRecordCreateProperties(label); break;
+      case 'RecordUpdate': properties = this.extractRecordUpdateProperties(label); break;
+      case 'Subflow': properties = this.extractSubflowProperties(label); break;
+      case 'Loop': properties = this.extractLoopProperties(label); break;
+      case 'Wait': properties = this.extractWaitProperties(label); break;
+      case 'GetRecords': properties = this.extractGetRecordsProperties(label); break;
+      default: properties = {};
     }
+
+    const layout = this.extractLayout(label);
+    return layout ? { ...properties, layout } : properties;
+  }
+
+  private extractLayout(label: string): { x: number; y: number } | undefined {
+    for (const line of this.lines(label)) {
+      const match = line.match(/^layout:\s*pos:\s*(-?\d+)\s*,\s*(-?\d+)$/i);
+      if (match) return { x: Number(match[1]), y: Number(match[2]) };
+    }
+    return undefined;
   }
 
   private extractStartProperties(label: string): Record<string, any> {
@@ -136,11 +163,14 @@ export class MetadataExtractor {
 
   private extractDecisionProperties(label: string): Record<string, any> {
     const conditions: string[] = [];
+    let conditionLogic: string | undefined;
     for (const line of this.lines(label)) {
       const match = line.match(/condition:\s*(.+)/i);
       if (match) conditions.push(match[1].trim());
+      const logic = line.match(/^conditionLogic:\s*(.+)$/i);
+      if (logic) conditionLogic = logic[1].trim();
     }
-    return { conditions };
+    return { conditions, conditionLogic };
   }
 
   private extractScreenProperties(label: string): Record<string, any> {
@@ -182,17 +212,20 @@ export class MetadataExtractor {
     const fields: Record<string, string> = {};
     const filters: any[] = [];
     let object = '';
+    let filterLogic: string | undefined;
     for (const line of this.lines(label)) {
       const objectMatch = line.match(/object:\s*(\w+)/i);
       if (objectMatch) { object = objectMatch[1]; continue; }
       const field = line.match(/field:\s*([A-Za-z0-9_.]+)\s*=\s*(.+)/i);
       if (field) { fields[field[1]] = field[2].trim(); continue; }
       if (includeFilters) {
+        const logic = line.match(/^filterLogic:\s*(.+)$/i);
+        if (logic) { filterLogic = logic[1].trim(); continue; }
         const filter = line.match(/filter:\s*([A-Za-z0-9_.]+)\s*=\s*(.+)/i);
         if (filter) filters.push({ field: filter[1], operator: 'EqualTo', value: filter[2].trim() });
       }
     }
-    return includeFilters ? { object, fields, filters } : { object, fields };
+    return includeFilters ? { object, fields, filters, filterLogic } : { object, fields };
   }
 
   private extractSubflowProperties(label: string): Record<string, any> {
