@@ -2,8 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { IntermediateModelBuilder } from '../dsl/intermediate-model-builder';
 import { MetadataExtractor } from '../extractor/metadata-extractor';
-import { DocsGenerator } from '../generators/docs-generator';
 import { FlowXmlGenerator } from '../generators/flow-xml-generator';
+import { MermaidGenerator } from '../generators/mermaid-generator';
 import { MermaidParser } from '../parser/mermaid-parser';
 import { parseFlowXmlText } from '../reverse/xml-parser';
 import { FlowDSL } from '../types/flow-dsl';
@@ -14,9 +14,14 @@ const fixtureDir = path.join(
   __dirname,
   '../../test/salesforce-project/force-app/main/default/flows',
 );
+const waveFixtureDir = path.join(__dirname, '../../test/fixtures');
 
 function fixture(name: string): string {
   return fs.readFileSync(path.join(fixtureDir, `${name}.flow-meta.xml`), 'utf-8');
+}
+
+function waveFixture(name: string): string {
+  return fs.readFileSync(path.join(waveFixtureDir, `${name}.flow-meta.xml`), 'utf-8');
 }
 
 function parseMermaidToFlowIr(mermaid: string, flowApiName: string, flowLabel: string): FlowDSL {
@@ -105,6 +110,7 @@ const cases: Array<[string, FlowDSL]> = [
 
 describe('M4 Salesforce correctness gates', () => {
   const generator = new FlowXmlGenerator();
+  const mermaidGenerator = new MermaidGenerator();
 
   it.each(cases)('%s matches normalized golden metadata', (name, dsl) => {
     const generated = canonicalizeXml(generator.generate(dsl));
@@ -122,7 +128,7 @@ describe('M4 Salesforce correctness gates', () => {
   it('Autolaunched survives Salesforce XML -> FlowIR -> Mermaid -> FlowIR -> Salesforce XML', () => {
     const sourceXml = fixture('Golden_Autolaunched');
     const sourceIr = parseFlowXmlText(sourceXml, 'Golden_Autolaunched');
-    const mermaid = new DocsGenerator().generateMermaidDiagram(sourceIr);
+    const mermaid = mermaidGenerator.generate(sourceIr);
     const reparsedIr = parseMermaidToFlowIr(
       mermaid,
       sourceIr.flowApiName,
@@ -131,6 +137,20 @@ describe('M4 Salesforce correctness gates', () => {
 
     expect(semanticDiff(sourceIr, reparsedIr).equal).toBe(true);
     expect(canonicalizeXml(generator.generate(reparsedIr))).toEqual(canonicalizeXml(sourceXml));
+  });
+
+  it('rich Autolaunched preserves business semantics through Salesforce XML <-> FlowIR <-> Mermaid', () => {
+    const sourceXml = waveFixture('Golden_Autolaunched_Rich');
+    const sourceIr = parseFlowXmlText(sourceXml, 'Golden_Autolaunched_Rich');
+    const mermaid = mermaidGenerator.generate(sourceIr);
+    const mermaidIr = parseMermaidToFlowIr(mermaid, sourceIr.flowApiName, sourceIr.label);
+    const regeneratedXml = generator.generate(mermaidIr);
+    const finalIr = parseFlowXmlText(regeneratedXml, sourceIr.flowApiName);
+
+    const mermaidDiff = semanticDiff(sourceIr, mermaidIr);
+    const finalDiff = semanticDiff(sourceIr, finalIr);
+    expect(mermaidDiff).toEqual({ equal: true, differences: [] });
+    expect(finalDiff).toEqual({ equal: true, differences: [] });
   });
 
   it('XML canonicalization ignores formatting but not metadata structure', () => {
