@@ -1,6 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { IntermediateModelBuilder } from '../dsl/intermediate-model-builder';
+import { MetadataExtractor } from '../extractor/metadata-extractor';
+import { DocsGenerator } from '../generators/docs-generator';
 import { FlowXmlGenerator } from '../generators/flow-xml-generator';
+import { MermaidParser } from '../parser/mermaid-parser';
 import { parseFlowXmlText } from '../reverse/xml-parser';
 import { FlowDSL } from '../types/flow-dsl';
 import { semanticDiff } from '../utils/flow-semantic';
@@ -13,6 +17,15 @@ const fixtureDir = path.join(
 
 function fixture(name: string): string {
   return fs.readFileSync(path.join(fixtureDir, `${name}.flow-meta.xml`), 'utf-8');
+}
+
+function parseMermaidToFlowIr(mermaid: string, flowApiName: string, flowLabel: string): FlowDSL {
+  const graph = new MermaidParser().parse(mermaid);
+  const extractor = new MetadataExtractor();
+  const metadataMap = new Map(
+    graph.nodes.map((node) => [node.id, extractor.extract(node)]),
+  );
+  return new IntermediateModelBuilder().build(graph, metadataMap, flowApiName, flowLabel);
 }
 
 const autolaunched: FlowDSL = {
@@ -104,6 +117,20 @@ describe('M4 Salesforce correctness gates', () => {
     const imported = parseFlowXmlText(xml, name);
     const diff = semanticDiff(dsl, imported);
     expect(diff.equal).toBe(true);
+  });
+
+  it('Autolaunched survives Salesforce XML -> FlowIR -> Mermaid -> FlowIR -> Salesforce XML', () => {
+    const sourceXml = fixture('Golden_Autolaunched');
+    const sourceIr = parseFlowXmlText(sourceXml, 'Golden_Autolaunched');
+    const mermaid = new DocsGenerator().generateMermaidDiagram(sourceIr);
+    const reparsedIr = parseMermaidToFlowIr(
+      mermaid,
+      sourceIr.flowApiName,
+      sourceIr.label,
+    );
+
+    expect(semanticDiff(sourceIr, reparsedIr).equal).toBe(true);
+    expect(canonicalizeXml(generator.generate(reparsedIr))).toEqual(canonicalizeXml(sourceXml));
   });
 
   it('XML canonicalization ignores formatting but not metadata structure', () => {
