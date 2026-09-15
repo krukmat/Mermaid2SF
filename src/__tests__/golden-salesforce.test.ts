@@ -147,10 +147,8 @@ describe('M4 Salesforce correctness gates', () => {
     const regeneratedXml = generator.generate(mermaidIr);
     const finalIr = parseFlowXmlText(regeneratedXml, sourceIr.flowApiName);
 
-    const mermaidDiff = semanticDiff(sourceIr, mermaidIr);
-    const finalDiff = semanticDiff(sourceIr, finalIr);
-    expect(mermaidDiff).toEqual({ equal: true, differences: [] });
-    expect(finalDiff).toEqual({ equal: true, differences: [] });
+    expect(semanticDiff(sourceIr, mermaidIr).equal).toBe(true);
+    expect(semanticDiff(sourceIr, finalIr).equal).toBe(true);
   });
 
   it('XML canonicalization ignores formatting but not metadata structure', () => {
