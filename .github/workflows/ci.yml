@@ -76,6 +76,15 @@ jobs:
           --source-dir force-app/main/default/flows/Golden_ScheduleTriggered.flow-meta.xml
           --target-org m2sf-ci
           --wait 20
+      - name: Validate Wave 4 Record-Triggered Before Delete Flow in Salesforce
+        if: ${{ env.SF_AUTH_URL != '' }}
+        working-directory: test/salesforce-project
+        run: >
+          sf project deploy start
+          --dry-run
+          --source-dir force-app/main/default/flows/Golden_RecordTriggered_BeforeDelete.flow-meta.xml
+          --target-org m2sf-ci
+          --wait 20
 
   legacy-style-debt:
     runs-on: ubuntu-latest
