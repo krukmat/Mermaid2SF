@@ -6,7 +6,7 @@
 
 The implementation now has a canonical FlowIR v2, Salesforce semantic validation, deterministic Salesforce XML generation, normalized golden fixtures, semantic round-trip gates, and an XML-tree reverse adapter for the guaranteed subset.
 
-The project remains a **correctness-hardened demo/PoC** with feature-scoped Salesforce verification. Wave 1 Autolaunched and Wave 2A Record-Triggered After Save canonical fixtures have passed authenticated Salesforce Metadata API dry-runs; broader Flow families remain explicitly scoped.
+The project remains a **correctness-hardened demo/PoC** with feature-scoped Salesforce verification. Wave 1 Autolaunched, Wave 2A Record-Triggered After Save, and Wave 2B Record-Triggered Before Save canonical fixtures have passed authenticated Salesforce Metadata API dry-runs; broader Flow families remain explicitly scoped.
 
 Canonical architecture:
 
@@ -74,15 +74,15 @@ Detailed execution record: `docs/planning/compiler-correctness-execution.md`.
 - Blocking GitHub Actions `compiler-core` gate: tests + TypeScript build.
 - Conditional authenticated Salesforce org gate implemented.
 
-Current evidence after Wave 2A:
+Current evidence after Wave 2B:
 
 ```text
 Test suites: 44 / 44 passed
-Tests:       294 / 294 passed
+Tests:       306 / 306 passed
 TypeScript:  build passed
 Golden XML:  passed
-Round-trip:  passed for Wave 1 Autolaunched + Wave 2A After Save guaranteed subsets
-Org dry-run: Wave 1 PASS; Wave 2A PASS
+Round-trip:  passed for Wave 1 Autolaunched + Wave 2A After Save + Wave 2B Before Save guaranteed subsets
+Org dry-run: Wave 1 PASS; Wave 2A PASS; Wave 2B PASS
 ```
 
 ### M5 — Reverse parser and fidelity — ✅ Complete for guaranteed subset
