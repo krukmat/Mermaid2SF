@@ -500,6 +500,78 @@ describe('M4 Salesforce correctness gates', () => {
     expect(semanticDiff(source, reparsed).equal).toBe(true);
   });
 
+  it('Wave 5 Salesforce validation fixture is canonical compiler output', () => {
+    const sourceXml = fixture('Golden_PlatformEventTriggered');
+    const sourceIr = parseFlowXmlText(sourceXml, 'Golden_PlatformEventTriggered');
+    const regeneratedXml = generator.generate(sourceIr);
+
+    expect(sourceIr.flowKind).toBe('PlatformEventTriggered');
+    expect(sourceIr.platformEvent).toEqual({
+      eventApiName: 'M2SF_Validation_Event__e',
+    });
+    expect(canonicalizeXml(regeneratedXml)).toEqual(canonicalizeXml(sourceXml));
+  });
+
+  it('Wave 5 rich Platform Event preserves event payload and business semantics through Salesforce XML <-> FlowIR <-> Mermaid', () => {
+    const sourceXml = waveFixture('Golden_PlatformEventTriggered_Rich');
+    const sourceIr = parseFlowXmlText(sourceXml, 'Golden_PlatformEventTriggered_Rich');
+
+    expect(sourceIr.flowKind).toBe('PlatformEventTriggered');
+    expect(sourceIr.platformEvent).toEqual({
+      eventApiName: 'M2SF_Validation_Event__e',
+    });
+
+    const mermaid = mermaidGenerator.generate(sourceIr);
+    expect(mermaid).toContain('flow: platform-event-triggered');
+    expect(mermaid).toContain('event: M2SF_Validation_Event__e');
+    expect(mermaid).toContain('set: eventStatus = ref:$Record.Status__c');
+
+    const mermaidIr = parseMermaidToFlowIr(mermaid, sourceIr.flowApiName, sourceIr.label);
+    const regeneratedXml = generator.generate(mermaidIr);
+    const finalIr = parseFlowXmlText(regeneratedXml, sourceIr.flowApiName);
+
+    expect(semanticDiff(sourceIr, mermaidIr).equal).toBe(true);
+    expect(semanticDiff(sourceIr, finalIr).equal).toBe(true);
+  });
+
+  it('Wave 5 canonical Mermaid preserves platform-event trigger metadata', () => {
+    const source: FlowDSL = {
+      version: 2,
+      flowApiName: 'Platform_Event_Test',
+      label: 'Platform Event Test',
+      flowKind: 'PlatformEventTriggered',
+      processType: 'PlatformEventTriggered',
+      apiVersion: '67.0',
+      status: 'Draft',
+      platformEvent: {
+        eventApiName: 'M2SF_Validation_Event__e',
+      },
+      startElement: 'Start',
+      variables: [
+        { name: 'message', dataType: 'String', isCollection: false, isInput: false, isOutput: false },
+      ],
+      elements: [
+        { id: 'Start', type: 'Start', next: 'Capture' },
+        {
+          id: 'Capture',
+          type: 'Assignment',
+          assignments: [{ variable: 'message', value: { kind: 'reference', name: '$Record.Message__c' } }],
+          next: 'End',
+        },
+        { id: 'End', type: 'End' },
+      ],
+    };
+
+    const mermaid = mermaidGenerator.generate(source);
+    const reparsed = parseMermaidToFlowIr(mermaid, source.flowApiName, source.label);
+
+    expect(mermaid).toContain('flow: platform-event-triggered');
+    expect(mermaid).toContain('event: M2SF_Validation_Event__e');
+    expect(reparsed.flowKind).toBe('PlatformEventTriggered');
+    expect(reparsed.platformEvent?.eventApiName).toBe('M2SF_Validation_Event__e');
+    expect(semanticDiff(source, reparsed).equal).toBe(true);
+  });
+
   it('XML canonicalization ignores formatting but not metadata structure', () => {
     const original = fixture('Golden_RecordTriggered');
     const compact = original.replace(/>\s+</g, '><').trim();
