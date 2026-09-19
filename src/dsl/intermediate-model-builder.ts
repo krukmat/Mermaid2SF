@@ -195,16 +195,19 @@ export class IntermediateModelBuilder {
   }
 
   private createScreenElement(base: any, metadata: ExtractedMetadata, edgeMap: Map<string, MermaidEdge[]>): ScreenElement {
-    const components = (metadata.properties.components || []).map((component: any) => ({
-      ...component,
-      defaultValue: component.defaultValue === undefined ? undefined : normalizeFlowValue(component.defaultValue),
-      visibility: component.visibilityCondition
-        ? (() => {
-            const parsed = parseConditionExpression(component.visibilityCondition);
-            return parsed ? { conditions: [parsed] } : undefined;
-          })()
-        : component.visibility,
-    }));
+    const components = (metadata.properties.components || []).map((component: any) => {
+      const { visibilityCondition, ...canonicalComponent } = component;
+      return {
+        ...canonicalComponent,
+        defaultValue: component.defaultValue === undefined ? undefined : normalizeFlowValue(component.defaultValue),
+        visibility: visibilityCondition
+          ? (() => {
+              const parsed = parseConditionExpression(visibilityCondition);
+              return parsed ? { conditions: [parsed] } : undefined;
+            })()
+          : component.visibility,
+      };
+    });
     return {
       ...base,
       type: 'Screen',
