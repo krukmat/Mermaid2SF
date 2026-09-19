@@ -6,7 +6,7 @@
 
 The implementation now has a canonical FlowIR v2, Salesforce semantic validation, deterministic Salesforce XML generation, normalized golden fixtures, semantic round-trip gates, and an XML-tree reverse adapter for the guaranteed subset.
 
-The project remains a **correctness-hardened demo/PoC** with feature-scoped Salesforce verification. Wave 1 Autolaunched, Wave 2A Record-Triggered After Save, Wave 2B Record-Triggered Before Save, Wave 3 Schedule-Triggered, Wave 4 Record-Triggered Before Delete, and Wave 5 Platform Event-Triggered canonical fixtures have passed authenticated Salesforce Metadata API dry-runs; broader Flow families remain explicitly scoped.
+The project remains a **correctness-hardened demo/PoC** with feature-scoped Salesforce verification. Wave 1 Autolaunched, Wave 2A Record-Triggered After Save, Wave 2B Record-Triggered Before Save, Wave 3 Schedule-Triggered, Wave 4 Record-Triggered Before Delete, Wave 5 Platform Event-Triggered, and Wave 6 Screen Flow canonical fixtures have passed authenticated Salesforce Metadata API dry-runs; broader metadata remains explicitly scoped.
 
 Canonical architecture:
 
@@ -50,6 +50,7 @@ Detailed execution record: `docs/planning/compiler-correctness-execution.md`.
 ### M2 — FlowIR v2 — ✅ Complete
 
 - Typed `FlowValue`: String, Boolean, Number, Date, DateTime, Reference and Null.
+- Screen resources now include static choices, typed defaults, navigation flags and structured one-condition visibility.
 - Structured conditions with typed operands/operators.
 - Explicit typed variables/resources.
 - Record-trigger, schedule-trigger and platform-event configuration represented explicitly in the canonical model.
@@ -74,22 +75,22 @@ Detailed execution record: `docs/planning/compiler-correctness-execution.md`.
 - Blocking GitHub Actions `compiler-core` gate: tests + TypeScript build.
 - Conditional authenticated Salesforce org gate implemented.
 
-Current evidence after Wave 5:
+Current evidence after Wave 6:
 
 ```text
 Test suites: 44 / 44 passed
-Tests:       338 / 338 passed
+Tests:       349 / 349 passed
 TypeScript:  build passed
 Golden XML:  passed
-Round-trip:  passed for Wave 1 Autolaunched + Wave 2A After Save + Wave 2B Before Save + Wave 3 Schedule-Triggered + Wave 4 Before Delete + Wave 5 Platform Event guaranteed subsets
-Org dry-run: Wave 1 PASS; Wave 2A PASS; Wave 2B PASS; Wave 3 PASS; Wave 4 PASS; Wave 5 PASS
+Round-trip:  passed for Wave 1 Autolaunched + Wave 2A After Save + Wave 2B Before Save + Wave 3 Schedule-Triggered + Wave 4 Before Delete + Wave 5 Platform Event + Wave 6 Screen guaranteed subsets
+Org dry-run: Wave 1 PASS; Wave 2A PASS; Wave 2B PASS; Wave 3 PASS; Wave 4 PASS; Wave 5 PASS; Wave 6 PASS
 ```
 
 ### M5 — Reverse parser and fidelity — ✅ Complete for guaranteed subset
 
 - Regex/string extraction replaced by an XML-tree parser/adapter.
 - Salesforce XML maps into FlowIR v2.
-- Typed Assignment values, Decision conditions, Screen basics, record operations, Get Records and Subflow metadata are covered by semantic tests.
+- Typed Assignment values, Decision conditions, the documented Wave 6 Screen subset, record operations, Get Records and Subflow metadata are covered by semantic tests.
 - Fidelity is feature-scoped; unsupported metadata is not advertised as lossless.
 
 Loop, Wait and Fault remain experimental and are intentionally outside the guaranteed round-trip contract.
@@ -136,4 +137,4 @@ These items are intentionally outside the completed hardening plan and must rema
 - legacy repository lint/format backlog is non-blocking and still red;
 - dependency audit currently reports legacy vulnerabilities and requires a separate modernization pass;
 - `package-lock.json` still carries stale ISC root-license metadata although `package.json`/`LICENSE` are MIT;
-- Loop, Wait, Fault, advanced Screens, Apex Actions, HTTP Callouts, Orchestration, and metadata outside the documented Wave contracts are not guaranteed.
+- Loop, Wait, Fault, Screen metadata beyond the Wave 6 contract, Apex Actions, HTTP Callouts, Orchestration, and metadata outside the documented Wave contracts are not guaranteed.

@@ -1,13 +1,13 @@
 # Mermaid2SF — Supported Features
 
-This matrix is the public fidelity contract. `Guaranteed` is reserved for behavior backed by automated semantic round-trip tests. Salesforce deploy compatibility additionally requires the authenticated deployment gate. See [`docs/WAVE1_AUTOLAUNCHED_PROOF.md`](docs/WAVE1_AUTOLAUNCHED_PROOF.md) for Wave 1, [`docs/WAVE2A_RECORD_TRIGGERED_AFTER_SAVE_PROOF.md`](docs/WAVE2A_RECORD_TRIGGERED_AFTER_SAVE_PROOF.md) for Wave 2A, [`docs/WAVE2B_RECORD_TRIGGERED_BEFORE_SAVE_PROOF.md`](docs/WAVE2B_RECORD_TRIGGERED_BEFORE_SAVE_PROOF.md) for Wave 2B, and [`docs/WAVE3_SCHEDULE_TRIGGERED_PROOF.md`](docs/WAVE3_SCHEDULE_TRIGGERED_PROOF.md) for Wave 3. Wave 4 evidence is in [`docs/WAVE4_RECORD_TRIGGERED_BEFORE_DELETE_PROOF.md`](docs/WAVE4_RECORD_TRIGGERED_BEFORE_DELETE_PROOF.md). Wave 5 evidence is in [`docs/WAVE5_PLATFORM_EVENT_TRIGGERED_PROOF.md`](docs/WAVE5_PLATFORM_EVENT_TRIGGERED_PROOF.md).
+This matrix is the public fidelity contract. `Guaranteed` is reserved for behavior backed by automated semantic round-trip tests. Salesforce deploy compatibility additionally requires the authenticated deployment gate. See [`docs/WAVE1_AUTOLAUNCHED_PROOF.md`](docs/WAVE1_AUTOLAUNCHED_PROOF.md) for Wave 1, [`docs/WAVE2A_RECORD_TRIGGERED_AFTER_SAVE_PROOF.md`](docs/WAVE2A_RECORD_TRIGGERED_AFTER_SAVE_PROOF.md) for Wave 2A, [`docs/WAVE2B_RECORD_TRIGGERED_BEFORE_SAVE_PROOF.md`](docs/WAVE2B_RECORD_TRIGGERED_BEFORE_SAVE_PROOF.md) for Wave 2B, and [`docs/WAVE3_SCHEDULE_TRIGGERED_PROOF.md`](docs/WAVE3_SCHEDULE_TRIGGERED_PROOF.md) for Wave 3. Wave 4 evidence is in [`docs/WAVE4_RECORD_TRIGGERED_BEFORE_DELETE_PROOF.md`](docs/WAVE4_RECORD_TRIGGERED_BEFORE_DELETE_PROOF.md). Wave 5 evidence is in [`docs/WAVE5_PLATFORM_EVENT_TRIGGERED_PROOF.md`](docs/WAVE5_PLATFORM_EVENT_TRIGGERED_PROOF.md). Wave 6 evidence is in [`docs/WAVE6_SCREEN_FLOW_PROOF.md`](docs/WAVE6_SCREEN_FLOW_PROOF.md).
 
 ## Flow families
 
 | Flow family | Forward | Reverse | Round-trip | Notes |
 |---|---|---|---|---|
 | Autolaunched Flow (no trigger) | Guaranteed subset | Guaranteed subset | Guaranteed subset | Wave 1 bidirectional contract: Salesforce XML ⇄ FlowIR ⇄ Mermaid. See scope below. |
-| Screen Flow | Baseline | Partial | Partial | Correct `processType` mapping exists; advanced Screen metadata is not part of Wave 1. |
+| Screen Flow | Guaranteed subset | Guaranteed subset | Guaranteed subset | Wave 6 contract for standard inputs, Display Text, navigation, defaults, simple choices and one-condition visibility. |
 | Record-Triggered After Save | Guaranteed subset | Guaranteed subset | Guaranteed subset | Wave 2A bidirectional contract for Create, Update and CreateAndUpdate trigger modes. |
 | Record-Triggered Before Save | Guaranteed subset | Guaranteed subset | Guaranteed subset | Wave 2B bidirectional contract with Salesforce-specific element restrictions enforced before XML generation. |
 | Record-Triggered Before Delete | Guaranteed subset | Guaranteed subset | Guaranteed subset | Wave 4 contract for `RecordBeforeDelete` + `Delete`, `$Record`, entry criteria and documented background elements. |
@@ -58,7 +58,7 @@ The following are not covered by the Autolaunched bidirectional guarantee yet:
 - advanced Record Create output/store metadata,
 - Loop, Wait, and Fault-path fidelity,
 - Apex Actions and HTTP Callouts,
-- formulas, constants, choices, collection processors, transforms, and other Salesforce Flow metadata not represented by the current FlowIR subset,
+- formulas, constants, collection processors, transforms, and other Salesforce Flow metadata outside the documented FlowIR contracts,
 - full layout/visual fidelity as a deployment guarantee,
 - Salesforce-org acceptance beyond the explicitly validated Wave 1 Autolaunched fixture and supported subset.
 
@@ -312,11 +312,111 @@ Wave 5 does not claim:
 - every background-flow element supported by Salesforce,
 - Orchestration support.
 
+## Wave 6 — Screen Flow bidirectional fidelity contract
+
+Wave 6 promotes Screen Flow from partial/baseline support to a tested bidirectional subset:
+
+```text
+Salesforce Screen Flow XML
+           ↓
+         FlowIR
+           ↓
+         Mermaid
+           ↓
+         FlowIR
+           ↓
+Salesforce Screen Flow XML
+           ↓
+         FlowIR
+```
+
+### Guaranteed Wave 6 subset
+
+Screen-level semantics:
+
+- `allowBack`,
+- `allowFinish`,
+- `allowPause`,
+- `showFooter`,
+- `showHeader`,
+- Screen connectors and terminal navigation.
+
+Guaranteed standard Screen component subset:
+
+- `InputField`,
+- `LargeTextArea`,
+- `DisplayText`,
+- `RadioButtons`,
+- `DropdownBox`.
+
+The contract preserves:
+
+- component API name,
+- input data type,
+- input/display label or text,
+- `isRequired`,
+- typed default values,
+- static Choice resources,
+- choice references,
+- one structured visibility condition per component.
+
+Canonical Mermaid authoring uses metadata such as:
+
+```text
+allow-back: true
+allow-finish: true
+allow-pause: false
+show-footer: true
+show-header: true
+
+input: CustomerName (String) [InputField] | Customer Name
+default: Acme
+required: true
+
+input: Priority (String) [DropdownBox] | Priority
+choices: HighPriority,LowPriority
+
+display: EmailHint | Email updates are enabled.
+visible-if: ref:WantsEmail = true
+```
+
+Choice resources are declared canonically on Start metadata:
+
+```text
+choice: HighPriority (String) = High | High Priority
+choice: LowPriority (String) = Low | Low Priority
+```
+
+### Wave 6 semantic validation
+
+The semantic validator rejects known-invalid or out-of-contract Screen metadata before XML generation:
+
+- `M2SF-SF-026` — Previous and Finish cannot both be disabled.
+- `M2SF-SF-027` — invalid or duplicate Screen component API name.
+- `M2SF-SF-028` — missing/unknown choice resource.
+- `M2SF-SF-029` — missing required input metadata.
+- `M2SF-SF-032` — component type outside the Wave 6 guaranteed subset.
+- `M2SF-SF-033` — empty Display Text.
+- `M2SF-SF-034` — more than one visibility condition in canonical Wave 6 authoring.
+
+### Explicit Wave 6 boundaries
+
+Wave 6 does not claim:
+
+- custom Lightning Screen Components,
+- sections/regions and advanced responsive layout metadata,
+- record-field components and advanced lookup/address/file-upload components,
+- dynamic Choice Sets or Record Choice Sets,
+- multiple-condition visibility expressions,
+- advanced input validation/error-message metadata,
+- pixel-perfect Salesforce Flow Builder layout fidelity,
+- every Salesforce Screen component type.
+
 ## Elements
 
 | Element | Forward | Reverse | Round-trip | Fidelity notes |
 |---|---|---|---|---|
-| Start | Supported | Supported | Guaranteed in Wave 1, Wave 2A, Wave 2B, Wave 3, Wave 4 and Wave 5 subsets | Includes Autolaunched, Record-Triggered, Schedule-Triggered and Platform Event-Triggered Start metadata. |
+| Start | Supported | Supported | Guaranteed in Wave 1, Wave 2A, Wave 2B, Wave 3, Wave 4, Wave 5 and Wave 6 subsets | Includes Autolaunched, Record-Triggered, Schedule-Triggered, Platform Event-Triggered and Screen Flow starts. |
 | End / Terminal | Supported | Synthetic | Guaranteed in Wave 1 Autolaunched | End is an authoring/IR concept; Salesforce termination is represented by no connector. |
 | Assignment | Supported | Supported | Guaranteed in Wave 1, Wave 2B, Wave 3 and Wave 5 subsets | Wave 5 covers event-payload `$Record` values. |
 | Decision | Supported | Supported subset | Guaranteed subset in Wave 1, Wave 2B, Wave 3, Wave 4 and Wave 5 | One structured condition per non-default Mermaid outcome; default outcome preserved. |
@@ -324,7 +424,7 @@ Wave 5 does not claim:
 | Create Records | Basic | Supported subset | Guaranteed subset in Wave 1 Autolaunched | Explicit object and typed field values; advanced output metadata excluded. |
 | Update Records | Basic | Supported subset | Guaranteed subset in Wave 1, Wave 3, Wave 4 and Wave 5 | Wave 5 rich proof uses event payload values to select/update records. |
 | Subflow | Basic | Supported subset | Guaranteed subset in Wave 1 Autolaunched | Explicit child Flow API name and basic input/output mappings. |
-| Screen | Basic | Partial | Partial | Basic input/display fields only; advanced components unsupported. |
+| Screen | Supported subset | Supported subset | Guaranteed subset in Wave 6 | Standard inputs, Display Text, navigation, typed defaults, static choices and one-condition visibility. |
 | Loop | Experimental | Partial | Unsupported | Salesforce permits Loop in Before Save, but Mermaid2SF Loop fidelity is still outside the guaranteed contract. |
 | Wait | Experimental | Partial | Unsupported | Outside the Wave 1 fidelity contract. |
 | Fault paths | Experimental | Partial | Unsupported | Connector semantics are not part of the Wave 1 guarantee. |
@@ -342,7 +442,7 @@ Wave 5 does not claim:
 
 ## External Salesforce gate
 
-Wave 1 Autolaunched, Wave 2A Record-Triggered After Save, Wave 2B Record-Triggered Before Save, Wave 3 Schedule-Triggered, Wave 4 Record-Triggered Before Delete, and Wave 5 Platform Event-Triggered compatibility have been externally verified against a real Salesforce org.
+Wave 1 Autolaunched, Wave 2A Record-Triggered After Save, Wave 2B Record-Triggered Before Save, Wave 3 Schedule-Triggered, Wave 4 Record-Triggered Before Delete, Wave 5 Platform Event-Triggered, and Wave 6 Screen Flow compatibility have been externally verified against a real Salesforce org.
 
 The CI gate authenticates with the configured `SF_AUTH_URL` and performs a non-destructive Metadata API dry-run of the canonical Autolaunched fixture:
 
@@ -395,4 +495,14 @@ Wave 5 was additionally verified on 2026-09-19 with Salesforce Metadata API v67.
 
 The rich Wave 5 custom-event payload is separately proven by semantic round-trip tests and does not require that custom Platform Event to exist in the validation org.
 
-These external gates prove Salesforce acceptance for the canonical Wave 1, Wave 2A, Wave 2B, Wave 3, Wave 4 and Wave 5 validation fixtures. Their richer documented subsets are separately proven by semantic round-trip tests. They do not extend the guarantee to unsupported Flow families or metadata outside the documented subsets.
+Wave 6 was additionally verified on 2026-09-19 with Salesforce Metadata API v67.0:
+
+- `Golden_Screen_Wave6` validated as a Salesforce `Flow`.
+- The external fixture contains two Screens, typed String/Boolean inputs, a typed default, Display Text, Screen-to-Screen navigation, and Back/Finish/Pause/header/footer metadata.
+- Components validated: 1/1.
+- Dry-run status: `Succeeded`.
+- No metadata was persisted to the validation org.
+
+Static choices and one-condition visibility are separately proven by the rich Wave 6 semantic round-trip fixture.
+
+These external gates prove Salesforce acceptance for the canonical Wave 1, Wave 2A, Wave 2B, Wave 3, Wave 4, Wave 5 and Wave 6 validation fixtures. Their richer documented subsets are separately proven by semantic round-trip tests. They do not extend the guarantee to unsupported Flow families or metadata outside the documented subsets.
