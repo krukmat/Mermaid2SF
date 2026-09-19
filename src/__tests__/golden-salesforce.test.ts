@@ -102,10 +102,46 @@ const recordTriggered: FlowDSL = {
   ],
 };
 
+const scheduleTriggered: FlowDSL = {
+  version: 2,
+  flowApiName: 'Golden_ScheduleTriggered',
+  label: 'Golden Schedule Triggered',
+  flowKind: 'ScheduleTriggered',
+  processType: 'ScheduleTriggered',
+  apiVersion: '67.0',
+  status: 'Draft',
+  schedule: {
+    frequency: 'Daily',
+    startDate: '2030-01-01',
+    startTime: '02:00:00.000Z',
+    object: 'Account',
+    filterLogic: 'and',
+    filters: [
+      { field: 'Industry', operator: 'EqualTo', value: { kind: 'string', value: 'Technology' } },
+    ],
+  },
+  startElement: 'Start',
+  variables: [
+    { name: 'recordName', dataType: 'String', isCollection: false, isInput: false, isOutput: false },
+  ],
+  elements: [
+    { id: 'Start', type: 'Start', next: 'Capture_Record_Name' },
+    {
+      id: 'Capture_Record_Name',
+      type: 'Assignment',
+      label: 'Capture Record Name',
+      assignments: [{ variable: 'recordName', value: { kind: 'reference', name: '$Record.Name' } }],
+      next: 'End',
+    },
+    { id: 'End', type: 'End' },
+  ],
+};
+
 const cases: Array<[string, FlowDSL]> = [
   ['Golden_Autolaunched', autolaunched],
   ['Golden_Screen', screen],
   ['Golden_RecordTriggered', recordTriggered],
+  ['Golden_ScheduleTriggered', scheduleTriggered],
 ];
 
 describe('M4 Salesforce correctness gates', () => {
@@ -300,6 +336,85 @@ describe('M4 Salesforce correctness gates', () => {
 
     expect(reparsed.trigger?.triggerType).toBe('RecordBeforeSave');
     expect(reparsed.trigger?.recordTriggerType).toBe(recordTriggerType);
+    expect(semanticDiff(source, reparsed).equal).toBe(true);
+  });
+
+  it('Wave 3 Salesforce validation fixture is canonical compiler output', () => {
+    const sourceXml = fixture('Golden_ScheduleTriggered');
+    const sourceIr = parseFlowXmlText(sourceXml, 'Golden_ScheduleTriggered');
+    const regeneratedXml = generator.generate(sourceIr);
+
+    expect(sourceIr.flowKind).toBe('ScheduleTriggered');
+    expect(sourceIr.schedule).toEqual(expect.objectContaining({
+      frequency: 'Daily',
+      startDate: '2030-01-01',
+      startTime: '02:00:00.000Z',
+      object: 'Account',
+      filterLogic: 'and',
+    }));
+    expect(canonicalizeXml(regeneratedXml)).toEqual(canonicalizeXml(sourceXml));
+  });
+
+  it('Wave 3 rich Schedule-Triggered preserves schedule and business semantics through Salesforce XML <-> FlowIR <-> Mermaid', () => {
+    const sourceXml = waveFixture('Golden_ScheduleTriggered_Rich');
+    const sourceIr = parseFlowXmlText(sourceXml, 'Golden_ScheduleTriggered_Rich');
+
+    expect(sourceIr.flowKind).toBe('ScheduleTriggered');
+    expect(sourceIr.schedule).toEqual(expect.objectContaining({
+      frequency: 'Weekly',
+      startDate: '2030-01-07',
+      startTime: '03:30:00.000Z',
+      object: 'Account',
+      filterLogic: 'and',
+    }));
+
+    const mermaid = mermaidGenerator.generate(sourceIr);
+    expect(mermaid).toContain('flow: schedule-triggered');
+    expect(mermaid).toContain('frequency: weekly');
+    expect(mermaid).toContain('start-date: 2030-01-07');
+    expect(mermaid).toContain('start-time: 03:30:00.000Z');
+    expect(mermaid).toContain('object: Account');
+    expect(mermaid).toContain('filter: Industry = Technology');
+    expect(mermaid).toContain('set: recordName = ref:$Record.Name');
+
+    const mermaidIr = parseMermaidToFlowIr(mermaid, sourceIr.flowApiName, sourceIr.label);
+    const regeneratedXml = generator.generate(mermaidIr);
+    const finalIr = parseFlowXmlText(regeneratedXml, sourceIr.flowApiName);
+
+    expect(semanticDiff(sourceIr, mermaidIr).equal).toBe(true);
+    expect(semanticDiff(sourceIr, finalIr).equal).toBe(true);
+  });
+
+  it.each([
+    ['once', 'Once'],
+    ['daily', 'Daily'],
+    ['weekly', 'Weekly'],
+  ] as const)('Wave 3 canonical Mermaid preserves %s schedule frequency', (_mermaidFrequency, frequency) => {
+    const source: FlowDSL = {
+      version: 2,
+      flowApiName: `Scheduled_${frequency}`,
+      label: `Scheduled ${frequency}`,
+      flowKind: 'ScheduleTriggered',
+      processType: 'ScheduleTriggered',
+      apiVersion: '67.0',
+      status: 'Draft',
+      schedule: {
+        frequency,
+        startDate: '2030-01-01',
+        startTime: '02:00:00.000Z',
+      },
+      startElement: 'Start',
+      elements: [
+        { id: 'Start', type: 'Start', next: 'End' },
+        { id: 'End', type: 'End' },
+      ],
+    };
+
+    const mermaid = mermaidGenerator.generate(source);
+    const reparsed = parseMermaidToFlowIr(mermaid, source.flowApiName, source.label);
+
+    expect(reparsed.flowKind).toBe('ScheduleTriggered');
+    expect(reparsed.schedule?.frequency).toBe(frequency);
     expect(semanticDiff(source, reparsed).equal).toBe(true);
   });
 
