@@ -33,6 +33,7 @@ export class XMLGenerator {
 
     lines.push(...this.headerGenerator.generate(dsl, context.escapeXml));
     const sortedElements = [...dsl.elements].sort((a, b) => (a.apiName || a.id).localeCompare(b.apiName || b.id));
+    lines.push(...this.generateChoices(dsl, context));
     for (const element of sortedElements) {
       if (element.type === 'Start' || element.type === 'End') continue;
       lines.push(...this.elementGenerator.generate(element, context));
@@ -41,6 +42,21 @@ export class XMLGenerator {
     lines.push(...this.generateVariables(dsl, context));
     lines.push(...this.footerGenerator.generate(dsl));
     return lines.join('\n');
+  }
+
+  private generateChoices(dsl: FlowDSL, context: XMLGeneratorContext): string[] {
+    const lines: string[] = [];
+    for (const choice of [...(dsl.choices || [])].sort((a, b) => a.name.localeCompare(b.name))) {
+      lines.push('    <choices>');
+      lines.push(`        <name>${context.escapeXml(choice.name)}</name>`);
+      lines.push(`        <choiceText>${context.escapeXml(choice.label)}</choiceText>`);
+      lines.push(`        <dataType>${context.escapeXml(choice.dataType)}</dataType>`);
+      lines.push('        <value>');
+      lines.push(...serializeFlowValueXml(choice.value, context.escapeXml, 12));
+      lines.push('        </value>');
+      lines.push('    </choices>');
+    }
+    return lines;
   }
 
   private generateStartBlock(dsl: FlowDSL, context: XMLGeneratorContext): string[] {
