@@ -151,6 +151,36 @@ describe('M4 Salesforce correctness gates', () => {
     expect(semanticDiff(sourceIr, finalIr).equal).toBe(true);
   });
 
+  it('Wave 2A rich After Save preserves trigger and business semantics through Salesforce XML <-> FlowIR <-> Mermaid', () => {
+    const sourceXml = waveFixture('Golden_RecordTriggered_AfterSave_Rich');
+    const sourceIr = parseFlowXmlText(sourceXml, 'Golden_RecordTriggered_AfterSave_Rich');
+
+    expect(sourceIr.flowKind).toBe('RecordTriggered');
+    expect(sourceIr.trigger).toEqual(expect.objectContaining({
+      object: 'Account',
+      triggerType: 'RecordAfterSave',
+      recordTriggerType: 'CreateAndUpdate',
+      filterLogic: 'and',
+      doesRequireRecordChangedToMeetCriteria: false,
+    }));
+
+    const mermaid = mermaidGenerator.generate(sourceIr);
+    expect(mermaid).toContain('flow: record-triggered');
+    expect(mermaid).toContain('object: Account');
+    expect(mermaid).toContain('trigger: after-save');
+    expect(mermaid).toContain('record-trigger: create-and-update');
+    expect(mermaid).toContain('filter-logic: and');
+    expect(mermaid).toContain('filter: Industry = Technology');
+    expect(mermaid).toContain('require-changed-to-meet-criteria: false');
+
+    const mermaidIr = parseMermaidToFlowIr(mermaid, sourceIr.flowApiName, sourceIr.label);
+    const regeneratedXml = generator.generate(mermaidIr);
+    const finalIr = parseFlowXmlText(regeneratedXml, sourceIr.flowApiName);
+
+    expect(semanticDiff(sourceIr, mermaidIr).equal).toBe(true);
+    expect(semanticDiff(sourceIr, finalIr).equal).toBe(true);
+  });
+
   it('XML canonicalization ignores formatting but not metadata structure', () => {
     const original = fixture('Golden_RecordTriggered');
     const compact = original.replace(/>\s+</g, '><').trim();
