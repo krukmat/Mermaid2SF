@@ -173,18 +173,38 @@ function parseDecisions(root: XmlNode): FlowElement[] {
 function parseScreens(root: XmlNode): FlowElement[] {
   return xmlChildren(root, 'screens').map((node) => {
     const apiName = xmlChildText(node, 'name') || 'Screen';
-    const components = xmlChildren(node, 'fields').map((field, index) => ({
-      type: (xmlChildText(field, 'fieldType') || 'Field') as 'Field' | 'DisplayText' | 'DisplayImage',
-      name: xmlChildText(field, 'name') || `Field_${index + 1}`,
-      dataType: xmlChildText(field, 'dataType'),
-      target: xmlChildText(field, 'fieldReference'),
-      text: xmlChildText(field, 'fieldText'),
-      required: xmlChildText(field, 'isRequired') === undefined
-        ? undefined
-        : xmlChildText(field, 'isRequired') === 'true',
-    }));
+    const components = xmlChildren(node, 'fields').map((field, index) => {
+      const visibilityRule = xmlChild(field, 'visibilityRule');
+      const conditions = visibilityRule ? parseConditions(visibilityRule) : [];
+      return {
+        type: (xmlChildText(field, 'fieldType') || 'InputField') as any,
+        name: xmlChildText(field, 'name') || `Field_${index + 1}`,
+        dataType: xmlChildText(field, 'dataType'),
+        label: xmlChildText(field, 'fieldText'),
+        target: xmlChildText(field, 'fieldReference'),
+        text: xmlChildText(field, 'fieldText'),
+        required: xmlChildText(field, 'isRequired') === undefined
+          ? undefined
+          : xmlChildText(field, 'isRequired') === 'true',
+        defaultValue: xmlChild(field, 'defaultValue')
+          ? parseFlowValue(xmlChild(field, 'defaultValue'))
+          : undefined,
+        choiceReferences: xmlChildren(field, 'choiceReferences')
+          .map((choice) => xmlText(choice) || '')
+          .filter(Boolean),
+        visibility: visibilityRule && conditions.length > 0
+          ? {
+              conditionLogic: xmlChildText(visibilityRule, 'conditionLogic') || undefined,
+              conditions,
+            }
+          : undefined,
+      };
+    });
     const allowBack = xmlChildText(node, 'allowBack');
     const allowFinish = xmlChildText(node, 'allowFinish');
+    const allowPause = xmlChildText(node, 'allowPause');
+    const showFooter = xmlChildText(node, 'showFooter');
+    const showHeader = xmlChildText(node, 'showHeader');
     return {
       id: apiName,
       apiName,
@@ -193,10 +213,28 @@ function parseScreens(root: XmlNode): FlowElement[] {
       components,
       allowBack: allowBack === undefined ? undefined : allowBack === 'true',
       allowFinish: allowFinish === undefined ? undefined : allowFinish === 'true',
+      allowPause: allowPause === undefined ? undefined : allowPause === 'true',
+      showFooter: showFooter === undefined ? undefined : showFooter === 'true',
+      showHeader: showHeader === undefined ? undefined : showHeader === 'true',
       layout: layout(node),
       next: terminalTarget(connectorTarget(node)),
     };
   });
+}
+
+function parseChoices(root: XmlNode): FlowDSL['choices'] {
+  const choices = xmlChildren(root, 'choices').map((node) => {
+    const name = xmlChildText(node, 'name') || '';
+    const label = xmlChildText(node, 'choiceText') || name;
+    const dataType = xmlChildText(node, 'dataType') || 'String';
+    return {
+      name,
+      label,
+      dataType,
+      value: parseFlowValue(xmlChild(node, 'value') || node),
+    };
+  }).filter((choice) => Boolean(choice.name));
+  return choices.length > 0 ? choices : undefined;
 }
 
 function parseInputAssignments(node: XmlNode): Record<string, FlowValue> {
@@ -448,6 +486,7 @@ export function parseFlowXmlText(text: string, flowName = 'Flow'): FlowDSL {
     trigger: parseTrigger(startNode, kind),
     schedule: parseSchedule(startNode, kind),
     platformEvent: parsePlatformEvent(startNode, kind),
+    choices: parseChoices(root),
     startElement: 'Start',
     variables: variables.length > 0 ? variables : undefined,
     elements,
