@@ -47,6 +47,7 @@ export class IntermediateModelBuilder {
       trigger: options.trigger || startMetadata.trigger,
       schedule: options.schedule || startMetadata.schedule,
       platformEvent: options.platformEvent || startMetadata.platformEvent,
+      choices: (options.choices || startMetadata.choices || []).map((choice: any) => ({ ...choice, value: normalizeFlowValue(choice.value) })),
       startElement,
       variables: variables.length > 0 ? variables : undefined,
       elements,
@@ -194,7 +195,27 @@ export class IntermediateModelBuilder {
   }
 
   private createScreenElement(base: any, metadata: ExtractedMetadata, edgeMap: Map<string, MermaidEdge[]>): ScreenElement {
-    return { ...base, type: 'Screen', components: metadata.properties.components || [], next: (edgeMap.get(base.id) || [])[0]?.to };
+    const components = (metadata.properties.components || []).map((component: any) => ({
+      ...component,
+      defaultValue: component.defaultValue === undefined ? undefined : normalizeFlowValue(component.defaultValue),
+      visibility: component.visibilityCondition
+        ? (() => {
+            const parsed = parseConditionExpression(component.visibilityCondition);
+            return parsed ? { conditions: [parsed] } : undefined;
+          })()
+        : component.visibility,
+    }));
+    return {
+      ...base,
+      type: 'Screen',
+      components,
+      allowBack: metadata.properties.allowBack,
+      allowFinish: metadata.properties.allowFinish,
+      allowPause: metadata.properties.allowPause,
+      showFooter: metadata.properties.showFooter,
+      showHeader: metadata.properties.showHeader,
+      next: (edgeMap.get(base.id) || [])[0]?.to,
+    };
   }
 
   private createRecordCreateElement(base: any, metadata: ExtractedMetadata, edgeMap: Map<string, MermaidEdge[]>): RecordCreateElement {
