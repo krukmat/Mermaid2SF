@@ -111,8 +111,8 @@
       "additionalProperties": false,
       "properties": {
         "object": { "type": "string" },
-        "triggerType": { "type": "string", "enum": ["RecordBeforeSave", "RecordAfterSave"] },
-        "recordTriggerType": { "type": "string", "enum": ["Create", "Update", "CreateAndUpdate"] },
+        "triggerType": { "type": "string", "enum": ["RecordBeforeSave", "RecordAfterSave", "RecordBeforeDelete"] },
+        "recordTriggerType": { "type": "string", "enum": ["Create", "Update", "CreateAndUpdate", "Delete"] },
         "filters": { "type": "array", "items": { "$ref": "#/definitions/RecordFilter" } },
         "filterLogic": { "type": "string" },
         "doesRequireRecordChangedToMeetCriteria": { "type": "boolean" }
