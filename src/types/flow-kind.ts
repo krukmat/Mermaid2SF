@@ -1,4 +1,4 @@
-export type FlowKind = 'Autolaunched' | 'RecordTriggered' | 'Screen';
+export type FlowKind = 'Autolaunched' | 'RecordTriggered' | 'ScheduleTriggered' | 'Screen';
 export type SalesforceProcessType = 'AutoLaunchedFlow' | 'Flow';
 export type FlowStatus = 'Draft' | 'Active' | 'Obsolete';
 
