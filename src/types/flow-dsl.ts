@@ -172,6 +172,7 @@ export type FlowElement =
 export type ProcessType = FlowKind;
 export type RecordTriggerType = 'Create' | 'Update' | 'CreateAndUpdate';
 export type RecordTriggerExecution = 'RecordBeforeSave' | 'RecordAfterSave';
+export type ScheduleFrequency = 'Once' | 'Daily' | 'Weekly';
 
 export interface RecordTriggerConfig {
   object: string;
@@ -180,6 +181,15 @@ export interface RecordTriggerConfig {
   filters?: RecordFilter[];
   filterLogic?: string;
   doesRequireRecordChangedToMeetCriteria?: boolean;
+}
+
+export interface ScheduleTriggerConfig {
+  frequency: ScheduleFrequency;
+  startDate: string;
+  startTime: string;
+  object?: string;
+  filters?: RecordFilter[];
+  filterLogic?: string;
 }
 
 export interface FlowDSL {
@@ -191,6 +201,7 @@ export interface FlowDSL {
   apiVersion?: string;
   status?: FlowStatus;
   trigger?: RecordTriggerConfig;
+  schedule?: ScheduleTriggerConfig;
   startElement: string;
   variables?: FlowVariable[];
   elements: FlowElement[];
@@ -201,6 +212,7 @@ export interface FlowBuildOptions {
   apiVersion?: string;
   status?: FlowStatus;
   trigger?: RecordTriggerConfig;
+  schedule?: ScheduleTriggerConfig;
   variables?: FlowVariable[];
 }
 
