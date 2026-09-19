@@ -46,6 +46,7 @@ export class IntermediateModelBuilder {
       status: options.status || startMetadata.status || DEFAULT_FLOW_STATUS,
       trigger: options.trigger || startMetadata.trigger,
       schedule: options.schedule || startMetadata.schedule,
+      platformEvent: options.platformEvent || startMetadata.platformEvent,
       startElement,
       variables: variables.length > 0 ? variables : undefined,
       elements,
