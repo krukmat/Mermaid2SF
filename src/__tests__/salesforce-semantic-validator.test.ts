@@ -91,6 +91,75 @@ describe('SalesforceSemanticValidator', () => {
     expect(validator.validate(dsl).errors).toHaveLength(0);
   });
 
+  it('accepts the supported RecordBeforeSave element subset', () => {
+    const dsl = flow({
+      flowKind: 'RecordTriggered',
+      processType: 'RecordTriggered',
+      trigger: {
+        object: 'Account',
+        triggerType: 'RecordBeforeSave',
+        recordTriggerType: 'CreateAndUpdate',
+      },
+      elements: [
+        { id: 'Start', type: 'Start', next: 'Route' },
+        {
+          id: 'Route',
+          type: 'Decision',
+          outcomes: [
+            {
+              name: 'Technology',
+              conditions: [{
+                left: { kind: 'reference', name: '$Record.Industry' },
+                operator: 'EqualTo',
+                right: { kind: 'string', value: 'Technology' },
+              }],
+              next: 'SetDescription',
+            },
+            { name: 'Default', isDefault: true, next: 'End' },
+          ],
+        },
+        {
+          id: 'SetDescription',
+          type: 'Assignment',
+          assignments: [{
+            variable: '$Record.Description',
+            value: { kind: 'string', value: 'Validated by Mermaid2SF' },
+          }],
+          next: 'End',
+        },
+        { id: 'End', type: 'End' },
+      ],
+    });
+
+    expect(validator.validate(dsl).errors).toHaveLength(0);
+  });
+
+  it.each([
+    ['RecordCreate', { id: 'Bad', type: 'RecordCreate', object: 'Contact', fields: {}, next: 'End' }],
+    ['RecordUpdate', { id: 'Bad', type: 'RecordUpdate', object: 'Account', fields: {}, next: 'End' }],
+    ['Subflow', { id: 'Bad', type: 'Subflow', flowName: 'Child_Flow', next: 'End' }],
+    ['Wait', { id: 'Bad', type: 'Wait', waitType: 'duration', durationValue: 1, durationUnit: 'Minutes', next: 'End' }],
+    ['Fault', { id: 'Bad', type: 'Fault', next: 'End' }],
+  ] as const)('rejects %s in RecordBeforeSave', (_type, invalidElement) => {
+    const dsl = flow({
+      flowKind: 'RecordTriggered',
+      processType: 'RecordTriggered',
+      trigger: {
+        object: 'Account',
+        triggerType: 'RecordBeforeSave',
+        recordTriggerType: 'CreateAndUpdate',
+      },
+      elements: [
+        { id: 'Start', type: 'Start', next: 'Bad' },
+        invalidElement as any,
+        { id: 'End', type: 'End' },
+      ],
+    });
+
+    const result = validator.validate(dsl);
+    expect(result.errors.some((error) => error.code === 'M2SF-SF-008' && error.elementId === 'Bad')).toBe(true);
+  });
+
   it('prevents XML serialization when v2 semantics are invalid', () => {
     const dsl = flow({
       elements: [
