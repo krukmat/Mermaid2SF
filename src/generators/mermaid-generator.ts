@@ -11,8 +11,8 @@ import {
  * Canonical FlowIR -> Mermaid serializer.
  *
  * The emitted Mermaid is intentionally authoring-compatible with MermaidParser +
- * MetadataExtractor, so it can be compiled back into FlowIR. Wave 1 guarantees
- * this path for the supported Autolaunched subset.
+ * MetadataExtractor, so it can be compiled back into FlowIR. Fidelity is
+ * feature-scoped by the documented Wave contracts.
  */
 export class MermaidGenerator {
   generate(dsl: FlowDSL): string {
@@ -145,7 +145,7 @@ export class MermaidGenerator {
       case 'RecordCreate':
         if (element.assignRecordIdToReference || element.storeOutputAutomatically !== undefined) {
           throw new Error(
-            `RecordCreate ${element.id} uses output metadata that is not round-trip safe in Mermaid Wave 1.`,
+            `RecordCreate ${element.id} uses output metadata that is not round-trip safe in the canonical Mermaid contract.`,
           );
         }
         lines.push(`object: ${element.object}`);
@@ -211,7 +211,7 @@ export class MermaidGenerator {
         const conditions = outcome.conditions || [];
         if (conditions.length > 1) {
           throw new Error(
-            `Decision ${element.id} outcome ${outcome.name} has multiple conditions; Mermaid Wave 1 supports one condition per outcome.`,
+            `Decision ${element.id} outcome ${outcome.name} has multiple conditions; the current canonical Mermaid contract supports one condition per outcome.`,
           );
         }
 
@@ -248,7 +248,7 @@ export class MermaidGenerator {
   private renderFilter(field: string, operator: string, value: FlowValueLike, elementId: string): string {
     if (operator !== 'EqualTo') {
       throw new Error(
-        `${elementId} uses filter operator ${operator}; Mermaid Wave 1 record filters support EqualTo only.`,
+        `${elementId} uses filter operator ${operator}; the current canonical Mermaid record-filter contract supports EqualTo only.`,
       );
     }
     return `filter: ${field} = ${this.renderValue(value)}`;
