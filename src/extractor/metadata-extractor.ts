@@ -98,8 +98,8 @@ export class MetadataExtractor {
     let apiVersion: string | undefined;
     let status: 'Draft' | 'Active' | 'Obsolete' | undefined;
     let object = '';
-    let triggerType: 'RecordBeforeSave' | 'RecordAfterSave' | undefined;
-    let recordTriggerType: 'Create' | 'Update' | 'CreateAndUpdate' | undefined;
+    let triggerType: 'RecordBeforeSave' | 'RecordAfterSave' | 'RecordBeforeDelete' | undefined;
+    let recordTriggerType: 'Create' | 'Update' | 'CreateAndUpdate' | 'Delete' | undefined;
     let filterLogic: string | undefined;
     let doesRequireRecordChangedToMeetCriteria: boolean | undefined;
     let scheduleFrequency: 'Once' | 'Daily' | 'Weekly' | undefined;
@@ -122,14 +122,16 @@ export class MetadataExtractor {
       const objectMatch = line.match(/^object:\s*([A-Za-z0-9_]+)/i);
       if (objectMatch) object = objectMatch[1];
 
-      const trigger = line.match(/^trigger:\s*(before-save|after-save)/i)?.[1]?.toLowerCase();
+      const trigger = line.match(/^trigger:\s*(before-save|after-save|before-delete)/i)?.[1]?.toLowerCase();
       if (trigger === 'before-save') triggerType = 'RecordBeforeSave';
       if (trigger === 'after-save') triggerType = 'RecordAfterSave';
+      if (trigger === 'before-delete') triggerType = 'RecordBeforeDelete';
 
-      const recordTrigger = line.match(/^record-trigger:\s*(create-and-update|create|update)/i)?.[1]?.toLowerCase();
+      const recordTrigger = line.match(/^record-trigger:\s*(create-and-update|create|update|delete)/i)?.[1]?.toLowerCase();
       if (recordTrigger === 'create') recordTriggerType = 'Create';
       if (recordTrigger === 'update') recordTriggerType = 'Update';
       if (recordTrigger === 'create-and-update') recordTriggerType = 'CreateAndUpdate';
+      if (recordTrigger === 'delete') recordTriggerType = 'Delete';
 
       const frequency = line.match(/^frequency:\s*(once|daily|weekly)$/i)?.[1]?.toLowerCase();
       if (frequency === 'once') scheduleFrequency = 'Once';
