@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <environments>Default</environments>
+    <interviewLabel>Golden Record Triggered Before Delete {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Golden Record Triggered Before Delete</label>
+    <processType>AutoLaunchedFlow</processType>
+    <recordUpdates>
+        <name>Update_Contacts</name>
+        <label>Update Contacts</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <filters>
+            <field>AccountId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>Description</field>
+            <value>
+                <stringValue>Parent Account deleted</stringValue>
+            </value>
+        </inputAssignments>
+        <object>Contact</object>
+    </recordUpdates>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Update_Contacts</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Industry</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Technology</stringValue>
+            </value>
+        </filters>
+        <object>Account</object>
+        <recordTriggerType>Delete</recordTriggerType>
+        <triggerType>RecordBeforeDelete</triggerType>
+    </start>
+    <status>Draft</status>
+</Flow>
