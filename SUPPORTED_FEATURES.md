@@ -1,6 +1,6 @@
 # Mermaid2SF — Supported Features
 
-This matrix is the public fidelity contract. `Guaranteed` is reserved for behavior backed by automated semantic round-trip tests. Salesforce deploy compatibility additionally requires the authenticated deployment gate. See [`docs/WAVE1_AUTOLAUNCHED_PROOF.md`](docs/WAVE1_AUTOLAUNCHED_PROOF.md) for the Wave 1 evidence record.
+This matrix is the public fidelity contract. `Guaranteed` is reserved for behavior backed by automated semantic round-trip tests. Salesforce deploy compatibility additionally requires the authenticated deployment gate. See [`docs/WAVE1_AUTOLAUNCHED_PROOF.md`](docs/WAVE1_AUTOLAUNCHED_PROOF.md) for Wave 1 and [`docs/WAVE2A_RECORD_TRIGGERED_AFTER_SAVE_PROOF.md`](docs/WAVE2A_RECORD_TRIGGERED_AFTER_SAVE_PROOF.md) for Wave 2A.
 
 ## Flow families
 
@@ -8,7 +8,8 @@ This matrix is the public fidelity contract. `Guaranteed` is reserved for behavi
 |---|---|---|---|---|
 | Autolaunched Flow (no trigger) | Guaranteed subset | Guaranteed subset | Guaranteed subset | Wave 1 bidirectional contract: Salesforce XML ⇄ FlowIR ⇄ Mermaid. See scope below. |
 | Screen Flow | Baseline | Partial | Partial | Correct `processType` mapping exists; advanced Screen metadata is not part of Wave 1. |
-| Record-Triggered Flow | Baseline | Partial | Partial | Requires explicit trigger configuration; not part of the Wave 1 guarantee. |
+| Record-Triggered After Save | Guaranteed subset | Guaranteed subset | Guaranteed subset | Wave 2A bidirectional contract for Create, Update and CreateAndUpdate trigger modes. |
+| Record-Triggered Before Save | Baseline | Partial | Partial | Representable, but subtype-specific Salesforce restrictions are deferred to Wave 2B. |
 | Scheduled / Platform Event / Orchestrated | Unsupported | Partial/unknown | Unsupported | Not part of the current correctness baseline. |
 
 ## Wave 1 — Autolaunched bidirectional contract
@@ -60,11 +61,55 @@ The following are not covered by the Autolaunched bidirectional guarantee yet:
 
 Unsupported Wave 1 metadata must not be described as lossless simply because the XML parser can read part of it.
 
+
+## Wave 2A — Record-Triggered After Save bidirectional contract
+
+Wave 2A extends the same canonical contract to Record-Triggered After Save Flows:
+
+```text
+Salesforce Record-Triggered Flow XML
+              ↓
+            FlowIR
+              ↓
+            Mermaid
+              ↓
+            FlowIR
+              ↓
+Salesforce Record-Triggered Flow XML
+              ↓
+            FlowIR
+```
+
+### Guaranteed Wave 2A trigger subset
+
+- Record-Triggered Flow with `triggerType = RecordAfterSave`.
+- Standard trigger object metadata.
+- Record trigger modes: `Create`, `Update`, and `CreateAndUpdate`.
+- Entry filters using the current canonical `EqualTo` filter subset.
+- `filterLogic`.
+- `doesRequireRecordChangedToMeetCriteria`.
+- `$Record` references through supported values and conditions.
+- The Wave 1 business-element subset where valid for After Save: Assignment, Decision, Get Records, Create Records, Update Records and basic Subflow mappings.
+
+The rich Wave 2A fixture is checked with semantic equality across Salesforce XML → FlowIR → Mermaid → FlowIR → Salesforce XML → FlowIR. A separate org-safe fixture is validated by Salesforce Metadata API in CI.
+
+### Explicit Wave 2A boundaries
+
+Wave 2A does not claim:
+
+- Before Save restrictions or fidelity (Wave 2B),
+- Before Delete,
+- scheduled paths,
+- non-`EqualTo` trigger filters in canonical Mermaid authoring,
+- Apex Actions or HTTP Callouts,
+- universal support for all Record-Triggered metadata,
+- lossless preservation of Salesforce metadata that is not modeled by FlowIR.
+
 ## Elements
 
 | Element | Forward | Reverse | Round-trip | Fidelity notes |
 |---|---|---|---|---|
-| Start | Supported | Supported | Guaranteed in Wave 1 Autolaunched | Record-trigger configuration remains feature-scoped. |
+| Start | Supported | Supported | Guaranteed in Wave 1 Autolaunched and Wave 2A After Save | Wave 2A preserves object, trigger mode, filters, filter logic and changed-to-meet-criteria metadata. |
 | End / Terminal | Supported | Synthetic | Guaranteed in Wave 1 Autolaunched | End is an authoring/IR concept; Salesforce termination is represented by no connector. |
 | Assignment | Supported | Supported | Guaranteed in Wave 1 Autolaunched | Typed values are preserved in the guaranteed subset. |
 | Decision | Supported | Supported subset | Guaranteed subset in Wave 1 Autolaunched | One structured condition per non-default Mermaid outcome; default outcome preserved. |
@@ -90,7 +135,7 @@ Unsupported Wave 1 metadata must not be described as lossless simply because the
 
 ## External Salesforce gate
 
-Wave 1 Autolaunched compatibility has been externally verified against a real Salesforce org.
+Wave 1 Autolaunched and Wave 2A Record-Triggered After Save compatibility have been externally verified against a real Salesforce org.
 
 The CI gate authenticates with the configured `SF_AUTH_URL` and performs a non-destructive Metadata API dry-run of the canonical Autolaunched fixture:
 
@@ -105,4 +150,11 @@ Verified on 2026-09-19 with Salesforce Metadata API v67.0:
 - Dry-run status: `Succeeded`.
 - No metadata was persisted to the validation org.
 
-This external gate proves Salesforce acceptance for the canonical Wave 1 Autolaunched validation fixture. The richer Wave 1 subset is separately proven by semantic round-trip tests. It does not extend the guarantee to unsupported Flow families or metadata outside the documented subset.
+Wave 2A was additionally verified on 2026-09-19 with Salesforce Metadata API v67.0:
+
+- `Golden_RecordTriggered_AfterSave` validated as a Salesforce `Flow`.
+- Components validated: 1/1.
+- Dry-run status: `Succeeded`.
+- No metadata was persisted to the validation org.
+
+These external gates prove Salesforce acceptance for the canonical Wave 1 and Wave 2A validation fixtures. Their richer documented subsets are separately proven by semantic round-trip tests. They do not extend the guarantee to unsupported Flow families or metadata outside the documented subsets.
