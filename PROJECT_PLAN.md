@@ -6,7 +6,7 @@
 
 The implementation now has a canonical FlowIR v2, Salesforce semantic validation, deterministic Salesforce XML generation, normalized golden fixtures, semantic round-trip gates, and an XML-tree reverse adapter for the guaranteed subset.
 
-The project remains a **correctness-hardened demo/PoC** with feature-scoped Salesforce verification. Wave 1 Autolaunched, Wave 2A Record-Triggered After Save, and Wave 2B Record-Triggered Before Save canonical fixtures have passed authenticated Salesforce Metadata API dry-runs; broader Flow families remain explicitly scoped.
+The project remains a **correctness-hardened demo/PoC** with feature-scoped Salesforce verification. Wave 1 Autolaunched, Wave 2A Record-Triggered After Save, Wave 2B Record-Triggered Before Save, and Wave 3 Schedule-Triggered canonical fixtures have passed authenticated Salesforce Metadata API dry-runs; broader Flow families remain explicitly scoped.
 
 Canonical architecture:
 
@@ -42,7 +42,7 @@ Detailed execution record: `docs/planning/compiler-correctness-execution.md`.
 
 - API baseline centralized at `67.0` and overrideable.
 - Internal `FlowKind` separated from Salesforce `processType`.
-- Screen, Autolaunched and Record-Triggered Start semantics modeled explicitly.
+- Screen, Autolaunched, Record-Triggered and Schedule-Triggered Start semantics modeled explicitly.
 - End is an authoring/IR terminal and never serializes as a fictitious target.
 - Canonical Salesforce golden fixtures exist for the three baseline Flow families.
 - Supported serializers are exercised against normalized fixtures.
@@ -52,7 +52,7 @@ Detailed execution record: `docs/planning/compiler-correctness-execution.md`.
 - Typed `FlowValue`: String, Boolean, Number, Date, DateTime, Reference and Null.
 - Structured conditions with typed operands/operators.
 - Explicit typed variables/resources.
-- Record-trigger configuration represented in the canonical model.
+- Record-trigger and schedule-trigger configuration represented explicitly in the canonical model.
 - Supported Mermaid and Salesforce XML paths normalize into FlowIR v2.
 - Mermaid authoring supports delimiter-safe references through `ref:<resource>`.
 
@@ -74,15 +74,15 @@ Detailed execution record: `docs/planning/compiler-correctness-execution.md`.
 - Blocking GitHub Actions `compiler-core` gate: tests + TypeScript build.
 - Conditional authenticated Salesforce org gate implemented.
 
-Current evidence after Wave 2B:
+Current evidence after Wave 3:
 
 ```text
 Test suites: 44 / 44 passed
-Tests:       306 / 306 passed
+Tests:       320 / 320 passed
 TypeScript:  build passed
 Golden XML:  passed
-Round-trip:  passed for Wave 1 Autolaunched + Wave 2A After Save + Wave 2B Before Save guaranteed subsets
-Org dry-run: Wave 1 PASS; Wave 2A PASS; Wave 2B PASS
+Round-trip:  passed for Wave 1 Autolaunched + Wave 2A After Save + Wave 2B Before Save + Wave 3 Schedule-Triggered guaranteed subsets
+Org dry-run: Wave 1 PASS; Wave 2A PASS; Wave 2B PASS; Wave 3 PASS
 ```
 
 ### M5 — Reverse parser and fidelity — ✅ Complete for guaranteed subset
@@ -136,4 +136,4 @@ These items are intentionally outside the completed hardening plan and must rema
 - legacy repository lint/format backlog is non-blocking and still red;
 - dependency audit currently reports legacy vulnerabilities and requires a separate modernization pass;
 - `package-lock.json` still carries stale ISC root-license metadata although `package.json`/`LICENSE` are MIT;
-- Loop, Wait, Fault, advanced Screens, Apex Actions, HTTP Callouts and additional Flow families are not guaranteed.
+- Loop, Wait, Fault, advanced Screens, Apex Actions, HTTP Callouts, Platform Event/Orchestration families, and metadata outside the documented Wave contracts are not guaranteed.
