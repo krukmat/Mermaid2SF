@@ -244,10 +244,20 @@ describe('SalesforceSemanticValidator', () => {
     expect(validator.validate(dsl).errors).toHaveLength(0);
   });
 
+  it('accepts a standard Platform Event API name', () => {
+    const dsl = flow({
+      flowKind: 'PlatformEventTriggered',
+      processType: 'PlatformEventTriggered',
+      platformEvent: { eventApiName: 'BatchApexErrorEvent' },
+    });
+
+    expect(validator.validate(dsl).errors).toHaveLength(0);
+  });
+
   it.each([
     ['missing event metadata', undefined, 'M2SF-SF-019'],
-    ['non-event API name', { eventApiName: 'Account' }, 'M2SF-SF-023'],
-    ['custom object instead of event', { eventApiName: 'M2SF_Validation__c' }, 'M2SF-SF-023'],
+    ['API name containing spaces', { eventApiName: 'Bad Event' }, 'M2SF-SF-023'],
+    ['API name starting with a number', { eventApiName: '1BadEvent' }, 'M2SF-SF-023'],
   ] as const)('rejects PlatformEventTriggered %s', (_name, platformEvent, code) => {
     const dsl = flow({
       flowKind: 'PlatformEventTriggered',

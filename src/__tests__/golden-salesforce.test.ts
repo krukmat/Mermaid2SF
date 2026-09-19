@@ -507,7 +507,7 @@ describe('M4 Salesforce correctness gates', () => {
 
     expect(sourceIr.flowKind).toBe('PlatformEventTriggered');
     expect(sourceIr.platformEvent).toEqual({
-      eventApiName: 'M2SF_Validation_Event__e',
+      eventApiName: 'BatchApexErrorEvent',
     });
     expect(canonicalizeXml(regeneratedXml)).toEqual(canonicalizeXml(sourceXml));
   });

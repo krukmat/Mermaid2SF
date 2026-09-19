@@ -5,34 +5,11 @@
     <interviewLabel>Golden Platform Event Triggered {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Golden Platform Event Triggered</label>
     <processType>AutoLaunchedFlow</processType>
-    <assignments>
-        <name>Capture_Message</name>
-        <label>Capture Message</label>
-        <locationX>0</locationX>
-        <locationY>0</locationY>
-        <assignmentItems>
-            <assignToReference>message</assignToReference>
-            <operator>Assign</operator>
-            <value>
-                <elementReference>$Record.Message__c</elementReference>
-            </value>
-        </assignmentItems>
-    </assignments>
     <start>
         <locationX>0</locationX>
         <locationY>0</locationY>
-        <connector>
-            <targetReference>Capture_Message</targetReference>
-        </connector>
-        <object>M2SF_Validation_Event__e</object>
+        <object>BatchApexErrorEvent</object>
         <triggerType>PlatformEvent</triggerType>
     </start>
-    <variables>
-        <name>message</name>
-        <dataType>String</dataType>
-        <isCollection>false</isCollection>
-        <isInput>false</isInput>
-        <isOutput>false</isOutput>
-    </variables>
     <status>Draft</status>
 </Flow>

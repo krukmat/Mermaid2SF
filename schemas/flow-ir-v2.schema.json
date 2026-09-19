@@ -137,7 +137,7 @@
       "required": ["eventApiName"],
       "additionalProperties": false,
       "properties": {
-        "eventApiName": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*__e$" }
+        "eventApiName": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" }
       }
     },
     "FlowElement": {

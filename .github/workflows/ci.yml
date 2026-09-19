@@ -1,5 +1,9 @@
 name: CI
 
+concurrency:
+  group: mermaid2sf-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]
@@ -91,7 +95,6 @@ jobs:
         run: >
           sf project deploy start
           --dry-run
-          --source-dir force-app/main/default/objects/M2SF_Validation_Event__e
           --source-dir force-app/main/default/flows/Golden_PlatformEventTriggered.flow-meta.xml
           --target-org m2sf-ci
           --wait 20

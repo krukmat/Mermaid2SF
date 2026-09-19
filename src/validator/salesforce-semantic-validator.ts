@@ -85,8 +85,8 @@ export class SalesforceSemanticValidator {
     } else if (kind === 'PlatformEventTriggered') {
       if (!dsl.platformEvent) {
         this.error(errors, 'M2SF-SF-019', 'Platform Event-Triggered Flow requires platformEvent metadata.');
-      } else if (!/^[A-Za-z][A-Za-z0-9_]*__e$/.test(dsl.platformEvent.eventApiName || '')) {
-        this.error(errors, 'M2SF-SF-023', 'Wave 5 Platform Event API name must be a custom event ending in __e.');
+      } else if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(dsl.platformEvent.eventApiName || '')) {
+        this.error(errors, 'M2SF-SF-023', 'Platform Event API name must be a valid Salesforce API name.');
       }
       if (dsl.trigger || dsl.schedule) {
         this.error(errors, 'M2SF-SF-025', 'Platform Event-Triggered Flow cannot mix record-trigger or schedule metadata.');
