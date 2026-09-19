@@ -101,6 +101,7 @@ export class MetadataExtractor {
     let triggerType: 'RecordBeforeSave' | 'RecordAfterSave' | undefined;
     let recordTriggerType: 'Create' | 'Update' | 'CreateAndUpdate' | undefined;
     let filterLogic: string | undefined;
+    let doesRequireRecordChangedToMeetCriteria: boolean | undefined;
     const filters: any[] = [];
     const variables: any[] = [];
 
@@ -128,6 +129,8 @@ export class MetadataExtractor {
 
       const logic = line.match(/^filter-logic:\s*(.+)$/i);
       if (logic) filterLogic = logic[1].trim();
+      const changed = line.match(/^require-changed-to-meet-criteria:\s*(true|false)$/i);
+      if (changed) doesRequireRecordChangedToMeetCriteria = changed[1].toLowerCase() === 'true';
       const filter = line.match(/^filter:\s*([A-Za-z0-9_.]+)\s*=\s*(.+)$/i);
       if (filter) filters.push({ field: filter[1], operator: 'EqualTo', value: filter[2].trim() });
 
@@ -147,7 +150,14 @@ export class MetadataExtractor {
     }
 
     const trigger = object || triggerType || recordTriggerType
-      ? { object, triggerType, recordTriggerType, filters, filterLogic }
+      ? {
+          object,
+          triggerType,
+          recordTriggerType,
+          filters,
+          filterLogic,
+          doesRequireRecordChangedToMeetCriteria,
+        }
       : undefined;
     return { flowKind, apiVersion, status, trigger, variables };
   }
