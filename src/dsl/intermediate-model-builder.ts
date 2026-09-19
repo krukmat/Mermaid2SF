@@ -45,6 +45,7 @@ export class IntermediateModelBuilder {
       apiVersion: options.apiVersion || startMetadata.apiVersion || DEFAULT_API_VERSION,
       status: options.status || startMetadata.status || DEFAULT_FLOW_STATUS,
       trigger: options.trigger || startMetadata.trigger,
+      schedule: options.schedule || startMetadata.schedule,
       startElement,
       variables: variables.length > 0 ? variables : undefined,
       elements,
