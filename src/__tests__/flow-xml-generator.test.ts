@@ -114,7 +114,7 @@ describe('FlowXmlGenerator', () => {
     expect(xml).toContain('<assignmentItems>');
     expect(xml).toContain('<defaultConnector>');
     expect(xml).toContain('<defaultConnectorLabel>Default</defaultConnectorLabel>');
-    expect(xml).toContain('<fieldType>Field</fieldType>');
+    expect(xml).toContain('<fieldType>InputField</fieldType>');
     expect(xml).toContain('<fieldText>Hello &lt;world&gt;</fieldText>');
     expect(xml).toContain('<assignRecordIdToReference>varRecordId</assignRecordIdToReference>');
     expect(xml).toContain('<filters>');
