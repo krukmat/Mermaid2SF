@@ -9,7 +9,7 @@
         <name>Capture_Record_Id</name>
         <label>Capture Record Id</label>
         <locationX>0</locationX>
-        <locationY>100</locationY>
+        <locationY>0</locationY>
         <assignmentItems>
             <assignToReference>recordId</assignToReference>
             <operator>Assign</operator>
@@ -25,7 +25,7 @@
         <name>Create_Contact</name>
         <label>Create Contact</label>
         <locationX>0</locationX>
-        <locationY>200</locationY>
+        <locationY>0</locationY>
         <inputAssignments>
             <field>AccountId</field>
             <value>
@@ -47,7 +47,7 @@
         <name>Update_Account</name>
         <label>Update Account</label>
         <locationX>0</locationX>
-        <locationY>300</locationY>
+        <locationY>0</locationY>
         <filters>
             <field>Id</field>
             <operator>EqualTo</operator>
@@ -66,6 +66,9 @@
     <start>
         <locationX>0</locationX>
         <locationY>0</locationY>
+        <connector>
+            <targetReference>Capture_Record_Id</targetReference>
+        </connector>
         <filterLogic>and</filterLogic>
         <filters>
             <field>Industry</field>
@@ -77,9 +80,6 @@
         <object>Account</object>
         <recordTriggerType>CreateAndUpdate</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
-        <connector>
-            <targetReference>Capture_Record_Id</targetReference>
-        </connector>
     </start>
     <variables>
         <name>recordId</name>
