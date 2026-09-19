@@ -90,7 +90,7 @@ export class MermaidGenerator {
     switch (element.type) {
       case 'Start': {
         const kind = resolveFlowKind(dsl);
-        const kindName = kind === 'RecordTriggered' ? 'record-triggered' : kind === 'ScheduleTriggered' ? 'schedule-triggered' : kind.toLowerCase();
+        const kindName = kind === 'RecordTriggered' ? 'record-triggered' : kind === 'ScheduleTriggered' ? 'schedule-triggered' : kind === 'PlatformEventTriggered' ? 'platform-event-triggered' : kind.toLowerCase();
         lines.push(`flow: ${kindName}`);
         if (dsl.apiVersion) lines.push(`api-version: ${dsl.apiVersion}`);
         if (dsl.status) lines.push(`status: ${dsl.status.toLowerCase()}`);
@@ -128,6 +128,9 @@ export class MermaidGenerator {
           for (const filter of schedule.filters || []) {
             lines.push(this.renderFilter(filter.field, filter.operator, filter.value, element.id));
           }
+        }
+        if (kind === 'PlatformEventTriggered' && dsl.platformEvent) {
+          lines.push(`event: ${dsl.platformEvent.eventApiName}`);
         }
         for (const variable of dsl.variables || []) {
           const flags = [
