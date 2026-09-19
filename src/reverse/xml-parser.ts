@@ -176,13 +176,15 @@ function parseScreens(root: XmlNode): FlowElement[] {
     const components = xmlChildren(node, 'fields').map((field, index) => {
       const visibilityRule = xmlChild(field, 'visibilityRule');
       const conditions = visibilityRule ? parseConditions(visibilityRule) : [];
+      const type = (xmlChildText(field, 'fieldType') || 'InputField') as any;
+      const fieldText = xmlChildText(field, 'fieldText');
       return {
-        type: (xmlChildText(field, 'fieldType') || 'InputField') as any,
+        type,
         name: xmlChildText(field, 'name') || `Field_${index + 1}`,
         dataType: xmlChildText(field, 'dataType'),
-        label: xmlChildText(field, 'fieldText'),
+        label: type === 'DisplayText' ? undefined : fieldText,
         target: xmlChildText(field, 'fieldReference'),
-        text: xmlChildText(field, 'fieldText'),
+        text: type === 'DisplayText' ? fieldText : undefined,
         required: xmlChildText(field, 'isRequired') === undefined
           ? undefined
           : xmlChildText(field, 'isRequired') === 'true',
