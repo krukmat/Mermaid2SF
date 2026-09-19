@@ -19,7 +19,8 @@ function logicForConditions(explicit: string | undefined, conditionCount: number
   return conditionCount > 0 ? explicit || 'and' : undefined;
 }
 function elementSnapshot(element: FlowElement, terminalIds: Set<string>): unknown {
-  const common = { id: element.apiName || element.id, type: element.type, label: element.label || undefined, next: stableNext('next' in element ? element.next : undefined, terminalIds) };
+  const effectiveId = element.apiName || element.id;
+  const common = { id: effectiveId, type: element.type, label: element.label || effectiveId, next: stableNext('next' in element ? element.next : undefined, terminalIds) };
   switch (element.type) {
     case 'Start': return common;
     case 'End': return undefined;
