@@ -67,6 +67,26 @@ export class XMLGenerator {
       lines.push(`        <recordTriggerType>${trigger.recordTriggerType}</recordTriggerType>`);
       lines.push(`        <triggerType>${trigger.triggerType}</triggerType>`);
     }
+    if (resolveFlowKind(dsl) === 'ScheduleTriggered' && dsl.schedule) {
+      const schedule = dsl.schedule;
+      if (schedule.filterLogic) lines.push(`        <filterLogic>${context.escapeXml(schedule.filterLogic)}</filterLogic>`);
+      for (const filter of schedule.filters || []) {
+        lines.push('        <filters>');
+        lines.push(`            <field>${context.escapeXml(filter.field)}</field>`);
+        lines.push(`            <operator>${filter.operator}</operator>`);
+        lines.push('            <value>');
+        lines.push(...serializeFlowValueXml(filter.value, context.escapeXml, 16));
+        lines.push('            </value>');
+        lines.push('        </filters>');
+      }
+      if (schedule.object) lines.push(`        <object>${context.escapeXml(schedule.object)}</object>`);
+      lines.push('        <schedule>');
+      lines.push(`            <frequency>${schedule.frequency}</frequency>`);
+      lines.push(`            <startDate>${context.escapeXml(schedule.startDate)}</startDate>`);
+      lines.push(`            <startTime>${context.escapeXml(schedule.startTime)}</startTime>`);
+      lines.push('        </schedule>');
+      lines.push('        <triggerType>Scheduled</triggerType>');
+    }
     lines.push('    </start>');
     return lines;
   }
