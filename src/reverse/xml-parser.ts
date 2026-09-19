@@ -357,9 +357,11 @@ function parseVariables(root: XmlNode): FlowVariable[] {
 function resolveFlowKind(root: XmlNode, start: XmlNode): FlowKind {
   const processType = xmlChildText(root, 'processType') || 'AutoLaunchedFlow';
   if (processType === 'Flow') return 'Screen';
+  const triggerType = xmlChildText(start, 'triggerType');
+  if (triggerType === 'Scheduled' || xmlChild(start, 'schedule')) return 'ScheduleTriggered';
   if (
     xmlChildText(start, 'object') ||
-    xmlChildText(start, 'triggerType') ||
+    triggerType ||
     xmlChildText(start, 'recordTriggerType')
   ) return 'RecordTriggered';
   return 'Autolaunched';
@@ -376,6 +378,20 @@ function parseTrigger(start: XmlNode, kind: FlowKind): FlowDSL['trigger'] {
     doesRequireRecordChangedToMeetCriteria: xmlChildText(start, 'doesRequireRecordChangedToMeetCriteria') === undefined
       ? undefined
       : xmlChildText(start, 'doesRequireRecordChangedToMeetCriteria') === 'true',
+  };
+}
+
+function parseSchedule(start: XmlNode, kind: FlowKind): FlowDSL['schedule'] {
+  if (kind !== 'ScheduleTriggered') return undefined;
+  const schedule = xmlChild(start, 'schedule');
+  if (!schedule) return undefined;
+  return {
+    frequency: (xmlChildText(schedule, 'frequency') || 'Daily') as 'Once' | 'Daily' | 'Weekly',
+    startDate: xmlChildText(schedule, 'startDate') || '',
+    startTime: xmlChildText(schedule, 'startTime') || '',
+    object: xmlChildText(start, 'object') || undefined,
+    filters: parseFilters(start),
+    filterLogic: xmlChildText(start, 'filterLogic'),
   };
 }
 
@@ -421,6 +437,7 @@ export function parseFlowXmlText(text: string, flowName = 'Flow'): FlowDSL {
     apiVersion: xmlChildText(root, 'apiVersion') || DEFAULT_API_VERSION,
     status: (xmlChildText(root, 'status') || DEFAULT_FLOW_STATUS) as FlowDSL['status'],
     trigger: parseTrigger(startNode, kind),
+    schedule: parseSchedule(startNode, kind),
     startElement: 'Start',
     variables: variables.length > 0 ? variables : undefined,
     elements,
