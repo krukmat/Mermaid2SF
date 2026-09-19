@@ -87,6 +87,10 @@ export class XMLGenerator {
       lines.push('        </schedule>');
       lines.push('        <triggerType>Scheduled</triggerType>');
     }
+    if (resolveFlowKind(dsl) === 'PlatformEventTriggered' && dsl.platformEvent) {
+      lines.push(`        <object>${context.escapeXml(dsl.platformEvent.eventApiName)}</object>`);
+      lines.push('        <triggerType>PlatformEvent</triggerType>');
+    }
     lines.push('    </start>');
     return lines;
   }
