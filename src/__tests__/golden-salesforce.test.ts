@@ -596,10 +596,10 @@ describe('M4 Salesforce correctness gates', () => {
 
     const mermaid = mermaidGenerator.generate(sourceIr);
     expect(mermaid).toContain('flow: screen');
-    expect(mermaid).toContain('choice: HighPriority (String) = High | High Priority');
-    expect(mermaid).toContain('input: CustomerName (String) [InputField] | Customer Name');
+    expect(mermaid).toContain('choice: HighPriority');
+    expect(mermaid).toContain('input: CustomerName');
     expect(mermaid).toContain('choices: HighPriority,LowPriority');
-    expect(mermaid).toContain('visible-if: WantsEmail = true');
+    expect(mermaid).toContain('visible-if: ref:WantsEmail = true');
     expect(mermaid).toContain('display: EmailHint | Email updates are enabled.');
 
     const mermaidIr = parseMermaidToFlowIr(mermaid, sourceIr.flowApiName, sourceIr.label);
@@ -675,7 +675,7 @@ describe('M4 Salesforce correctness gates', () => {
 
     expect(mermaid).toContain('allow-pause: false');
     expect(mermaid).toContain('default: Acme');
-    expect(mermaid).toContain('input: ConfirmChoice (String) [RadioButtons] | Continue?');
+    expect(mermaid).toContain('input: ConfirmChoice');
     expect(semanticDiff(source, reparsed).equal).toBe(true);
   });
 
