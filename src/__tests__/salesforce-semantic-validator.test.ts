@@ -160,6 +160,65 @@ describe('SalesforceSemanticValidator', () => {
     expect(result.errors.some((error) => error.code === 'M2SF-SF-008' && error.elementId === 'Bad')).toBe(true);
   });
 
+  it('accepts a valid RecordBeforeDelete trigger pair with $Record context', () => {
+    const dsl = flow({
+      flowKind: 'RecordTriggered',
+      processType: 'RecordTriggered',
+      trigger: {
+        object: 'Account',
+        triggerType: 'RecordBeforeDelete',
+        recordTriggerType: 'Delete',
+      },
+      variables: [
+        { name: 'deletedId', dataType: 'String', isCollection: false, isInput: false, isOutput: false },
+      ],
+      elements: [
+        { id: 'Start', type: 'Start', next: 'Capture' },
+        {
+          id: 'Capture',
+          type: 'Assignment',
+          assignments: [{ variable: 'deletedId', value: { kind: 'reference', name: '$Record.Id' } }],
+          next: 'End',
+        },
+        { id: 'End', type: 'End' },
+      ],
+    });
+
+    expect(validator.validate(dsl).errors).toHaveLength(0);
+  });
+
+  it.each([
+    ['RecordBeforeDelete + Update', 'RecordBeforeDelete', 'Update', 'M2SF-SF-017'],
+    ['RecordBeforeSave + Delete', 'RecordBeforeSave', 'Delete', 'M2SF-SF-018'],
+    ['RecordAfterSave + Delete', 'RecordAfterSave', 'Delete', 'M2SF-SF-018'],
+  ] as const)('rejects invalid before-delete trigger pair: %s', (_name, triggerType, recordTriggerType, code) => {
+    const dsl = flow({
+      flowKind: 'RecordTriggered',
+      processType: 'RecordTriggered',
+      trigger: {
+        object: 'Account',
+        triggerType,
+        recordTriggerType,
+      },
+    });
+
+    expect(validator.validate(dsl).errors.some((error) => error.code === code)).toBe(true);
+  });
+
+  it('prevents XML serialization for an invalid RecordBeforeDelete trigger pair', () => {
+    const dsl = flow({
+      flowKind: 'RecordTriggered',
+      processType: 'RecordTriggered',
+      trigger: {
+        object: 'Account',
+        triggerType: 'RecordBeforeDelete',
+        recordTriggerType: 'Update',
+      },
+    });
+
+    expect(() => new FlowXmlGenerator().generate(dsl)).toThrow(/M2SF-SF-017/);
+  });
+
   it('accepts a complete ScheduleTriggered baseline with object context', () => {
     const dsl = flow({
       flowKind: 'ScheduleTriggered',
