@@ -94,7 +94,7 @@ export class MetadataExtractor {
   }
 
   private extractStartProperties(label: string): Record<string, any> {
-    let flowKind: 'Screen' | 'Autolaunched' | 'RecordTriggered' | 'ScheduleTriggered' | undefined;
+    let flowKind: 'Screen' | 'Autolaunched' | 'RecordTriggered' | 'ScheduleTriggered' | 'PlatformEventTriggered' | undefined;
     let apiVersion: string | undefined;
     let status: 'Draft' | 'Active' | 'Obsolete' | undefined;
     let object = '';
@@ -105,6 +105,7 @@ export class MetadataExtractor {
     let scheduleFrequency: 'Once' | 'Daily' | 'Weekly' | undefined;
     let scheduleStartDate: string | undefined;
     let scheduleStartTime: string | undefined;
+    let platformEventApiName: string | undefined;
     const filters: any[] = [];
     const variables: any[] = [];
 
@@ -114,6 +115,7 @@ export class MetadataExtractor {
       if (flow === 'autolaunched' || flow === 'auto-launched') flowKind = 'Autolaunched';
       if (flow === 'record-triggered' || flow === 'recordtriggered') flowKind = 'RecordTriggered';
       if (flow === 'schedule-triggered' || flow === 'scheduletriggered' || flow === 'scheduled') flowKind = 'ScheduleTriggered';
+      if (flow === 'platform-event-triggered' || flow === 'platformeventtriggered' || flow === 'platform-event') flowKind = 'PlatformEventTriggered';
 
       const version = line.match(/^api-version:\s*([\d.]+)/i);
       if (version) apiVersion = version[1];
@@ -121,6 +123,8 @@ export class MetadataExtractor {
       if (statusMatch) status = `${statusMatch[1][0].toUpperCase()}${statusMatch[1].slice(1).toLowerCase()}` as any;
       const objectMatch = line.match(/^object:\s*([A-Za-z0-9_]+)/i);
       if (objectMatch) object = objectMatch[1];
+      const eventMatch = line.match(/^event:\s*([A-Za-z][A-Za-z0-9_]*__e)$/i);
+      if (eventMatch) platformEventApiName = eventMatch[1];
 
       const trigger = line.match(/^trigger:\s*(before-save|after-save|before-delete)/i)?.[1]?.toLowerCase();
       if (trigger === 'before-save') triggerType = 'RecordBeforeSave';
@@ -184,7 +188,10 @@ export class MetadataExtractor {
           filterLogic,
         }
       : undefined;
-    return { flowKind, apiVersion, status, trigger, schedule, variables };
+    const platformEvent = flowKind === 'PlatformEventTriggered' || platformEventApiName
+      ? { eventApiName: platformEventApiName || object || '' }
+      : undefined;
+    return { flowKind, apiVersion, status, trigger, schedule, platformEvent, variables };
   }
 
   private extractAssignmentProperties(label: string): Record<string, any> {
