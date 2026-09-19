@@ -14,8 +14,8 @@
         <allowFinish>true</allowFinish>
         <fields>
             <name>Message</name>
-            <fieldType>DisplayText</fieldType>
             <fieldText>Hello</fieldText>
+            <fieldType>DisplayText</fieldType>
         </fields>
     </screens>
     <start>
