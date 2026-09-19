@@ -160,6 +160,25 @@ describe('SalesforceSemanticValidator', () => {
     expect(result.errors.some((error) => error.code === 'M2SF-SF-008' && error.elementId === 'Bad')).toBe(true);
   });
 
+  it('prevents XML serialization for invalid RecordBeforeSave elements', () => {
+    const dsl = flow({
+      flowKind: 'RecordTriggered',
+      processType: 'RecordTriggered',
+      trigger: {
+        object: 'Account',
+        triggerType: 'RecordBeforeSave',
+        recordTriggerType: 'CreateAndUpdate',
+      },
+      elements: [
+        { id: 'Start', type: 'Start', next: 'Create1' },
+        { id: 'Create1', type: 'RecordCreate', object: 'Contact', fields: {}, next: 'End' },
+        { id: 'End', type: 'End' },
+      ],
+    });
+
+    expect(() => new FlowXmlGenerator().generate(dsl)).toThrow(/M2SF-SF-008/);
+  });
+
   it('prevents XML serialization when v2 semantics are invalid', () => {
     const dsl = flow({
       elements: [
