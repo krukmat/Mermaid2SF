@@ -359,6 +359,7 @@ function resolveFlowKind(root: XmlNode, start: XmlNode): FlowKind {
   if (processType === 'Flow') return 'Screen';
   const triggerType = xmlChildText(start, 'triggerType');
   if (triggerType === 'Scheduled' || xmlChild(start, 'schedule')) return 'ScheduleTriggered';
+  if (triggerType === 'PlatformEvent') return 'PlatformEventTriggered';
   if (
     xmlChildText(start, 'object') ||
     triggerType ||
@@ -394,6 +395,14 @@ function parseSchedule(start: XmlNode, kind: FlowKind): FlowDSL['schedule'] {
     filterLogic: xmlChildText(start, 'filterLogic'),
   };
 }
+
+function parsePlatformEvent(start: XmlNode, kind: FlowKind): FlowDSL['platformEvent'] {
+  if (kind !== 'PlatformEventTriggered') return undefined;
+  return {
+    eventApiName: xmlChildText(start, 'object') || '',
+  };
+}
+
 
 /** Parse Salesforce Flow Metadata XML into canonical FlowIR v2. */
 export function parseFlowXmlText(text: string, flowName = 'Flow'): FlowDSL {
@@ -438,6 +447,7 @@ export function parseFlowXmlText(text: string, flowName = 'Flow'): FlowDSL {
     status: (xmlChildText(root, 'status') || DEFAULT_FLOW_STATUS) as FlowDSL['status'],
     trigger: parseTrigger(startNode, kind),
     schedule: parseSchedule(startNode, kind),
+    platformEvent: parsePlatformEvent(startNode, kind),
     startElement: 'Start',
     variables: variables.length > 0 ? variables : undefined,
     elements,
