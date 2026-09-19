@@ -21,6 +21,7 @@ export class SalesforceSemanticValidator {
     this.validateApiNames(dsl, errors);
     this.validateRequiredMetadata(dsl, errors);
     this.validateDecisions(dsl, errors);
+    this.validateScreens(dsl, errors);
     this.validateResources(dsl, errors);
     this.warnExperimentalElements(dsl, warnings);
     return { errors, warnings };
@@ -128,6 +129,58 @@ export class SalesforceSemanticValidator {
     }
   }
 
+  private validateScreens(dsl: FlowDSL, errors: ValidationError[]): void {
+    const choices = new Set((dsl.choices || []).map((choice) => choice.name));
+    for (const element of dsl.elements) {
+      if (element.type !== 'Screen') continue;
+
+      if (element.allowBack === false && element.allowFinish === false) {
+        this.error(errors, 'M2SF-SF-026', 'A Screen cannot disable both Previous and Finish navigation.', element.id);
+      }
+
+      const seen = new Set<string>();
+      for (const component of element.components) {
+        if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(component.name)) {
+          this.error(errors, 'M2SF-SF-027', `Invalid Screen component API name "${component.name}".`, element.id);
+        } else if (seen.has(component.name)) {
+          this.error(errors, 'M2SF-SF-027', `Duplicate Screen component API name "${component.name}".`, element.id);
+        }
+        seen.add(component.name);
+
+        const type = component.type === 'Field' ? 'InputField' : component.type;
+        const guaranteedTypes = new Set(['InputField', 'LargeTextArea', 'DisplayText', 'RadioButtons', 'DropdownBox']);
+        if (!guaranteedTypes.has(type)) {
+          this.error(errors, 'M2SF-SF-032', `Screen component type ${component.type} is outside the Wave 6 guaranteed subset.`, element.id);
+        }
+
+        if (type === 'InputField' && !component.dataType?.trim()) {
+          this.error(errors, 'M2SF-SF-029', `Screen input ${component.name} requires dataType.`, element.id);
+        }
+        if ((type === 'InputField' || type === 'LargeTextArea' || type === 'RadioButtons' || type === 'DropdownBox') && !(component.label || component.text)?.trim()) {
+          this.error(errors, 'M2SF-SF-029', `Screen input ${component.name} requires a field label.`, element.id);
+        }
+        if (type === 'DisplayText' && !component.text?.trim()) {
+          this.error(errors, 'M2SF-SF-033', `DisplayText ${component.name} requires text.`, element.id);
+        }
+
+        if (type === 'RadioButtons' || type === 'DropdownBox') {
+          if (!component.choiceReferences?.length) {
+            this.error(errors, 'M2SF-SF-028', `${type} ${component.name} requires at least one choice reference.`, element.id);
+          }
+        }
+        for (const choice of component.choiceReferences || []) {
+          if (!choices.has(choice)) {
+            this.error(errors, 'M2SF-SF-028', `Screen component ${component.name} references unknown choice "${choice}".`, element.id);
+          }
+        }
+
+        if ((component.visibility?.conditions?.length || 0) > 1) {
+          this.error(errors, 'M2SF-SF-034', `Screen component ${component.name} has multiple visibility conditions; Wave 6 guarantees one.`, element.id);
+        }
+      }
+    }
+  }
+
   private validateDecisions(dsl: FlowDSL, errors: ValidationError[]): void {
     for (const element of dsl.elements) {
       if (element.type !== 'Decision') continue;
@@ -149,10 +202,14 @@ export class SalesforceSemanticValidator {
 
   private validateResources(dsl: FlowDSL, errors: ValidationError[]): void {
     const resources = new Set((dsl.variables || []).map((variable) => variable.name));
+    for (const choice of dsl.choices || []) resources.add(choice.name);
     const elements = new Set<string>();
     for (const element of dsl.elements) {
       elements.add(element.id);
       elements.add(element.apiName || element.id);
+      if (element.type === 'Screen') {
+        for (const component of element.components) resources.add(component.name);
+      }
     }
 
     const check = (value: FlowValueLike, element: FlowElement) => {
@@ -183,6 +240,15 @@ export class SalesforceSemanticValidator {
       if (element.type === 'Decision') {
         for (const outcome of element.outcomes) {
           for (const condition of outcome.conditions || []) {
+            check(condition.left, element);
+            check(condition.right, element);
+          }
+        }
+      }
+      if (element.type === 'Screen') {
+        for (const component of element.components) {
+          if (component.defaultValue !== undefined) check(component.defaultValue, element);
+          for (const condition of component.visibility?.conditions || []) {
             check(condition.left, element);
             check(condition.right, element);
           }
