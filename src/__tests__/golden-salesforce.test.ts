@@ -606,8 +606,10 @@ describe('M4 Salesforce correctness gates', () => {
     const regeneratedXml = generator.generate(mermaidIr);
     const finalIr = parseFlowXmlText(regeneratedXml, sourceIr.flowApiName);
 
-    expect(semanticDiff(sourceIr, mermaidIr).equal).toBe(true);
-    expect(semanticDiff(sourceIr, finalIr).equal).toBe(true);
+    const mermaidDiff = semanticDiff(sourceIr, mermaidIr);
+    const xmlDiff = semanticDiff(sourceIr, finalIr);
+    expect(mermaidDiff.actual).toEqual(mermaidDiff.expected);
+    expect(xmlDiff.actual).toEqual(xmlDiff.expected);
   });
 
   it('Wave 6 canonical Mermaid preserves Screen navigation and typed defaults', () => {
@@ -676,7 +678,8 @@ describe('M4 Salesforce correctness gates', () => {
     expect(mermaid).toContain('allow-pause: false');
     expect(mermaid).toContain('default: Acme');
     expect(mermaid).toContain('input: ConfirmChoice');
-    expect(semanticDiff(source, reparsed).equal).toBe(true);
+    const diff = semanticDiff(source, reparsed);
+    expect(diff.actual).toEqual(diff.expected);
   });
 
   it('XML canonicalization ignores formatting but not metadata structure', () => {
