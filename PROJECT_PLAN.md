@@ -78,7 +78,7 @@ Current evidence after Wave 2A:
 
 ```text
 Test suites: 44 / 44 passed
-Tests:       293 / 293 passed
+Tests:       294 / 294 passed
 TypeScript:  build passed
 Golden XML:  passed
 Round-trip:  passed for Wave 1 Autolaunched + Wave 2A After Save guaranteed subsets
