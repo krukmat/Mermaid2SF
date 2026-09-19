@@ -97,11 +97,17 @@ export class MermaidGenerator {
         if (kind === 'RecordTriggered' && dsl.trigger) {
           const trigger = dsl.trigger;
           lines.push(`object: ${trigger.object}`);
-          lines.push(`trigger: ${trigger.triggerType === 'RecordBeforeSave' ? 'before-save' : 'after-save'}`);
+          const triggerNames: Record<string, string> = {
+            RecordBeforeSave: 'before-save',
+            RecordAfterSave: 'after-save',
+            RecordBeforeDelete: 'before-delete',
+          };
+          lines.push(`trigger: ${triggerNames[trigger.triggerType] || trigger.triggerType}`);
           const recordTriggerNames: Record<string, string> = {
             Create: 'create',
             Update: 'update',
             CreateAndUpdate: 'create-and-update',
+            Delete: 'delete',
           };
           lines.push(`record-trigger: ${recordTriggerNames[trigger.recordTriggerType] || trigger.recordTriggerType}`);
           if (trigger.filterLogic) lines.push(`filter-logic: ${trigger.filterLogic}`);
