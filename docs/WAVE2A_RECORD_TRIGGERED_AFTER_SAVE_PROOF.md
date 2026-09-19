@@ -99,7 +99,7 @@ CI evidence on the Wave 2A implementation:
 
 ```text
 Test Suites: 44 passed, 44 total
-Tests:       293 passed, 293 total
+Tests:       294 passed, 294 total
 TypeScript:  build passed
 ```
 
@@ -136,11 +136,13 @@ Component: Golden_RecordTriggered_AfterSave
 Type: Flow
 Components: 1/1
 Status: Succeeded
-Deploy ID: 0Afd200000Ttxl7CAB
+Deploy ID: 0Afd200000Tty2rCAB
 Dry-run complete.
 ```
 
 No metadata was persisted to the validation org.
+
+The same Salesforce validation fixture is also asserted in the automated suite to equal the canonical output produced by `FlowXmlGenerator` from FlowIR. This binds the external Salesforce acceptance proof directly to compiler output rather than to an independently hand-maintained XML sample.
 
 ## Traceability
 
@@ -148,10 +150,10 @@ The full Wave 2A implementation was validated by:
 
 - Repository: `krukmat/Mermaid2SF`
 - Branch: `main`
-- Implementation commit: `e9adee78fd8147ce40af043f44d3ba3041be337a`
+- Final compiler/fixture commit: `f0cc795cb48c964d4b30a5795d9ee136eee8d6f7`
 - GitHub Actions workflow: `CI`
-- Run: `#101`
-- Run URL: https://github.com/krukmat/Mermaid2SF/actions/runs/35432135724
+- Run: `#107`
+- Run URL: https://github.com/krukmat/Mermaid2SF/actions/runs/35432292278
 - `compiler-core`: success
 - `salesforce-org-gate`: success
 
@@ -173,6 +175,7 @@ and validates both Wave 1 and Wave 2A canonical fixtures on authenticated runs.
 | Create / Update / CreateAndUpdate modes survive canonical Mermaid round-trip | parameterized tests | PASS |
 | `$Record` references survive the supported round-trip | rich fixture | PASS |
 | Wave 1 business primitives remain semantically stable in After Save | rich fixture | PASS |
+| Salesforce validation fixture is reproducible as canonical `FlowXmlGenerator` output | golden compiler-output test | PASS |
 | Canonical After Save metadata is accepted by a real Salesforce org | Metadata API dry-run | PASS |
 | Before Save restrictions/fidelity | deferred to Wave 2B | NOT IN SCOPE |
 | Before Delete / Scheduled Paths | future work | NOT IN SCOPE |
