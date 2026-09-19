@@ -191,9 +191,12 @@ function parseScreens(root: XmlNode): FlowElement[] {
         defaultValue: xmlChild(field, 'defaultValue')
           ? parseFlowValue(xmlChild(field, 'defaultValue'))
           : undefined,
-        choiceReferences: xmlChildren(field, 'choiceReferences')
-          .map((choice) => xmlText(choice) || '')
-          .filter(Boolean),
+        choiceReferences: (() => {
+          const refs = xmlChildren(field, 'choiceReferences')
+            .map((choice) => xmlText(choice) || '')
+            .filter(Boolean);
+          return refs.length > 0 ? refs : undefined;
+        })(),
         visibility: visibilityRule && conditions.length > 0
           ? {
               conditionLogic: xmlChildText(visibilityRule, 'conditionLogic') || undefined,
