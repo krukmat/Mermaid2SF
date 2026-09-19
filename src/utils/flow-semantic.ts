@@ -39,7 +39,26 @@ function elementSnapshot(element: FlowElement, terminalIds: Set<string>): unknow
         };
       }).sort((a, b) => a.name.localeCompare(b.name)),
     };
-    case 'Screen': return { ...common, allowBack: element.allowBack, allowFinish: element.allowFinish, components: [...element.components].map((component) => ({ ...component })) };
+    case 'Screen': return {
+      ...common,
+      allowBack: element.allowBack,
+      allowFinish: element.allowFinish,
+      allowPause: element.allowPause,
+      showFooter: element.showFooter,
+      showHeader: element.showHeader,
+      components: [...element.components].map((component) => ({
+        ...component,
+        defaultValue: component.defaultValue === undefined ? undefined : stableValue(component.defaultValue),
+        visibility: component.visibility ? {
+          conditionLogic: component.visibility.conditionLogic,
+          conditions: component.visibility.conditions.map((condition) => ({
+            left: stableValue(condition.left),
+            operator: condition.operator,
+            right: stableValue(condition.right),
+          })),
+        } : undefined,
+      })),
+    };
     case 'RecordCreate': return { ...common, object: element.object, fields: stableRecord(element.fields), assignRecordIdToReference: element.assignRecordIdToReference, storeOutputAutomatically: element.storeOutputAutomatically };
     case 'RecordUpdate': return { ...common, object: element.object, fields: stableRecord(element.fields), filterLogic: element.filterLogic, filters: (element.filters || []).map((filter) => ({ field: filter.field, operator: filter.operator, value: stableValue(filter.value) })) };
     case 'Subflow': return { ...common, flowName: element.flowName, inputAssignments: (element.inputAssignments || []).map((item) => ({ name: item.name, value: stableValue(item.value) })), outputAssignments: (element.outputAssignments || []).map((item) => ({ name: item.name, value: stableValue(item.value) })) };
@@ -75,6 +94,7 @@ export function flowSemanticSnapshot(dsl: FlowDSL): unknown {
     trigger: dsl.trigger ? { ...dsl.trigger, filters: (dsl.trigger.filters || []).map((filter) => ({ field: filter.field, operator: filter.operator, value: stableValue(filter.value) })) } : undefined,
     schedule: dsl.schedule ? { ...dsl.schedule, filters: (dsl.schedule.filters || []).map((filter) => ({ field: filter.field, operator: filter.operator, value: stableValue(filter.value) })) } : undefined,
     platformEvent: dsl.platformEvent ? { ...dsl.platformEvent } : undefined,
+    choices: [...(dsl.choices || [])].map((choice) => ({ ...choice, value: stableValue(choice.value) })).sort((a, b) => a.name.localeCompare(b.name)),
     variables: resources,
     elements,
   });
