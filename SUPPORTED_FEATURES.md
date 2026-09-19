@@ -1,6 +1,6 @@
 # Mermaid2SF — Supported Features
 
-This matrix is the public fidelity contract. `Guaranteed` is reserved for behavior backed by automated semantic round-trip tests. Salesforce deploy compatibility additionally requires the authenticated deployment gate.
+This matrix is the public fidelity contract. `Guaranteed` is reserved for behavior backed by automated semantic round-trip tests. Salesforce deploy compatibility additionally requires the authenticated deployment gate. See [`docs/WAVE1_AUTOLAUNCHED_PROOF.md`](docs/WAVE1_AUTOLAUNCHED_PROOF.md) for the Wave 1 evidence record.
 
 ## Flow families
 
@@ -105,4 +105,4 @@ Verified on 2026-09-19 with Salesforce Metadata API v67.0:
 - Dry-run status: `Succeeded`.
 - No metadata was persisted to the validation org.
 
-This external gate proves Salesforce acceptance for the documented Wave 1 Autolaunched fixture/subset. It does not extend the guarantee to unsupported Flow families or metadata outside the documented subset.
+This external gate proves Salesforce acceptance for the canonical Wave 1 Autolaunched validation fixture. The richer Wave 1 subset is separately proven by semantic round-trip tests. It does not extend the guarantee to unsupported Flow families or metadata outside the documented subset.
