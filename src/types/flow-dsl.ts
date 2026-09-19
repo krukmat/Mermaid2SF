@@ -77,19 +77,31 @@ export interface DecisionOutcome {
   next: string;
 }
 
+export interface ScreenVisibilityRule {
+  conditionLogic?: 'and' | 'or' | string;
+  conditions: FlowCondition[];
+}
+
 export interface ScreenElement extends BaseElement {
   type: 'Screen';
   components: ScreenComponent[];
   allowBack?: boolean;
   allowFinish?: boolean;
+  allowPause?: boolean;
+  showFooter?: boolean;
+  showHeader?: boolean;
 }
 export interface ScreenComponent {
-  type: 'Field' | 'DisplayText' | 'DisplayImage';
+  type: 'InputField' | 'LargeTextArea' | 'DisplayText' | 'RadioButtons' | 'DropdownBox' | 'Field' | 'DisplayImage';
   name: string;
   dataType?: string;
+  label?: string;
   target?: string;
   text?: string;
   required?: boolean;
+  defaultValue?: FlowValueLike;
+  choiceReferences?: string[];
+  visibility?: ScreenVisibilityRule;
 }
 
 export interface RecordFilter {
@@ -196,6 +208,13 @@ export interface PlatformEventTriggerConfig {
   eventApiName: string;
 }
 
+export interface FlowChoice {
+  name: string;
+  label: string;
+  dataType: string;
+  value: FlowValueLike;
+}
+
 export interface FlowDSL {
   version: number;
   flowApiName: string;
@@ -207,6 +226,7 @@ export interface FlowDSL {
   trigger?: RecordTriggerConfig;
   schedule?: ScheduleTriggerConfig;
   platformEvent?: PlatformEventTriggerConfig;
+  choices?: FlowChoice[];
   startElement: string;
   variables?: FlowVariable[];
   elements: FlowElement[];
@@ -219,6 +239,7 @@ export interface FlowBuildOptions {
   trigger?: RecordTriggerConfig;
   schedule?: ScheduleTriggerConfig;
   platformEvent?: PlatformEventTriggerConfig;
+  choices?: FlowChoice[];
   variables?: FlowVariable[];
 }
 
