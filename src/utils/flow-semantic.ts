@@ -50,7 +50,7 @@ function elementSnapshot(element: FlowElement, terminalIds: Set<string>): unknow
         ...component,
         defaultValue: component.defaultValue === undefined ? undefined : stableValue(component.defaultValue),
         visibility: component.visibility ? {
-          conditionLogic: component.visibility.conditionLogic,
+          conditionLogic: logicForConditions(component.visibility.conditionLogic, component.visibility.conditions.length),
           conditions: component.visibility.conditions.map((condition) => ({
             left: stableValue(condition.left),
             operator: condition.operator,
