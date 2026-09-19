@@ -192,6 +192,10 @@ export interface ScheduleTriggerConfig {
   filterLogic?: string;
 }
 
+export interface PlatformEventTriggerConfig {
+  eventApiName: string;
+}
+
 export interface FlowDSL {
   version: number;
   flowApiName: string;
@@ -202,6 +206,7 @@ export interface FlowDSL {
   status?: FlowStatus;
   trigger?: RecordTriggerConfig;
   schedule?: ScheduleTriggerConfig;
+  platformEvent?: PlatformEventTriggerConfig;
   startElement: string;
   variables?: FlowVariable[];
   elements: FlowElement[];
@@ -213,6 +218,7 @@ export interface FlowBuildOptions {
   status?: FlowStatus;
   trigger?: RecordTriggerConfig;
   schedule?: ScheduleTriggerConfig;
+  platformEvent?: PlatformEventTriggerConfig;
   variables?: FlowVariable[];
 }
 
