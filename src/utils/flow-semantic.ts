@@ -74,6 +74,7 @@ export function flowSemanticSnapshot(dsl: FlowDSL): unknown {
     startNext: stableNext(start && 'next' in start ? start.next : undefined, terminalIds),
     trigger: dsl.trigger ? { ...dsl.trigger, filters: (dsl.trigger.filters || []).map((filter) => ({ field: filter.field, operator: filter.operator, value: stableValue(filter.value) })) } : undefined,
     schedule: dsl.schedule ? { ...dsl.schedule, filters: (dsl.schedule.filters || []).map((filter) => ({ field: filter.field, operator: filter.operator, value: stableValue(filter.value) })) } : undefined,
+    platformEvent: dsl.platformEvent ? { ...dsl.platformEvent } : undefined,
     variables: resources,
     elements,
   });
