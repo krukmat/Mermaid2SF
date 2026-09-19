@@ -56,7 +56,7 @@ The following are not covered by the Autolaunched bidirectional guarantee yet:
 - Apex Actions and HTTP Callouts,
 - formulas, constants, choices, collection processors, transforms, and other Salesforce Flow metadata not represented by the current FlowIR subset,
 - full layout/visual fidelity as a deployment guarantee,
-- Salesforce-org acceptance unless the authenticated deployment gate has actually run.
+- Salesforce-org acceptance beyond the explicitly validated Wave 1 Autolaunched fixture and supported subset.
 
 Unsupported Wave 1 metadata must not be described as lossless simply because the XML parser can read part of it.
 
@@ -90,12 +90,19 @@ Unsupported Wave 1 metadata must not be described as lossless simply because the
 
 ## External Salesforce gate
 
-Internal tests validate Mermaid2SF behavior and the Wave 1 semantic round-trip contract. They do not independently prove Salesforce acceptance.
+Wave 1 Autolaunched compatibility has been externally verified against a real Salesforce org.
 
-The final external compatibility check is:
+The CI gate authenticates with the configured `SF_AUTH_URL` and performs a non-destructive Metadata API dry-run of the canonical Autolaunched fixture:
 
 ```text
-FlowIR -> Flow XML -> sf project deploy validate -> SUCCESS
+FlowIR -> Flow XML -> sf project deploy start --dry-run -> SUCCESS
 ```
 
-The repository includes an optional deployment-validation CI job that runs only when an authenticated Salesforce URL is configured as a repository secret. Without that credential, documentation must not describe deployment compatibility as externally verified.
+Verified on 2026-09-19 with Salesforce Metadata API v67.0:
+
+- `Golden_Autolaunched` validated as a Salesforce `Flow`.
+- Components validated: 1/1.
+- Dry-run status: `Succeeded`.
+- No metadata was persisted to the validation org.
+
+This external gate proves Salesforce acceptance for the documented Wave 1 Autolaunched fixture/subset. It does not extend the guarantee to unsupported Flow families or metadata outside the documented subset.
