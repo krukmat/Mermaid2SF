@@ -141,6 +141,9 @@ export class MermaidGenerator {
           ].filter(Boolean);
           lines.push(`variable: ${variable.name} ${variable.dataType}${flags.length ? ` ${flags.join(' ')}` : ''}`);
         }
+        for (const choice of dsl.choices || []) {
+          lines.push(`choice: ${choice.name} (${choice.dataType}) = ${this.renderValue(choice.value)} | ${choice.label}`);
+        }
         break;
       }
       case 'Assignment':
@@ -152,13 +155,26 @@ export class MermaidGenerator {
         if (element.conditionLogic) lines.push(`conditionLogic: ${element.conditionLogic}`);
         break;
       case 'Screen':
+        if (element.allowBack !== undefined) lines.push(`allow-back: ${element.allowBack}`);
+        if (element.allowFinish !== undefined) lines.push(`allow-finish: ${element.allowFinish}`);
+        if (element.allowPause !== undefined) lines.push(`allow-pause: ${element.allowPause}`);
+        if (element.showFooter !== undefined) lines.push(`show-footer: ${element.showFooter}`);
+        if (element.showHeader !== undefined) lines.push(`show-header: ${element.showHeader}`);
         for (const component of element.components) {
           if (component.type === 'DisplayText') {
-            lines.push(`display: ${component.text || ''}`);
+            lines.push(`display: ${component.name} | ${component.text || ''}`);
           } else {
-            lines.push(`field: ${component.name}${component.dataType ? ` (${component.dataType})` : ''}`);
+            const fieldType = component.type === 'Field' ? 'InputField' : component.type;
+            lines.push(`input: ${component.name} (${component.dataType || 'String'}) [${fieldType}] | ${component.label || component.text || component.name}`);
+            if (component.choiceReferences?.length) lines.push(`choices: ${component.choiceReferences.join(',')}`);
             if (component.target) lines.push(`target: ${component.target}`);
+            if (component.defaultValue !== undefined) lines.push(`default: ${this.renderValue(component.defaultValue)}`);
             if (component.required !== undefined) lines.push(`required: ${component.required}`);
+          }
+          if (component.visibility?.conditions?.length === 1) {
+            lines.push(`visible-if: ${this.renderCondition(component.visibility.conditions[0])}`);
+          } else if ((component.visibility?.conditions?.length || 0) > 1) {
+            throw new Error(`Screen component ${component.name} has multiple visibility conditions; Wave 6 canonical Mermaid supports one condition.`);
           }
         }
         break;
