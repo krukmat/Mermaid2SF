@@ -108,6 +108,7 @@ export class MetadataExtractor {
     let platformEventApiName: string | undefined;
     const filters: any[] = [];
     const variables: any[] = [];
+    const choices: any[] = [];
 
     for (const line of this.lines(label).slice(1)) {
       const flow = line.match(/^flow:\s*(.+)$/i)?.[1]?.toLowerCase();
@@ -123,7 +124,7 @@ export class MetadataExtractor {
       if (statusMatch) status = `${statusMatch[1][0].toUpperCase()}${statusMatch[1].slice(1).toLowerCase()}` as any;
       const objectMatch = line.match(/^object:\s*([A-Za-z0-9_]+)/i);
       if (objectMatch) object = objectMatch[1];
-      const eventMatch = line.match(/^event:\s*([A-Za-z][A-Za-z0-9_]*__e)$/i);
+      const eventMatch = line.match(/^event:\s*([A-Za-z][A-Za-z0-9_]*)$/i);
       if (eventMatch) platformEventApiName = eventMatch[1];
 
       const trigger = line.match(/^trigger:\s*(before-save|after-save|before-delete)/i)?.[1]?.toLowerCase();
@@ -166,6 +167,15 @@ export class MetadataExtractor {
           ...(objectType ? { objectType } : {}),
         });
       }
+      const choice = line.match(/^choice:\s*([A-Za-z][A-Za-z0-9_]*)\s*\(([A-Za-z]+)\)\s*=\s*(.+?)\s*\|\s*(.+)$/i);
+      if (choice) {
+        choices.push({
+          name: choice[1],
+          dataType: choice[2],
+          value: choice[3].trim(),
+          label: choice[4].trim(),
+        });
+      }
     }
 
     const trigger = flowKind === 'RecordTriggered' && (object || triggerType || recordTriggerType)
@@ -191,7 +201,7 @@ export class MetadataExtractor {
     const platformEvent = flowKind === 'PlatformEventTriggered' || platformEventApiName
       ? { eventApiName: platformEventApiName || object || '' }
       : undefined;
-    return { flowKind, apiVersion, status, trigger, schedule, platformEvent, variables };
+    return { flowKind, apiVersion, status, trigger, schedule, platformEvent, variables, choices };
   }
 
   private extractAssignmentProperties(label: string): Record<string, any> {
@@ -218,28 +228,77 @@ export class MetadataExtractor {
   private extractScreenProperties(label: string): Record<string, any> {
     const components: any[] = [];
     let currentComponent: any = null;
-    for (const line of this.lines(label)) {
-      const fieldMatch = line.match(/field:\s*(\w+)(?:\s*\((.+)\))?/i);
+    let allowBack: boolean | undefined;
+    let allowFinish: boolean | undefined;
+    let allowPause: boolean | undefined;
+    let showFooter: boolean | undefined;
+    let showHeader: boolean | undefined;
+
+    const flush = () => {
+      if (currentComponent) components.push(currentComponent);
+      currentComponent = null;
+    };
+
+    for (const line of this.lines(label).slice(1)) {
+      const nav = line.match(/^(allow-back|allow-finish|allow-pause|show-footer|show-header):\s*(true|false)$/i);
+      if (nav) {
+        const value = nav[2].toLowerCase() === 'true';
+        if (nav[1].toLowerCase() === 'allow-back') allowBack = value;
+        if (nav[1].toLowerCase() === 'allow-finish') allowFinish = value;
+        if (nav[1].toLowerCase() === 'allow-pause') allowPause = value;
+        if (nav[1].toLowerCase() === 'show-footer') showFooter = value;
+        if (nav[1].toLowerCase() === 'show-header') showHeader = value;
+        continue;
+      }
+
+      const input = line.match(/^input:\s*([A-Za-z][A-Za-z0-9_]*)\s*\(([A-Za-z]+)\)\s*\[([A-Za-z]+)\]\s*\|\s*(.+)$/i);
+      if (input) {
+        flush();
+        currentComponent = {
+          type: input[3],
+          name: input[1],
+          dataType: input[2],
+          label: input[4].trim(),
+        };
+        continue;
+      }
+
+      // Backward compatibility with the pre-Wave-6 field syntax.
+      const fieldMatch = line.match(/^field:\s*(\w+)(?:\s*\((.+)\))?/i);
       if (fieldMatch) {
-        if (currentComponent) components.push(currentComponent);
-        currentComponent = { type: 'Field', name: fieldMatch[1], dataType: fieldMatch[2] || 'String' };
+        flush();
+        currentComponent = { type: 'InputField', name: fieldMatch[1], dataType: fieldMatch[2] || 'String', label: fieldMatch[1] };
         continue;
       }
-      const displayMatch = line.match(/display:\s*(.+)/i);
+
+      const displayMatch = line.match(/^display:\s*([^|]+?)\s*\|\s*(.*)$/i);
       if (displayMatch) {
-        if (currentComponent) components.push(currentComponent);
-        currentComponent = { type: 'DisplayText', name: `Display_${components.length}`, text: displayMatch[1].trim() };
+        flush();
+        currentComponent = { type: 'DisplayText', name: displayMatch[1].trim(), text: displayMatch[2].trim() };
         continue;
       }
+      const legacyDisplay = line.match(/^display:\s*(.+)$/i);
+      if (legacyDisplay) {
+        flush();
+        currentComponent = { type: 'DisplayText', name: `Display_${components.length}`, text: legacyDisplay[1].trim() };
+        continue;
+      }
+
       if (currentComponent) {
-        const target = line.match(/target:\s*(.+)/i);
+        const choices = line.match(/^choices:\s*(.+)$/i);
+        if (choices) currentComponent.choiceReferences = choices[1].split(',').map((item) => item.trim()).filter(Boolean);
+        const target = line.match(/^target:\s*(.+)$/i);
         if (target) currentComponent.target = target[1].trim();
-        const required = line.match(/required:\s*(true|false)/i);
+        const defaultValue = line.match(/^default:\s*(.+)$/i);
+        if (defaultValue) currentComponent.defaultValue = defaultValue[1].trim();
+        const required = line.match(/^required:\s*(true|false)$/i);
         if (required) currentComponent.required = required[1].toLowerCase() === 'true';
+        const visibleIf = line.match(/^visible-if:\s*(.+)$/i);
+        if (visibleIf) currentComponent.visibilityCondition = visibleIf[1].trim();
       }
     }
-    if (currentComponent) components.push(currentComponent);
-    return { components };
+    flush();
+    return { components, allowBack, allowFinish, allowPause, showFooter, showHeader };
   }
 
   private extractRecordCreateProperties(label: string): Record<string, any> {
