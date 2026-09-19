@@ -6,7 +6,7 @@
 
 The implementation now has a canonical FlowIR v2, Salesforce semantic validation, deterministic Salesforce XML generation, normalized golden fixtures, semantic round-trip gates, and an XML-tree reverse adapter for the guaranteed subset.
 
-The project remains a **correctness-hardened demo/PoC**, not an org-verified Salesforce compiler, until the authenticated `sf project deploy validate` job runs with `SF_AUTH_URL` configured.
+The project remains a **correctness-hardened demo/PoC** with feature-scoped Salesforce verification. Wave 1 Autolaunched and Wave 2A Record-Triggered After Save canonical fixtures have passed authenticated Salesforce Metadata API dry-runs; broader Flow families remain explicitly scoped.
 
 Canonical architecture:
 
@@ -23,7 +23,7 @@ Mermaid / Salesforce XML / Web UI
             ↓
  Golden + semantic round-trip gates
             ↓
- sf project deploy validate (when authenticated)
+ authenticated Salesforce Metadata API dry-run
 ```
 
 Detailed execution record: `docs/planning/compiler-correctness-execution.md`.
@@ -74,15 +74,15 @@ Detailed execution record: `docs/planning/compiler-correctness-execution.md`.
 - Blocking GitHub Actions `compiler-core` gate: tests + TypeScript build.
 - Conditional authenticated Salesforce org gate implemented.
 
-Current evidence at plan close:
+Current evidence after Wave 2A:
 
 ```text
 Test suites: 44 / 44 passed
-Tests:       287 / 287 passed
+Tests:       293 / 293 passed
 TypeScript:  build passed
 Golden XML:  passed
-Round-trip:  passed for guaranteed subset
-Org deploy:  gate ready; skipped until SF_AUTH_URL is configured
+Round-trip:  passed for Wave 1 Autolaunched + Wave 2A After Save guaranteed subsets
+Org dry-run: Wave 1 PASS; Wave 2A PASS
 ```
 
 ### M5 — Reverse parser and fidelity — ✅ Complete for guaranteed subset
@@ -121,17 +121,18 @@ Prioritized post-hardening work is documented in `docs/planning/post-hardening-b
 
 ### What must NOT be claimed yet
 
-Do not describe the project as **Salesforce deployment verified** or universally **Salesforce-correct** until representative generated metadata passes the authenticated CI org gate:
+Do not describe the project as universally **Salesforce-correct**. External verification is feature-scoped to the documented canonical fixtures and guaranteed subsets.
+
+Current verified path:
 
 ```text
-FlowIR → Flow XML → sf project deploy validate → SUCCESS
+FlowIR → Flow XML → sf project deploy start --dry-run → SUCCESS
 ```
 
 ## Known residual debt
 
 These items are intentionally outside the completed hardening plan and must remain visible:
 
-- authenticated org evidence is pending `SF_AUTH_URL` configuration;
 - legacy repository lint/format backlog is non-blocking and still red;
 - dependency audit currently reports legacy vulnerabilities and requires a separate modernization pass;
 - `package-lock.json` still carries stale ISC root-license metadata although `package.json`/`LICENSE` are MIT;
