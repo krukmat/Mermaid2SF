@@ -219,6 +219,69 @@ describe('SalesforceSemanticValidator', () => {
     expect(() => new FlowXmlGenerator().generate(dsl)).toThrow(/M2SF-SF-017/);
   });
 
+  it('accepts a PlatformEventTriggered flow with event payload $Record context', () => {
+    const dsl = flow({
+      flowKind: 'PlatformEventTriggered',
+      processType: 'PlatformEventTriggered',
+      platformEvent: {
+        eventApiName: 'M2SF_Validation_Event__e',
+      },
+      variables: [
+        { name: 'message', dataType: 'String', isCollection: false, isInput: false, isOutput: false },
+      ],
+      elements: [
+        { id: 'Start', type: 'Start', next: 'Capture' },
+        {
+          id: 'Capture',
+          type: 'Assignment',
+          assignments: [{ variable: 'message', value: { kind: 'reference', name: '$Record.Message__c' } }],
+          next: 'End',
+        },
+        { id: 'End', type: 'End' },
+      ],
+    });
+
+    expect(validator.validate(dsl).errors).toHaveLength(0);
+  });
+
+  it.each([
+    ['missing event metadata', undefined, 'M2SF-SF-019'],
+    ['non-event API name', { eventApiName: 'Account' }, 'M2SF-SF-023'],
+    ['custom object instead of event', { eventApiName: 'M2SF_Validation__c' }, 'M2SF-SF-023'],
+  ] as const)('rejects PlatformEventTriggered %s', (_name, platformEvent, code) => {
+    const dsl = flow({
+      flowKind: 'PlatformEventTriggered',
+      processType: 'PlatformEventTriggered',
+      platformEvent: platformEvent as any,
+    });
+
+    expect(validator.validate(dsl).errors.some((error) => error.code === code)).toBe(true);
+  });
+
+  it('rejects mixed Platform Event and record-trigger metadata', () => {
+    const dsl = flow({
+      flowKind: 'PlatformEventTriggered',
+      processType: 'PlatformEventTriggered',
+      platformEvent: { eventApiName: 'M2SF_Validation_Event__e' },
+      trigger: {
+        object: 'Account',
+        triggerType: 'RecordAfterSave',
+        recordTriggerType: 'Create',
+      },
+    });
+
+    expect(validator.validate(dsl).errors.some((error) => error.code === 'M2SF-SF-025')).toBe(true);
+  });
+
+  it('prevents XML serialization when Platform Event metadata is missing', () => {
+    const dsl = flow({
+      flowKind: 'PlatformEventTriggered',
+      processType: 'PlatformEventTriggered',
+    });
+
+    expect(() => new FlowXmlGenerator().generate(dsl)).toThrow(/M2SF-SF-019/);
+  });
+
   it('accepts a complete ScheduleTriggered baseline with object context', () => {
     const dsl = flow({
       flowKind: 'ScheduleTriggered',
