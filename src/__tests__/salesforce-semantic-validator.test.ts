@@ -160,6 +160,98 @@ describe('SalesforceSemanticValidator', () => {
     expect(result.errors.some((error) => error.code === 'M2SF-SF-008' && error.elementId === 'Bad')).toBe(true);
   });
 
+  it('accepts a complete ScheduleTriggered baseline with object context', () => {
+    const dsl = flow({
+      flowKind: 'ScheduleTriggered',
+      processType: 'ScheduleTriggered',
+      schedule: {
+        frequency: 'Daily',
+        startDate: '2030-01-01',
+        startTime: '02:00:00.000Z',
+        object: 'Account',
+        filters: [
+          { field: 'Industry', operator: 'EqualTo', value: { kind: 'string', value: 'Technology' } },
+        ],
+      },
+      elements: [
+        { id: 'Start', type: 'Start', next: 'Capture' },
+        {
+          id: 'Capture',
+          type: 'Assignment',
+          assignments: [{ variable: 'recordName', value: { kind: 'reference', name: '$Record.Name' } }],
+          next: 'End',
+        },
+        { id: 'End', type: 'End' },
+      ],
+      variables: [
+        { name: 'recordName', dataType: 'String', isCollection: false, isInput: false, isOutput: false },
+      ],
+    });
+
+    expect(validator.validate(dsl).errors).toHaveLength(0);
+  });
+
+  it('allows ScheduleTriggered flows without an object when no record context is used', () => {
+    const dsl = flow({
+      flowKind: 'ScheduleTriggered',
+      processType: 'ScheduleTriggered',
+      schedule: {
+        frequency: 'Weekly',
+        startDate: '2030-01-07',
+        startTime: '03:30:00.000Z',
+      },
+    });
+
+    expect(validator.validate(dsl).errors).toHaveLength(0);
+  });
+
+  it.each([
+    ['missing schedule', undefined, 'M2SF-SF-009'],
+    ['bad date', { frequency: 'Daily', startDate: '01-01-2030', startTime: '02:00:00.000Z' }, 'M2SF-SF-013'],
+    ['bad time', { frequency: 'Daily', startDate: '2030-01-01', startTime: '02:00' }, 'M2SF-SF-014'],
+    ['filter without object', {
+      frequency: 'Daily',
+      startDate: '2030-01-01',
+      startTime: '02:00:00.000Z',
+      filters: [{ field: 'Industry', operator: 'EqualTo', value: { kind: 'string', value: 'Technology' } }],
+    }, 'M2SF-SF-015'],
+  ] as const)('rejects ScheduleTriggered %s', (_name, schedule, code) => {
+    const dsl = flow({
+      flowKind: 'ScheduleTriggered',
+      processType: 'ScheduleTriggered',
+      schedule: schedule as any,
+    });
+
+    expect(validator.validate(dsl).errors.some((error) => error.code === code)).toBe(true);
+  });
+
+  it('rejects $Record in ScheduleTriggered flow without object context', () => {
+    const dsl = flow({
+      flowKind: 'ScheduleTriggered',
+      processType: 'ScheduleTriggered',
+      schedule: {
+        frequency: 'Daily',
+        startDate: '2030-01-01',
+        startTime: '02:00:00.000Z',
+      },
+      variables: [
+        { name: 'recordName', dataType: 'String', isCollection: false, isInput: false, isOutput: false },
+      ],
+      elements: [
+        { id: 'Start', type: 'Start', next: 'Capture' },
+        {
+          id: 'Capture',
+          type: 'Assignment',
+          assignments: [{ variable: 'recordName', value: { kind: 'reference', name: '$Record.Name' } }],
+          next: 'End',
+        },
+        { id: 'End', type: 'End' },
+      ],
+    });
+
+    expect(validator.validate(dsl).errors.some((error) => error.code === 'M2SF-SF-041')).toBe(true);
+  });
+
   it('prevents XML serialization for invalid RecordBeforeSave elements', () => {
     const dsl = flow({
       flowKind: 'RecordTriggered',
