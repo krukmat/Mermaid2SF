@@ -181,6 +181,39 @@ describe('M4 Salesforce correctness gates', () => {
     expect(semanticDiff(sourceIr, finalIr).equal).toBe(true);
   });
 
+  it.each([
+    ['create', 'Create'],
+    ['update', 'Update'],
+    ['create-and-update', 'CreateAndUpdate'],
+  ] as const)('Wave 2A canonical Mermaid preserves %s trigger mode', (_mermaidMode, recordTriggerType) => {
+    const source: FlowDSL = {
+      version: 2,
+      flowApiName: `AfterSave_${recordTriggerType}`,
+      label: `After Save ${recordTriggerType}`,
+      flowKind: 'RecordTriggered',
+      processType: 'RecordTriggered',
+      apiVersion: '67.0',
+      status: 'Draft',
+      trigger: {
+        object: 'Account',
+        triggerType: 'RecordAfterSave',
+        recordTriggerType,
+      },
+      startElement: 'Start',
+      elements: [
+        { id: 'Start', type: 'Start', next: 'End' },
+        { id: 'End', type: 'End' },
+      ],
+    };
+
+    const mermaid = mermaidGenerator.generate(source);
+    const reparsed = parseMermaidToFlowIr(mermaid, source.flowApiName, source.label);
+
+    expect(reparsed.trigger?.triggerType).toBe('RecordAfterSave');
+    expect(reparsed.trigger?.recordTriggerType).toBe(recordTriggerType);
+    expect(semanticDiff(source, reparsed).equal).toBe(true);
+  });
+
   it('XML canonicalization ignores formatting but not metadata structure', () => {
     const original = fixture('Golden_RecordTriggered');
     const compact = original.replace(/>\s+</g, '><').trim();
