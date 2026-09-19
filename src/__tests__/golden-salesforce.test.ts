@@ -572,6 +572,113 @@ describe('M4 Salesforce correctness gates', () => {
     expect(semanticDiff(source, reparsed).equal).toBe(true);
   });
 
+  it('Wave 6 Salesforce validation fixture is canonical compiler output', () => {
+    const sourceXml = fixture('Golden_Screen_Wave6');
+    const sourceIr = parseFlowXmlText(sourceXml, 'Golden_Screen_Wave6');
+    const regeneratedXml = generator.generate(sourceIr);
+
+    expect(sourceIr.flowKind).toBe('Screen');
+    const screens = sourceIr.elements.filter((element) => element.type === 'Screen');
+    expect(screens).toHaveLength(2);
+    expect(canonicalizeXml(regeneratedXml)).toEqual(canonicalizeXml(sourceXml));
+  });
+
+  it('Wave 6 rich Screen Flow preserves navigation, inputs, choices and visibility through XML <-> FlowIR <-> Mermaid', () => {
+    const sourceXml = waveFixture('Golden_Screen_Wave6_Rich');
+    const sourceIr = parseFlowXmlText(sourceXml, 'Golden_Screen_Wave6_Rich');
+
+    expect(sourceIr.flowKind).toBe('Screen');
+    expect(sourceIr.choices?.map((choice) => choice.name)).toEqual(['HighPriority', 'LowPriority']);
+
+    const collect = sourceIr.elements.find((element) => element.type === 'Screen' && element.id === 'Collect_Details');
+    expect(collect && collect.type === 'Screen' ? collect.allowPause : undefined).toBe(true);
+    expect(collect && collect.type === 'Screen' ? collect.showFooter : undefined).toBe(true);
+
+    const mermaid = mermaidGenerator.generate(sourceIr);
+    expect(mermaid).toContain('flow: screen');
+    expect(mermaid).toContain('choice: HighPriority (String) = High | High Priority');
+    expect(mermaid).toContain('input: CustomerName (String) [InputField] | Customer Name');
+    expect(mermaid).toContain('choices: HighPriority,LowPriority');
+    expect(mermaid).toContain('visible-if: WantsEmail = true');
+    expect(mermaid).toContain('display: EmailHint | Email updates are enabled.');
+
+    const mermaidIr = parseMermaidToFlowIr(mermaid, sourceIr.flowApiName, sourceIr.label);
+    const regeneratedXml = generator.generate(mermaidIr);
+    const finalIr = parseFlowXmlText(regeneratedXml, sourceIr.flowApiName);
+
+    expect(semanticDiff(sourceIr, mermaidIr).equal).toBe(true);
+    expect(semanticDiff(sourceIr, finalIr).equal).toBe(true);
+  });
+
+  it('Wave 6 canonical Mermaid preserves Screen navigation and typed defaults', () => {
+    const source: FlowDSL = {
+      version: 2,
+      flowApiName: 'Screen_Wave6',
+      label: 'Screen Wave 6',
+      flowKind: 'Screen',
+      processType: 'Screen',
+      apiVersion: '67.0',
+      status: 'Draft',
+      choices: [
+        { name: 'YesChoice', label: 'Yes', dataType: 'String', value: { kind: 'string', value: 'YES' } },
+        { name: 'NoChoice', label: 'No', dataType: 'String', value: { kind: 'string', value: 'NO' } },
+      ],
+      startElement: 'Start',
+      elements: [
+        { id: 'Start', type: 'Start', next: 'Collect' },
+        {
+          id: 'Collect',
+          type: 'Screen',
+          allowBack: true,
+          allowFinish: true,
+          allowPause: false,
+          showFooter: true,
+          showHeader: true,
+          components: [
+            {
+              type: 'InputField',
+              name: 'Name',
+              dataType: 'String',
+              label: 'Name',
+              required: true,
+              defaultValue: { kind: 'string', value: 'Acme' },
+            },
+            {
+              type: 'RadioButtons',
+              name: 'ConfirmChoice',
+              dataType: 'String',
+              label: 'Continue?',
+              choiceReferences: ['YesChoice', 'NoChoice'],
+              required: true,
+            },
+            {
+              type: 'DisplayText',
+              name: 'Hint',
+              text: 'Visible for Acme',
+              visibility: {
+                conditions: [{
+                  left: { kind: 'reference', name: 'Name' },
+                  operator: 'EqualTo',
+                  right: { kind: 'string', value: 'Acme' },
+                }],
+              },
+            },
+          ],
+          next: 'End',
+        },
+        { id: 'End', type: 'End' },
+      ],
+    };
+
+    const mermaid = mermaidGenerator.generate(source);
+    const reparsed = parseMermaidToFlowIr(mermaid, source.flowApiName, source.label);
+
+    expect(mermaid).toContain('allow-pause: false');
+    expect(mermaid).toContain('default: Acme');
+    expect(mermaid).toContain('input: ConfirmChoice (String) [RadioButtons] | Continue?');
+    expect(semanticDiff(source, reparsed).equal).toBe(true);
+  });
+
   it('XML canonicalization ignores formatting but not metadata structure', () => {
     const original = fixture('Golden_RecordTriggered');
     const compact = original.replace(/>\s+</g, '><').trim();
