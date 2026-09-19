@@ -81,9 +81,19 @@ export class SalesforceSemanticValidator {
         }
       }
       if (dsl.trigger) warnings.push({ code: 'M2SF-SF-007', message: 'Record trigger metadata is ignored for ScheduleTriggered Flow.' });
+      if (dsl.platformEvent) warnings.push({ code: 'M2SF-SF-024', message: 'Platform event metadata is ignored for ScheduleTriggered Flow.' });
+    } else if (kind === 'PlatformEventTriggered') {
+      if (!dsl.platformEvent) {
+        this.error(errors, 'M2SF-SF-019', 'Platform Event-Triggered Flow requires platformEvent metadata.');
+      } else if (!/^[A-Za-z][A-Za-z0-9_]*__e$/.test(dsl.platformEvent.eventApiName || '')) {
+        this.error(errors, 'M2SF-SF-023', 'Wave 5 Platform Event API name must be a custom event ending in __e.');
+      }
+      if (dsl.trigger) warnings.push({ code: 'M2SF-SF-007', message: 'Record trigger metadata is ignored for PlatformEventTriggered Flow.' });
+      if (dsl.schedule) warnings.push({ code: 'M2SF-SF-016', message: 'Schedule metadata is ignored for PlatformEventTriggered Flow.' });
     } else {
       if (dsl.trigger) warnings.push({ code: 'M2SF-SF-007', message: `Trigger metadata is ignored for ${kind} Flow.` });
       if (dsl.schedule) warnings.push({ code: 'M2SF-SF-016', message: `Schedule metadata is ignored for ${kind} Flow.` });
+      if (dsl.platformEvent) warnings.push({ code: 'M2SF-SF-024', message: `Platform event metadata is ignored for ${kind} Flow.` });
     }
   }
 
@@ -151,9 +161,9 @@ export class SalesforceSemanticValidator {
       if (name.startsWith('$')) {
         if (name === '$Record' || name.startsWith('$Record.')) {
           const kind = resolveFlowKind(dsl);
-          const hasRecordContext = kind === 'RecordTriggered' || (kind === 'ScheduleTriggered' && Boolean(dsl.schedule?.object));
+          const hasRecordContext = kind === 'RecordTriggered' || (kind === 'ScheduleTriggered' && Boolean(dsl.schedule?.object)) || kind === 'PlatformEventTriggered';
           if (!hasRecordContext) {
-            this.error(errors, 'M2SF-SF-041', '$Record requires Record-Triggered Flow or a Schedule-Triggered Flow with an object context.', element.id);
+            this.error(errors, 'M2SF-SF-041', '$Record requires Record-Triggered Flow, a Schedule-Triggered Flow with object context, or Platform Event-Triggered Flow.', element.id);
           }
         }
         return;
