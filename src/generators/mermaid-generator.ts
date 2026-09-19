@@ -90,7 +90,7 @@ export class MermaidGenerator {
     switch (element.type) {
       case 'Start': {
         const kind = resolveFlowKind(dsl);
-        const kindName = kind === 'RecordTriggered' ? 'record-triggered' : kind.toLowerCase();
+        const kindName = kind === 'RecordTriggered' ? 'record-triggered' : kind === 'ScheduleTriggered' ? 'schedule-triggered' : kind.toLowerCase();
         lines.push(`flow: ${kindName}`);
         if (dsl.apiVersion) lines.push(`api-version: ${dsl.apiVersion}`);
         if (dsl.status) lines.push(`status: ${dsl.status.toLowerCase()}`);
@@ -110,6 +110,17 @@ export class MermaidGenerator {
           }
           if (trigger.doesRequireRecordChangedToMeetCriteria !== undefined) {
             lines.push(`require-changed-to-meet-criteria: ${trigger.doesRequireRecordChangedToMeetCriteria}`);
+          }
+        }
+        if (kind === 'ScheduleTriggered' && dsl.schedule) {
+          const schedule = dsl.schedule;
+          lines.push(`frequency: ${schedule.frequency.toLowerCase()}`);
+          lines.push(`start-date: ${schedule.startDate}`);
+          lines.push(`start-time: ${schedule.startTime}`);
+          if (schedule.object) lines.push(`object: ${schedule.object}`);
+          if (schedule.filterLogic) lines.push(`filter-logic: ${schedule.filterLogic}`);
+          for (const filter of schedule.filters || []) {
+            lines.push(this.renderFilter(filter.field, filter.operator, filter.value, element.id));
           }
         }
         for (const variable of dsl.variables || []) {
