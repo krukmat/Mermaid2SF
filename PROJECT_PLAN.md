@@ -6,7 +6,7 @@
 
 The implementation now has a canonical FlowIR v2, Salesforce semantic validation, deterministic Salesforce XML generation, normalized golden fixtures, semantic round-trip gates, and an XML-tree reverse adapter for the guaranteed subset.
 
-The project remains a **correctness-hardened demo/PoC** with feature-scoped Salesforce verification. Wave 1 Autolaunched, Wave 2A Record-Triggered After Save, Wave 2B Record-Triggered Before Save, and Wave 3 Schedule-Triggered canonical fixtures have passed authenticated Salesforce Metadata API dry-runs; broader Flow families remain explicitly scoped.
+The project remains a **correctness-hardened demo/PoC** with feature-scoped Salesforce verification. Wave 1 Autolaunched, Wave 2A Record-Triggered After Save, Wave 2B Record-Triggered Before Save, Wave 3 Schedule-Triggered, and Wave 4 Record-Triggered Before Delete canonical fixtures have passed authenticated Salesforce Metadata API dry-runs; broader Flow families remain explicitly scoped.
 
 Canonical architecture:
 
@@ -44,7 +44,7 @@ Detailed execution record: `docs/planning/compiler-correctness-execution.md`.
 - Internal `FlowKind` separated from Salesforce `processType`.
 - Screen, Autolaunched, Record-Triggered and Schedule-Triggered Start semantics modeled explicitly.
 - End is an authoring/IR terminal and never serializes as a fictitious target.
-- Canonical Salesforce golden fixtures exist for the three baseline Flow families.
+- Canonical Salesforce golden fixtures exist for every currently guaranteed Wave family/trigger variant.
 - Supported serializers are exercised against normalized fixtures.
 
 ### M2 — FlowIR v2 — ✅ Complete
@@ -74,15 +74,15 @@ Detailed execution record: `docs/planning/compiler-correctness-execution.md`.
 - Blocking GitHub Actions `compiler-core` gate: tests + TypeScript build.
 - Conditional authenticated Salesforce org gate implemented.
 
-Current evidence after Wave 3:
+Current evidence after Wave 4:
 
 ```text
 Test suites: 44 / 44 passed
-Tests:       320 / 320 passed
+Tests:       328 / 328 passed
 TypeScript:  build passed
 Golden XML:  passed
-Round-trip:  passed for Wave 1 Autolaunched + Wave 2A After Save + Wave 2B Before Save + Wave 3 Schedule-Triggered guaranteed subsets
-Org dry-run: Wave 1 PASS; Wave 2A PASS; Wave 2B PASS; Wave 3 PASS
+Round-trip:  passed for Wave 1 Autolaunched + Wave 2A After Save + Wave 2B Before Save + Wave 3 Schedule-Triggered + Wave 4 Before Delete guaranteed subsets
+Org dry-run: Wave 1 PASS; Wave 2A PASS; Wave 2B PASS; Wave 3 PASS; Wave 4 PASS
 ```
 
 ### M5 — Reverse parser and fidelity — ✅ Complete for guaranteed subset
