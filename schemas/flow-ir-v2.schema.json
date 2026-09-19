@@ -15,6 +15,7 @@
     "trigger": { "$ref": "#/definitions/RecordTrigger" },
     "schedule": { "$ref": "#/definitions/ScheduleTrigger" },
     "platformEvent": { "$ref": "#/definitions/PlatformEventTrigger" },
+    "choices": { "type": "array", "items": { "$ref": "#/definitions/FlowChoice" } },
     "startElement": { "type": "string", "minLength": 1 },
     "variables": {
       "type": "array",
@@ -138,6 +139,17 @@
       "additionalProperties": false,
       "properties": {
         "eventApiName": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" }
+      }
+    },
+    "FlowChoice": {
+      "type": "object",
+      "required": ["name", "label", "dataType", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+        "label": { "type": "string", "minLength": 1 },
+        "dataType": { "type": "string", "minLength": 1 },
+        "value": { "$ref": "#/definitions/FlowValue" }
       }
     },
     "FlowElement": {
