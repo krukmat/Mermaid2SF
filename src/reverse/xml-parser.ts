@@ -371,8 +371,8 @@ function parseTrigger(start: XmlNode, kind: FlowKind): FlowDSL['trigger'] {
   if (kind !== 'RecordTriggered') return undefined;
   return {
     object: xmlChildText(start, 'object') || '',
-    triggerType: (xmlChildText(start, 'triggerType') || 'RecordAfterSave') as 'RecordBeforeSave' | 'RecordAfterSave',
-    recordTriggerType: (xmlChildText(start, 'recordTriggerType') || 'CreateAndUpdate') as 'Create' | 'Update' | 'CreateAndUpdate',
+    triggerType: (xmlChildText(start, 'triggerType') || 'RecordAfterSave') as 'RecordBeforeSave' | 'RecordAfterSave' | 'RecordBeforeDelete',
+    recordTriggerType: (xmlChildText(start, 'recordTriggerType') || 'CreateAndUpdate') as 'Create' | 'Update' | 'CreateAndUpdate' | 'Delete',
     filters: parseFilters(start),
     filterLogic: xmlChildText(start, 'filterLogic'),
     doesRequireRecordChangedToMeetCriteria: xmlChildText(start, 'doesRequireRecordChangedToMeetCriteria') === undefined
