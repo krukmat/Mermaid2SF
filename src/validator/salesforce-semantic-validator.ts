@@ -42,6 +42,19 @@ export class SalesforceSemanticValidator {
         if (!dsl.trigger.object?.trim()) this.error(errors, 'M2SF-SF-004', 'Record-Triggered Flow requires trigger.object.');
         if (!dsl.trigger.triggerType) this.error(errors, 'M2SF-SF-005', 'Record-Triggered Flow requires trigger.triggerType.');
         if (!dsl.trigger.recordTriggerType) this.error(errors, 'M2SF-SF-006', 'Record-Triggered Flow requires trigger.recordTriggerType.');
+        if (dsl.trigger.triggerType === 'RecordBeforeSave') {
+          const allowedBeforeSave = new Set(['Start', 'End', 'Assignment', 'Decision', 'GetRecords', 'Loop']);
+          for (const element of dsl.elements) {
+            if (!allowedBeforeSave.has(element.type)) {
+              this.error(
+                errors,
+                'M2SF-SF-008',
+                `RecordBeforeSave supports only Assignment, Decision, GetRecords, and Loop; ${element.type} is not allowed.`,
+                element.id,
+              );
+            }
+          }
+        }
       }
     } else if (dsl.trigger) {
       warnings.push({ code: 'M2SF-SF-007', message: `Trigger metadata is ignored for ${kind} Flow.` });
