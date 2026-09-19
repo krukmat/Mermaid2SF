@@ -94,7 +94,7 @@ export class MetadataExtractor {
   }
 
   private extractStartProperties(label: string): Record<string, any> {
-    let flowKind: 'Screen' | 'Autolaunched' | 'RecordTriggered' | undefined;
+    let flowKind: 'Screen' | 'Autolaunched' | 'RecordTriggered' | 'ScheduleTriggered' | undefined;
     let apiVersion: string | undefined;
     let status: 'Draft' | 'Active' | 'Obsolete' | undefined;
     let object = '';
@@ -102,6 +102,9 @@ export class MetadataExtractor {
     let recordTriggerType: 'Create' | 'Update' | 'CreateAndUpdate' | undefined;
     let filterLogic: string | undefined;
     let doesRequireRecordChangedToMeetCriteria: boolean | undefined;
+    let scheduleFrequency: 'Once' | 'Daily' | 'Weekly' | undefined;
+    let scheduleStartDate: string | undefined;
+    let scheduleStartTime: string | undefined;
     const filters: any[] = [];
     const variables: any[] = [];
 
@@ -110,6 +113,7 @@ export class MetadataExtractor {
       if (flow === 'screen') flowKind = 'Screen';
       if (flow === 'autolaunched' || flow === 'auto-launched') flowKind = 'Autolaunched';
       if (flow === 'record-triggered' || flow === 'recordtriggered') flowKind = 'RecordTriggered';
+      if (flow === 'schedule-triggered' || flow === 'scheduletriggered' || flow === 'scheduled') flowKind = 'ScheduleTriggered';
 
       const version = line.match(/^api-version:\s*([\d.]+)/i);
       if (version) apiVersion = version[1];
@@ -126,6 +130,15 @@ export class MetadataExtractor {
       if (recordTrigger === 'create') recordTriggerType = 'Create';
       if (recordTrigger === 'update') recordTriggerType = 'Update';
       if (recordTrigger === 'create-and-update') recordTriggerType = 'CreateAndUpdate';
+
+      const frequency = line.match(/^frequency:\s*(once|daily|weekly)$/i)?.[1]?.toLowerCase();
+      if (frequency === 'once') scheduleFrequency = 'Once';
+      if (frequency === 'daily') scheduleFrequency = 'Daily';
+      if (frequency === 'weekly') scheduleFrequency = 'Weekly';
+      const startDate = line.match(/^start-date:\s*(\d{4}-\d{2}-\d{2})$/i);
+      if (startDate) scheduleStartDate = startDate[1];
+      const startTime = line.match(/^start-time:\s*([^\s]+)$/i);
+      if (startTime) scheduleStartTime = startTime[1];
 
       const logic = line.match(/^filter-logic:\s*(.+)$/i);
       if (logic) filterLogic = logic[1].trim();
@@ -149,7 +162,7 @@ export class MetadataExtractor {
       }
     }
 
-    const trigger = object || triggerType || recordTriggerType
+    const trigger = flowKind === 'RecordTriggered' && (object || triggerType || recordTriggerType)
       ? {
           object,
           triggerType,
@@ -159,7 +172,17 @@ export class MetadataExtractor {
           doesRequireRecordChangedToMeetCriteria,
         }
       : undefined;
-    return { flowKind, apiVersion, status, trigger, variables };
+    const schedule = flowKind === 'ScheduleTriggered' || scheduleFrequency || scheduleStartDate || scheduleStartTime
+      ? {
+          frequency: scheduleFrequency,
+          startDate: scheduleStartDate,
+          startTime: scheduleStartTime,
+          object: object || undefined,
+          filters,
+          filterLogic,
+        }
+      : undefined;
+    return { flowKind, apiVersion, status, trigger, schedule, variables };
   }
 
   private extractAssignmentProperties(label: string): Record<string, any> {
