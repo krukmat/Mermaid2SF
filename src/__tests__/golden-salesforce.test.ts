@@ -418,6 +418,88 @@ describe('M4 Salesforce correctness gates', () => {
     expect(semanticDiff(source, reparsed).equal).toBe(true);
   });
 
+  it('Wave 4 Salesforce validation fixture is canonical compiler output', () => {
+    const sourceXml = fixture('Golden_RecordTriggered_BeforeDelete');
+    const sourceIr = parseFlowXmlText(sourceXml, 'Golden_RecordTriggered_BeforeDelete');
+    const regeneratedXml = generator.generate(sourceIr);
+
+    expect(sourceIr.flowKind).toBe('RecordTriggered');
+    expect(sourceIr.trigger).toEqual(expect.objectContaining({
+      object: 'Account',
+      triggerType: 'RecordBeforeDelete',
+      recordTriggerType: 'Delete',
+      filterLogic: 'and',
+    }));
+    expect(canonicalizeXml(regeneratedXml)).toEqual(canonicalizeXml(sourceXml));
+  });
+
+  it('Wave 4 rich Before Delete preserves trigger and business semantics through Salesforce XML <-> FlowIR <-> Mermaid', () => {
+    const sourceXml = waveFixture('Golden_RecordTriggered_BeforeDelete_Rich');
+    const sourceIr = parseFlowXmlText(sourceXml, 'Golden_RecordTriggered_BeforeDelete_Rich');
+
+    expect(sourceIr.flowKind).toBe('RecordTriggered');
+    expect(sourceIr.trigger).toEqual(expect.objectContaining({
+      object: 'Account',
+      triggerType: 'RecordBeforeDelete',
+      recordTriggerType: 'Delete',
+      filterLogic: 'and',
+    }));
+
+    const mermaid = mermaidGenerator.generate(sourceIr);
+    expect(mermaid).toContain('flow: record-triggered');
+    expect(mermaid).toContain('trigger: before-delete');
+    expect(mermaid).toContain('record-trigger: delete');
+    expect(mermaid).toContain('filter: Industry = Technology');
+    expect(mermaid).toContain('set: deletedRecordId = ref:$Record.Id');
+
+    const mermaidIr = parseMermaidToFlowIr(mermaid, sourceIr.flowApiName, sourceIr.label);
+    const regeneratedXml = generator.generate(mermaidIr);
+    const finalIr = parseFlowXmlText(regeneratedXml, sourceIr.flowApiName);
+
+    expect(semanticDiff(sourceIr, mermaidIr).equal).toBe(true);
+    expect(semanticDiff(sourceIr, finalIr).equal).toBe(true);
+  });
+
+  it('Wave 4 canonical Mermaid preserves the before-delete/delete trigger pair', () => {
+    const source: FlowDSL = {
+      version: 2,
+      flowApiName: 'BeforeDelete_Account',
+      label: 'Before Delete Account',
+      flowKind: 'RecordTriggered',
+      processType: 'RecordTriggered',
+      apiVersion: '67.0',
+      status: 'Draft',
+      trigger: {
+        object: 'Account',
+        triggerType: 'RecordBeforeDelete',
+        recordTriggerType: 'Delete',
+      },
+      startElement: 'Start',
+      variables: [
+        { name: 'deletedId', dataType: 'String', isCollection: false, isInput: false, isOutput: false },
+      ],
+      elements: [
+        { id: 'Start', type: 'Start', next: 'Capture' },
+        {
+          id: 'Capture',
+          type: 'Assignment',
+          assignments: [{ variable: 'deletedId', value: { kind: 'reference', name: '$Record.Id' } }],
+          next: 'End',
+        },
+        { id: 'End', type: 'End' },
+      ],
+    };
+
+    const mermaid = mermaidGenerator.generate(source);
+    const reparsed = parseMermaidToFlowIr(mermaid, source.flowApiName, source.label);
+
+    expect(mermaid).toContain('trigger: before-delete');
+    expect(mermaid).toContain('record-trigger: delete');
+    expect(reparsed.trigger?.triggerType).toBe('RecordBeforeDelete');
+    expect(reparsed.trigger?.recordTriggerType).toBe('Delete');
+    expect(semanticDiff(source, reparsed).equal).toBe(true);
+  });
+
   it('XML canonicalization ignores formatting but not metadata structure', () => {
     const original = fixture('Golden_RecordTriggered');
     const compact = original.replace(/>\s+</g, '><').trim();
