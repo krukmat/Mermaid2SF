@@ -88,8 +88,9 @@ export class SalesforceSemanticValidator {
       } else if (!/^[A-Za-z][A-Za-z0-9_]*__e$/.test(dsl.platformEvent.eventApiName || '')) {
         this.error(errors, 'M2SF-SF-023', 'Wave 5 Platform Event API name must be a custom event ending in __e.');
       }
-      if (dsl.trigger) warnings.push({ code: 'M2SF-SF-007', message: 'Record trigger metadata is ignored for PlatformEventTriggered Flow.' });
-      if (dsl.schedule) warnings.push({ code: 'M2SF-SF-016', message: 'Schedule metadata is ignored for PlatformEventTriggered Flow.' });
+      if (dsl.trigger || dsl.schedule) {
+        this.error(errors, 'M2SF-SF-025', 'Platform Event-Triggered Flow cannot mix record-trigger or schedule metadata.');
+      }
     } else {
       if (dsl.trigger) warnings.push({ code: 'M2SF-SF-007', message: `Trigger metadata is ignored for ${kind} Flow.` });
       if (dsl.schedule) warnings.push({ code: 'M2SF-SF-016', message: `Schedule metadata is ignored for ${kind} Flow.` });
