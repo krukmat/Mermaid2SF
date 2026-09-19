@@ -1,6 +1,6 @@
 # Mermaid2SF — Supported Features
 
-This matrix is the public fidelity contract. `Guaranteed` is reserved for behavior backed by automated semantic round-trip tests. Salesforce deploy compatibility additionally requires the authenticated deployment gate. See [`docs/WAVE1_AUTOLAUNCHED_PROOF.md`](docs/WAVE1_AUTOLAUNCHED_PROOF.md) for Wave 1, [`docs/WAVE2A_RECORD_TRIGGERED_AFTER_SAVE_PROOF.md`](docs/WAVE2A_RECORD_TRIGGERED_AFTER_SAVE_PROOF.md) for Wave 2A, and [`docs/WAVE2B_RECORD_TRIGGERED_BEFORE_SAVE_PROOF.md`](docs/WAVE2B_RECORD_TRIGGERED_BEFORE_SAVE_PROOF.md) for Wave 2B.
+This matrix is the public fidelity contract. `Guaranteed` is reserved for behavior backed by automated semantic round-trip tests. Salesforce deploy compatibility additionally requires the authenticated deployment gate. See [`docs/WAVE1_AUTOLAUNCHED_PROOF.md`](docs/WAVE1_AUTOLAUNCHED_PROOF.md) for Wave 1, [`docs/WAVE2A_RECORD_TRIGGERED_AFTER_SAVE_PROOF.md`](docs/WAVE2A_RECORD_TRIGGERED_AFTER_SAVE_PROOF.md) for Wave 2A, [`docs/WAVE2B_RECORD_TRIGGERED_BEFORE_SAVE_PROOF.md`](docs/WAVE2B_RECORD_TRIGGERED_BEFORE_SAVE_PROOF.md) for Wave 2B, and [`docs/WAVE3_SCHEDULE_TRIGGERED_PROOF.md`](docs/WAVE3_SCHEDULE_TRIGGERED_PROOF.md) for Wave 3.
 
 ## Flow families
 
@@ -10,7 +10,8 @@ This matrix is the public fidelity contract. `Guaranteed` is reserved for behavi
 | Screen Flow | Baseline | Partial | Partial | Correct `processType` mapping exists; advanced Screen metadata is not part of Wave 1. |
 | Record-Triggered After Save | Guaranteed subset | Guaranteed subset | Guaranteed subset | Wave 2A bidirectional contract for Create, Update and CreateAndUpdate trigger modes. |
 | Record-Triggered Before Save | Guaranteed subset | Guaranteed subset | Guaranteed subset | Wave 2B bidirectional contract with Salesforce-specific element restrictions enforced before XML generation. |
-| Scheduled / Platform Event / Orchestrated | Unsupported | Partial/unknown | Unsupported | Not part of the current correctness baseline. |
+| Schedule-Triggered | Guaranteed subset | Guaranteed subset | Guaranteed subset | Wave 3 contract for Once, Daily and Weekly schedules, with optional record context. |
+| Platform Event / Orchestrated | Unsupported | Partial/unknown | Unsupported | Not part of the current correctness baseline. |
 
 ## Wave 1 — Autolaunched bidirectional contract
 
@@ -150,17 +151,72 @@ Wave 2B does not claim:
 
 Create Records, Update Records, Subflow, Screen, Wait, Fault and other unsupported element families are rejected for `RecordBeforeSave` before serialization.
 
+## Wave 3 — Schedule-Triggered bidirectional contract
+
+Wave 3 introduces a new Start strategy while keeping the canonical compiler architecture unchanged:
+
+```text
+Salesforce Schedule-Triggered Flow XML
+                 ↓
+               FlowIR
+                 ↓
+               Mermaid
+                 ↓
+               FlowIR
+                 ↓
+Salesforce Schedule-Triggered Flow XML
+                 ↓
+               FlowIR
+```
+
+### Guaranteed Wave 3 subset
+
+- `flowKind = ScheduleTriggered`.
+- Salesforce `triggerType = Scheduled`.
+- Schedule frequencies `Once`, `Daily`, and `Weekly`.
+- Exact preservation of `startDate` and `startTime`.
+- Optional Salesforce object context.
+- Entry filters using the current canonical `EqualTo` subset.
+- `filterLogic`.
+- `$Record` references when an object context is present.
+- Assignment, Decision, basic Get Records, and Update Records demonstrated by the rich semantic round-trip fixture.
+- Start and terminal semantics.
+
+Canonical Mermaid Start metadata is:
+
+```text
+flow: schedule-triggered
+frequency: daily
+start-date: 2030-01-01
+start-time: 02:00:00.000Z
+object: Account
+filter: Industry = Technology
+```
+
+The object, filters, and filter logic are optional. Without an object context, `$Record` is rejected by semantic validation.
+
+### Explicit Wave 3 boundaries
+
+Wave 3 does not claim:
+
+- monthly, hourly, cron, or custom schedule cadences,
+- Scheduled Paths on Record-Triggered Flows,
+- Screen/user-interaction semantics,
+- non-`EqualTo` trigger filters in canonical Mermaid authoring,
+- every Salesforce Schedule-Triggered metadata feature,
+- universal support for every Flow element inside a Scheduled Flow.
+
 ## Elements
 
 | Element | Forward | Reverse | Round-trip | Fidelity notes |
 |---|---|---|---|---|
-| Start | Supported | Supported | Guaranteed in Wave 1, Wave 2A and Wave 2B subsets | Record-Triggered Start preserves object, execution mode, trigger mode and documented filter metadata. |
+| Start | Supported | Supported | Guaranteed in Wave 1, Wave 2A, Wave 2B and Wave 3 subsets | Includes Autolaunched, Record-Triggered and Schedule-Triggered canonical Start metadata. |
 | End / Terminal | Supported | Synthetic | Guaranteed in Wave 1 Autolaunched | End is an authoring/IR concept; Salesforce termination is represented by no connector. |
-| Assignment | Supported | Supported | Guaranteed in Wave 1 and Wave 2B subsets | Wave 2B includes `$Record.Field` Assignment targets. |
-| Decision | Supported | Supported subset | Guaranteed subset in Wave 1 and Wave 2B | One structured condition per non-default Mermaid outcome; default outcome preserved. |
-| Get Records | Basic | Supported subset | Guaranteed subset in Wave 1 and Wave 2B | Basic queried fields/sort and `EqualTo` filters. Salesforce allows Get Records in Before Save. |
+| Assignment | Supported | Supported | Guaranteed in Wave 1, Wave 2B and Wave 3 subsets | Wave 2B covers `$Record.Field` Assignment targets; Wave 3 covers scheduled record context. |
+| Decision | Supported | Supported subset | Guaranteed subset in Wave 1, Wave 2B and Wave 3 | One structured condition per non-default Mermaid outcome; default outcome preserved. |
+| Get Records | Basic | Supported subset | Guaranteed subset in Wave 1, Wave 2B and Wave 3 | Basic queried fields/sort and `EqualTo` filters. |
 | Create Records | Basic | Supported subset | Guaranteed subset in Wave 1 Autolaunched | Explicit object and typed field values; advanced output metadata excluded. |
-| Update Records | Basic | Supported subset | Guaranteed subset in Wave 1 Autolaunched | Explicit object, typed field values, `EqualTo` filters and filter logic. |
+| Update Records | Basic | Supported subset | Guaranteed subset in Wave 1 and Wave 3 | Explicit object, typed field values, `EqualTo` filters and filter logic. |
 | Subflow | Basic | Supported subset | Guaranteed subset in Wave 1 Autolaunched | Explicit child Flow API name and basic input/output mappings. |
 | Screen | Basic | Partial | Partial | Basic input/display fields only; advanced components unsupported. |
 | Loop | Experimental | Partial | Unsupported | Salesforce permits Loop in Before Save, but Mermaid2SF Loop fidelity is still outside the guaranteed contract. |
@@ -180,7 +236,7 @@ Create Records, Update Records, Subflow, Screen, Wait, Fault and other unsupport
 
 ## External Salesforce gate
 
-Wave 1 Autolaunched, Wave 2A Record-Triggered After Save, and Wave 2B Record-Triggered Before Save compatibility have been externally verified against a real Salesforce org.
+Wave 1 Autolaunched, Wave 2A Record-Triggered After Save, Wave 2B Record-Triggered Before Save, and Wave 3 Schedule-Triggered compatibility have been externally verified against a real Salesforce org.
 
 The CI gate authenticates with the configured `SF_AUTH_URL` and performs a non-destructive Metadata API dry-run of the canonical Autolaunched fixture:
 
@@ -209,4 +265,11 @@ Wave 2B was additionally verified on 2026-09-19 with Salesforce Metadata API v67
 - Dry-run status: `Succeeded`.
 - No metadata was persisted to the validation org.
 
-These external gates prove Salesforce acceptance for the canonical Wave 1, Wave 2A and Wave 2B validation fixtures. Their richer documented subsets are separately proven by semantic round-trip tests. They do not extend the guarantee to unsupported Flow families or metadata outside the documented subsets.
+Wave 3 was additionally verified on 2026-09-19 with Salesforce Metadata API v67.0:
+
+- `Golden_ScheduleTriggered` validated as a Salesforce `Flow`.
+- Components validated: 1/1.
+- Dry-run status: `Succeeded`.
+- No metadata was persisted to the validation org.
+
+These external gates prove Salesforce acceptance for the canonical Wave 1, Wave 2A, Wave 2B and Wave 3 validation fixtures. Their richer documented subsets are separately proven by semantic round-trip tests. They do not extend the guarantee to unsupported Flow families or metadata outside the documented subsets.
