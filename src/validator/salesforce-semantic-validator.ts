@@ -56,8 +56,28 @@ export class SalesforceSemanticValidator {
           }
         }
       }
-    } else if (dsl.trigger) {
-      warnings.push({ code: 'M2SF-SF-007', message: `Trigger metadata is ignored for ${kind} Flow.` });
+      if (dsl.schedule) warnings.push({ code: 'M2SF-SF-016', message: 'Schedule metadata is ignored for RecordTriggered Flow.' });
+    } else if (kind === 'ScheduleTriggered') {
+      if (!dsl.schedule) {
+        this.error(errors, 'M2SF-SF-009', 'Schedule-Triggered Flow requires schedule metadata.');
+      } else {
+        if (!['Once', 'Daily', 'Weekly'].includes(dsl.schedule.frequency)) {
+          this.error(errors, 'M2SF-SF-012', 'Schedule-Triggered Flow frequency must be Once, Daily, or Weekly.');
+        }
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dsl.schedule.startDate || '')) {
+          this.error(errors, 'M2SF-SF-013', 'Schedule-Triggered Flow requires startDate in YYYY-MM-DD format.');
+        }
+        if (!/^\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(dsl.schedule.startTime || '')) {
+          this.error(errors, 'M2SF-SF-014', 'Schedule-Triggered Flow requires startTime such as 02:00:00.000Z.');
+        }
+        if ((dsl.schedule.filters || []).length > 0 && !dsl.schedule.object?.trim()) {
+          this.error(errors, 'M2SF-SF-015', 'Schedule-Triggered Flow entry filters require schedule.object.');
+        }
+      }
+      if (dsl.trigger) warnings.push({ code: 'M2SF-SF-007', message: 'Record trigger metadata is ignored for ScheduleTriggered Flow.' });
+    } else {
+      if (dsl.trigger) warnings.push({ code: 'M2SF-SF-007', message: `Trigger metadata is ignored for ${kind} Flow.` });
+      if (dsl.schedule) warnings.push({ code: 'M2SF-SF-016', message: `Schedule metadata is ignored for ${kind} Flow.` });
     }
   }
 
@@ -123,8 +143,12 @@ export class SalesforceSemanticValidator {
       if (normalized.kind !== 'reference') return;
       const name = normalized.name;
       if (name.startsWith('$')) {
-        if ((name === '$Record' || name.startsWith('$Record.')) && resolveFlowKind(dsl) !== 'RecordTriggered') {
-          this.error(errors, 'M2SF-SF-041', '$Record is only valid in the current Record-Triggered baseline.', element.id);
+        if (name === '$Record' || name.startsWith('$Record.')) {
+          const kind = resolveFlowKind(dsl);
+          const hasRecordContext = kind === 'RecordTriggered' || (kind === 'ScheduleTriggered' && Boolean(dsl.schedule?.object));
+          if (!hasRecordContext) {
+            this.error(errors, 'M2SF-SF-041', '$Record requires Record-Triggered Flow or a Schedule-Triggered Flow with an object context.', element.id);
+          }
         }
         return;
       }
