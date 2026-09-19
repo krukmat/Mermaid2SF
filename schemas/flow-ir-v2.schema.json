@@ -14,6 +14,7 @@
     "status": { "type": "string", "enum": ["Draft", "Active", "Obsolete"] },
     "trigger": { "$ref": "#/definitions/RecordTrigger" },
     "schedule": { "$ref": "#/definitions/ScheduleTrigger" },
+    "platformEvent": { "$ref": "#/definitions/PlatformEventTrigger" },
     "startElement": { "type": "string", "minLength": 1 },
     "variables": {
       "type": "array",
@@ -26,7 +27,7 @@
     }
   },
   "definitions": {
-    "FlowKind": { "type": "string", "enum": ["Autolaunched", "RecordTriggered", "ScheduleTriggered", "Screen"] },
+    "FlowKind": { "type": "string", "enum": ["Autolaunched", "RecordTriggered", "ScheduleTriggered", "PlatformEventTriggered", "Screen"] },
     "FlowValue": {
       "oneOf": [
         { "type": "string" },
@@ -129,6 +130,14 @@
         "object": { "type": "string" },
         "filters": { "type": "array", "items": { "$ref": "#/definitions/RecordFilter" } },
         "filterLogic": { "type": "string" }
+      }
+    },
+    "PlatformEventTrigger": {
+      "type": "object",
+      "required": ["eventApiName"],
+      "additionalProperties": false,
+      "properties": {
+        "eventApiName": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*__e$" }
       }
     },
     "FlowElement": {
