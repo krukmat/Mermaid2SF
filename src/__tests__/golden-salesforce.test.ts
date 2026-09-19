@@ -224,6 +224,85 @@ describe('M4 Salesforce correctness gates', () => {
     expect(semanticDiff(source, reparsed).equal).toBe(true);
   });
 
+  it('Wave 2B Salesforce validation fixture is canonical compiler output', () => {
+    const sourceXml = fixture('Golden_RecordTriggered_BeforeSave');
+    const sourceIr = parseFlowXmlText(sourceXml, 'Golden_RecordTriggered_BeforeSave');
+    const regeneratedXml = generator.generate(sourceIr);
+
+    expect(sourceIr.flowKind).toBe('RecordTriggered');
+    expect(sourceIr.trigger?.triggerType).toBe('RecordBeforeSave');
+    expect(canonicalizeXml(regeneratedXml)).toEqual(canonicalizeXml(sourceXml));
+  });
+
+  it('Wave 2B rich Before Save preserves trigger and business semantics through Salesforce XML <-> FlowIR <-> Mermaid', () => {
+    const sourceXml = waveFixture('Golden_RecordTriggered_BeforeSave_Rich');
+    const sourceIr = parseFlowXmlText(sourceXml, 'Golden_RecordTriggered_BeforeSave_Rich');
+
+    expect(sourceIr.flowKind).toBe('RecordTriggered');
+    expect(sourceIr.trigger).toEqual(expect.objectContaining({
+      object: 'Account',
+      triggerType: 'RecordBeforeSave',
+      recordTriggerType: 'CreateAndUpdate',
+      filterLogic: 'and',
+    }));
+
+    const mermaid = mermaidGenerator.generate(sourceIr);
+    expect(mermaid).toContain('flow: record-triggered');
+    expect(mermaid).toContain('trigger: before-save');
+    expect(mermaid).toContain('record-trigger: create-and-update');
+    expect(mermaid).toContain('filter: Industry = Technology');
+    expect(mermaid).toContain('set: $Record.Description = Validated by Mermaid2SF');
+
+    const mermaidIr = parseMermaidToFlowIr(mermaid, sourceIr.flowApiName, sourceIr.label);
+    const regeneratedXml = generator.generate(mermaidIr);
+    const finalIr = parseFlowXmlText(regeneratedXml, sourceIr.flowApiName);
+
+    expect(semanticDiff(sourceIr, mermaidIr).equal).toBe(true);
+    expect(semanticDiff(sourceIr, finalIr).equal).toBe(true);
+  });
+
+  it.each([
+    ['create', 'Create'],
+    ['update', 'Update'],
+    ['create-and-update', 'CreateAndUpdate'],
+  ] as const)('Wave 2B canonical Mermaid preserves %s trigger mode', (_mermaidMode, recordTriggerType) => {
+    const source: FlowDSL = {
+      version: 2,
+      flowApiName: `BeforeSave_${recordTriggerType}`,
+      label: `Before Save ${recordTriggerType}`,
+      flowKind: 'RecordTriggered',
+      processType: 'RecordTriggered',
+      apiVersion: '67.0',
+      status: 'Draft',
+      trigger: {
+        object: 'Account',
+        triggerType: 'RecordBeforeSave',
+        recordTriggerType,
+      },
+      startElement: 'Start',
+      elements: [
+        { id: 'Start', type: 'Start', next: 'SetDescription' },
+        {
+          id: 'SetDescription',
+          type: 'Assignment',
+          assignments: [{
+            variable: '$Record.Description',
+            value: { kind: 'string', value: 'Wave 2B' },
+          }],
+          next: 'End',
+        },
+        { id: 'End', type: 'End' },
+      ],
+    };
+
+    const mermaid = mermaidGenerator.generate(source);
+    const reparsed = parseMermaidToFlowIr(mermaid, source.flowApiName, source.label);
+
+    expect(reparsed.trigger?.triggerType).toBe('RecordBeforeSave');
+    expect(reparsed.trigger?.recordTriggerType).toBe(recordTriggerType);
+    expect(semanticDiff(source, reparsed).equal).toBe(true);
+  });
+
   it('XML canonicalization ignores formatting but not metadata structure', () => {
     const original = fixture('Golden_RecordTriggered');
     const compact = original.replace(/>\s+</g, '><').trim();
