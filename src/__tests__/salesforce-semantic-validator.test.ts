@@ -466,7 +466,6 @@ describe('SalesforceSemanticValidator', () => {
           type: 'Screen',
           allowBack: true,
           allowFinish: true,
-          components: [],
           ...screenOverrides,
           next: 'End',
         } as any,
