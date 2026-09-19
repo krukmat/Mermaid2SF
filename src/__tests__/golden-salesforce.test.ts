@@ -151,6 +151,16 @@ describe('M4 Salesforce correctness gates', () => {
     expect(semanticDiff(sourceIr, finalIr).equal).toBe(true);
   });
 
+  it('Wave 2A Salesforce validation fixture is canonical compiler output', () => {
+    const sourceXml = fixture('Golden_RecordTriggered_AfterSave');
+    const sourceIr = parseFlowXmlText(sourceXml, 'Golden_RecordTriggered_AfterSave');
+    const regeneratedXml = generator.generate(sourceIr);
+
+    expect(sourceIr.flowKind).toBe('RecordTriggered');
+    expect(sourceIr.trigger?.triggerType).toBe('RecordAfterSave');
+    expect(canonicalizeXml(regeneratedXml)).toEqual(canonicalizeXml(sourceXml));
+  });
+
   it('Wave 2A rich After Save preserves trigger and business semantics through Salesforce XML <-> FlowIR <-> Mermaid', () => {
     const sourceXml = waveFixture('Golden_RecordTriggered_AfterSave_Rich');
     const sourceIr = parseFlowXmlText(sourceXml, 'Golden_RecordTriggered_AfterSave_Rich');
