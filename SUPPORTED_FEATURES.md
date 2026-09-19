@@ -1,6 +1,6 @@
 # Mermaid2SF — Supported Features
 
-This matrix is the public fidelity contract. `Guaranteed` is reserved for behavior backed by automated semantic round-trip tests. Salesforce deploy compatibility additionally requires the authenticated deployment gate. See [`docs/WAVE1_AUTOLAUNCHED_PROOF.md`](docs/WAVE1_AUTOLAUNCHED_PROOF.md) for Wave 1, [`docs/WAVE2A_RECORD_TRIGGERED_AFTER_SAVE_PROOF.md`](docs/WAVE2A_RECORD_TRIGGERED_AFTER_SAVE_PROOF.md) for Wave 2A, [`docs/WAVE2B_RECORD_TRIGGERED_BEFORE_SAVE_PROOF.md`](docs/WAVE2B_RECORD_TRIGGERED_BEFORE_SAVE_PROOF.md) for Wave 2B, and [`docs/WAVE3_SCHEDULE_TRIGGERED_PROOF.md`](docs/WAVE3_SCHEDULE_TRIGGERED_PROOF.md) for Wave 3. Wave 4 evidence is in [`docs/WAVE4_RECORD_TRIGGERED_BEFORE_DELETE_PROOF.md`](docs/WAVE4_RECORD_TRIGGERED_BEFORE_DELETE_PROOF.md).
+This matrix is the public fidelity contract. `Guaranteed` is reserved for behavior backed by automated semantic round-trip tests. Salesforce deploy compatibility additionally requires the authenticated deployment gate. See [`docs/WAVE1_AUTOLAUNCHED_PROOF.md`](docs/WAVE1_AUTOLAUNCHED_PROOF.md) for Wave 1, [`docs/WAVE2A_RECORD_TRIGGERED_AFTER_SAVE_PROOF.md`](docs/WAVE2A_RECORD_TRIGGERED_AFTER_SAVE_PROOF.md) for Wave 2A, [`docs/WAVE2B_RECORD_TRIGGERED_BEFORE_SAVE_PROOF.md`](docs/WAVE2B_RECORD_TRIGGERED_BEFORE_SAVE_PROOF.md) for Wave 2B, and [`docs/WAVE3_SCHEDULE_TRIGGERED_PROOF.md`](docs/WAVE3_SCHEDULE_TRIGGERED_PROOF.md) for Wave 3. Wave 4 evidence is in [`docs/WAVE4_RECORD_TRIGGERED_BEFORE_DELETE_PROOF.md`](docs/WAVE4_RECORD_TRIGGERED_BEFORE_DELETE_PROOF.md). Wave 5 evidence is in [`docs/WAVE5_PLATFORM_EVENT_TRIGGERED_PROOF.md`](docs/WAVE5_PLATFORM_EVENT_TRIGGERED_PROOF.md).
 
 ## Flow families
 
@@ -12,7 +12,8 @@ This matrix is the public fidelity contract. `Guaranteed` is reserved for behavi
 | Record-Triggered Before Save | Guaranteed subset | Guaranteed subset | Guaranteed subset | Wave 2B bidirectional contract with Salesforce-specific element restrictions enforced before XML generation. |
 | Record-Triggered Before Delete | Guaranteed subset | Guaranteed subset | Guaranteed subset | Wave 4 contract for `RecordBeforeDelete` + `Delete`, `$Record`, entry criteria and documented background elements. |
 | Schedule-Triggered | Guaranteed subset | Guaranteed subset | Guaranteed subset | Wave 3 contract for Once, Daily and Weekly schedules, with optional record context. |
-| Platform Event / Orchestrated | Unsupported | Partial/unknown | Unsupported | Not part of the current correctness baseline. |
+| Platform Event-Triggered | Guaranteed subset | Guaranteed subset | Guaranteed subset | Wave 5 contract for Platform Event Start metadata and event-payload `$Record` semantics. |
+| Orchestrated | Unsupported | Partial/unknown | Unsupported | Not part of the current correctness baseline. |
 
 ## Wave 1 — Autolaunched bidirectional contract
 
@@ -259,17 +260,69 @@ The canonical Salesforce fixture also contains a related-record Update Records o
 
 Wave 4 does not claim Custom Error fidelity, advanced action families, non-`EqualTo` canonical trigger filters, or universal support for all Before Delete metadata.
 
+## Wave 5 — Platform Event-Triggered bidirectional contract
+
+Wave 5 adds an event-driven Start strategy:
+
+```text
+Salesforce Platform Event-Triggered Flow XML
+                   ↓
+                 FlowIR
+                   ↓
+                 Mermaid
+                   ↓
+                 FlowIR
+                   ↓
+Salesforce Platform Event-Triggered Flow XML
+                   ↓
+                 FlowIR
+```
+
+### Guaranteed Wave 5 subset
+
+- `flowKind = PlatformEventTriggered`.
+- Salesforce `triggerType = PlatformEvent`.
+- Platform Event API name represented independently in `PlatformEventTriggerConfig`.
+- Custom Platform Events (for example `Something__e`) and standard Platform Event API names are representable.
+- `$Record` references represent the Platform Event message payload.
+- Assignment.
+- Decision with the canonical structured-condition subset.
+- Basic Get Records.
+- Update Records driven by event payload values.
+- Start and terminal semantics.
+
+Canonical Mermaid Start metadata:
+
+```text
+flow: platform-event-triggered
+event: M2SF_Validation_Event__e
+```
+
+The rich semantic fixture uses a custom-event-shaped payload to exercise `$Record.Status__c`, `$Record.Account_Id__c`, and `$Record.Message__c`. The external org gate intentionally uses the standard `BatchApexErrorEvent` so validation does not depend on spare custom-object capacity in the target org.
+
+### Validation boundaries
+
+Mermaid2SF validates that the Platform Event API name is syntactically valid, but it does not attempt to infer locally whether an arbitrary API name is actually a Platform Event. That semantic existence/type check belongs to Salesforce Metadata API.
+
+Wave 5 does not claim:
+
+- arbitrary Platform Event field-schema validation offline,
+- Apex Action or HTTP Callout fidelity,
+- replay/subscription configuration outside Flow metadata,
+- every background-flow element supported by Salesforce,
+- Orchestration support.
+
 ## Elements
 
 | Element | Forward | Reverse | Round-trip | Fidelity notes |
 |---|---|---|---|---|
-| Start | Supported | Supported | Guaranteed in Wave 1, Wave 2A, Wave 2B, Wave 3 and Wave 4 subsets | Includes Autolaunched, all documented Record-Triggered variants, and Schedule-Triggered Start metadata. |
+| Start | Supported | Supported | Guaranteed in Wave 1, Wave 2A, Wave 2B, Wave 3, Wave 4 and Wave 5 subsets | Includes Autolaunched, Record-Triggered, Schedule-Triggered and Platform Event-Triggered Start metadata. |
 | End / Terminal | Supported | Synthetic | Guaranteed in Wave 1 Autolaunched | End is an authoring/IR concept; Salesforce termination is represented by no connector. |
-| Assignment | Supported | Supported | Guaranteed in Wave 1, Wave 2B and Wave 3 subsets | Wave 2B covers `$Record.Field` Assignment targets; Wave 3 covers scheduled record context. |
-| Decision | Supported | Supported subset | Guaranteed subset in Wave 1, Wave 2B, Wave 3 and Wave 4 | One structured condition per non-default Mermaid outcome; default outcome preserved. |
-| Get Records | Basic | Supported subset | Guaranteed subset in Wave 1, Wave 2B, Wave 3 and Wave 4 | Basic queried fields/sort and `EqualTo` filters. |
+| Assignment | Supported | Supported | Guaranteed in Wave 1, Wave 2B, Wave 3 and Wave 5 subsets | Wave 5 covers event-payload `$Record` values. |
+| Decision | Supported | Supported subset | Guaranteed subset in Wave 1, Wave 2B, Wave 3, Wave 4 and Wave 5 | One structured condition per non-default Mermaid outcome; default outcome preserved. |
+| Get Records | Basic | Supported subset | Guaranteed subset in Wave 1, Wave 2B, Wave 3, Wave 4 and Wave 5 | Basic queried fields/sort and `EqualTo` filters. |
 | Create Records | Basic | Supported subset | Guaranteed subset in Wave 1 Autolaunched | Explicit object and typed field values; advanced output metadata excluded. |
-| Update Records | Basic | Supported subset | Guaranteed subset in Wave 1, Wave 3 and Wave 4 | Wave 4 externally validates a related-record update in Before Delete. |
+| Update Records | Basic | Supported subset | Guaranteed subset in Wave 1, Wave 3, Wave 4 and Wave 5 | Wave 5 rich proof uses event payload values to select/update records. |
 | Subflow | Basic | Supported subset | Guaranteed subset in Wave 1 Autolaunched | Explicit child Flow API name and basic input/output mappings. |
 | Screen | Basic | Partial | Partial | Basic input/display fields only; advanced components unsupported. |
 | Loop | Experimental | Partial | Unsupported | Salesforce permits Loop in Before Save, but Mermaid2SF Loop fidelity is still outside the guaranteed contract. |
@@ -289,7 +342,7 @@ Wave 4 does not claim Custom Error fidelity, advanced action families, non-`Equa
 
 ## External Salesforce gate
 
-Wave 1 Autolaunched, Wave 2A Record-Triggered After Save, Wave 2B Record-Triggered Before Save, Wave 3 Schedule-Triggered, and Wave 4 Record-Triggered Before Delete compatibility have been externally verified against a real Salesforce org.
+Wave 1 Autolaunched, Wave 2A Record-Triggered After Save, Wave 2B Record-Triggered Before Save, Wave 3 Schedule-Triggered, Wave 4 Record-Triggered Before Delete, and Wave 5 Platform Event-Triggered compatibility have been externally verified against a real Salesforce org.
 
 The CI gate authenticates with the configured `SF_AUTH_URL` and performs a non-destructive Metadata API dry-run of the canonical Autolaunched fixture:
 
@@ -332,4 +385,14 @@ Wave 4 was additionally verified on 2026-09-19 with Salesforce Metadata API v67.
 - Dry-run status: `Succeeded`.
 - No metadata was persisted to the validation org.
 
-These external gates prove Salesforce acceptance for the canonical Wave 1, Wave 2A, Wave 2B, Wave 3 and Wave 4 validation fixtures. Their richer documented subsets are separately proven by semantic round-trip tests. They do not extend the guarantee to unsupported Flow families or metadata outside the documented subsets.
+Wave 5 was additionally verified on 2026-09-19 with Salesforce Metadata API v67.0:
+
+- `Golden_PlatformEventTriggered` validated as a Salesforce `Flow`.
+- External trigger target: standard `BatchApexErrorEvent`.
+- Components validated: 1/1.
+- Dry-run status: `Succeeded`.
+- No metadata was persisted to the validation org.
+
+The rich Wave 5 custom-event payload is separately proven by semantic round-trip tests and does not require that custom Platform Event to exist in the validation org.
+
+These external gates prove Salesforce acceptance for the canonical Wave 1, Wave 2A, Wave 2B, Wave 3, Wave 4 and Wave 5 validation fixtures. Their richer documented subsets are separately proven by semantic round-trip tests. They do not extend the guarantee to unsupported Flow families or metadata outside the documented subsets.
