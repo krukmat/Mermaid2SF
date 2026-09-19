@@ -384,6 +384,120 @@ describe('SalesforceSemanticValidator', () => {
     expect(validator.validate(dsl).errors.some((error) => error.code === 'M2SF-SF-041')).toBe(true);
   });
 
+  it('accepts the Wave 6 Screen subset with choices and visibility', () => {
+    const dsl = flow({
+      flowKind: 'Screen',
+      processType: 'Screen',
+      choices: [
+        { name: 'High', label: 'High', dataType: 'String', value: { kind: 'string', value: 'High' } },
+        { name: 'Low', label: 'Low', dataType: 'String', value: { kind: 'string', value: 'Low' } },
+      ],
+      elements: [
+        { id: 'Start', type: 'Start', next: 'Collect' },
+        {
+          id: 'Collect',
+          type: 'Screen',
+          allowBack: true,
+          allowFinish: true,
+          allowPause: false,
+          showFooter: true,
+          showHeader: true,
+          components: [
+            { type: 'InputField', name: 'Name', dataType: 'String', label: 'Name', required: true },
+            {
+              type: 'DropdownBox',
+              name: 'Priority',
+              dataType: 'String',
+              label: 'Priority',
+              choiceReferences: ['High', 'Low'],
+              required: true,
+            },
+            {
+              type: 'DisplayText',
+              name: 'Hint',
+              text: 'Visible for Acme',
+              visibility: {
+                conditions: [{
+                  left: { kind: 'reference', name: 'Name' },
+                  operator: 'EqualTo',
+                  right: { kind: 'string', value: 'Acme' },
+                }],
+              },
+            },
+          ],
+          next: 'End',
+        },
+        { id: 'End', type: 'End' },
+      ],
+    });
+
+    expect(validator.validate(dsl).errors).toHaveLength(0);
+  });
+
+  it.each([
+    ['both navigation controls disabled', {
+      allowBack: false,
+      allowFinish: false,
+      components: [],
+    }, 'M2SF-SF-026'],
+    ['invalid component API name', {
+      components: [{ type: 'InputField', name: 'Bad Name', dataType: 'String', label: 'Bad' }],
+    }, 'M2SF-SF-027'],
+    ['unknown choice', {
+      components: [{ type: 'DropdownBox', name: 'Priority', dataType: 'String', label: 'Priority', choiceReferences: ['Missing'] }],
+    }, 'M2SF-SF-028'],
+    ['missing input datatype', {
+      components: [{ type: 'InputField', name: 'Name', label: 'Name' }],
+    }, 'M2SF-SF-029'],
+    ['unsupported component type', {
+      components: [{ type: 'DisplayImage', name: 'Image1', text: 'x' }],
+    }, 'M2SF-SF-032'],
+    ['empty display text', {
+      components: [{ type: 'DisplayText', name: 'Message', text: '' }],
+    }, 'M2SF-SF-033'],
+  ] as const)('rejects Screen semantic violation: %s', (_name, screenOverrides, code) => {
+    const dsl = flow({
+      flowKind: 'Screen',
+      processType: 'Screen',
+      elements: [
+        { id: 'Start', type: 'Start', next: 'Screen1' },
+        {
+          id: 'Screen1',
+          type: 'Screen',
+          allowBack: true,
+          allowFinish: true,
+          components: [],
+          ...screenOverrides,
+          next: 'End',
+        } as any,
+        { id: 'End', type: 'End' },
+      ],
+    });
+
+    expect(validator.validate(dsl).errors.some((error) => error.code === code)).toBe(true);
+  });
+
+  it('prevents XML serialization for invalid Screen navigation', () => {
+    const dsl = flow({
+      flowKind: 'Screen',
+      processType: 'Screen',
+      elements: [
+        { id: 'Start', type: 'Start', next: 'Screen1' },
+        {
+          id: 'Screen1',
+          type: 'Screen',
+          allowBack: false,
+          allowFinish: false,
+          components: [],
+          next: 'End',
+        },
+        { id: 'End', type: 'End' },
+      ],
+    });
+
+    expect(() => new FlowXmlGenerator().generate(dsl)).toThrow(/M2SF-SF-026/);
+  });
+
   it('prevents XML serialization for invalid RecordBeforeSave elements', () => {
     const dsl = flow({
       flowKind: 'RecordTriggered',
