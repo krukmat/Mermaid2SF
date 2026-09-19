@@ -143,7 +143,7 @@ export class IntermediateModelBuilder {
     const raw = edge.label?.trim() || 'Outcome';
     const isDefault = /\bdefault\b/i.test(raw);
     if (isDefault) {
-      const name = raw.replace(/[\s(]*default[\s)]*/i, ' ').trim() || 'Default';
+      const name = raw.replace(/\s*\(?default\)?\s*$/i, '').trim() || 'Default';
       return { name, isDefault: true, next: edge.to };
     }
 
