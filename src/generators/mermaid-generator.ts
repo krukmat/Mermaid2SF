@@ -94,6 +94,24 @@ export class MermaidGenerator {
         lines.push(`flow: ${kindName}`);
         if (dsl.apiVersion) lines.push(`api-version: ${dsl.apiVersion}`);
         if (dsl.status) lines.push(`status: ${dsl.status.toLowerCase()}`);
+        if (kind === 'RecordTriggered' && dsl.trigger) {
+          const trigger = dsl.trigger;
+          lines.push(`object: ${trigger.object}`);
+          lines.push(`trigger: ${trigger.triggerType === 'RecordBeforeSave' ? 'before-save' : 'after-save'}`);
+          const recordTriggerNames: Record<string, string> = {
+            Create: 'create',
+            Update: 'update',
+            CreateAndUpdate: 'create-and-update',
+          };
+          lines.push(`record-trigger: ${recordTriggerNames[trigger.recordTriggerType] || trigger.recordTriggerType}`);
+          if (trigger.filterLogic) lines.push(`filter-logic: ${trigger.filterLogic}`);
+          for (const filter of trigger.filters || []) {
+            lines.push(this.renderFilter(filter.field, filter.operator, filter.value, element.id));
+          }
+          if (trigger.doesRequireRecordChangedToMeetCriteria !== undefined) {
+            lines.push(`require-changed-to-meet-criteria: ${trigger.doesRequireRecordChangedToMeetCriteria}`);
+          }
+        }
         for (const variable of dsl.variables || []) {
           const flags = [
             variable.isCollection ? 'collection' : '',
