@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <environments>Default</environments>
+    <interviewLabel>Golden Screen Wave 6 {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Golden Screen Wave 6</label>
+    <processType>Flow</processType>
+    <screens>
+        <name>Collect_Details</name>
+        <label>Collect Details</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>Confirm</targetReference>
+        </connector>
+        <fields>
+            <name>CustomerName</name>
+            <dataType>String</dataType>
+            <defaultValue>
+                <stringValue>Acme</stringValue>
+            </defaultValue>
+            <fieldText>Customer Name</fieldText>
+            <fieldType>InputField</fieldType>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>WantsEmail</name>
+            <dataType>Boolean</dataType>
+            <fieldText>Send email updates</fieldText>
+            <fieldType>InputField</fieldType>
+            <isRequired>false</isRequired>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
+    <screens>
+        <name>Confirm</name>
+        <label>Confirm</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <fields>
+            <name>Message</name>
+            <fieldText>Thanks for your submission.</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Collect_Details</targetReference>
+        </connector>
+    </start>
+    <status>Draft</status>
+</Flow>
