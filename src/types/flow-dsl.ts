@@ -170,8 +170,8 @@ export type FlowElement =
 
 /** @deprecated Use FlowKind. Kept for v1 compatibility. */
 export type ProcessType = FlowKind;
-export type RecordTriggerType = 'Create' | 'Update' | 'CreateAndUpdate';
-export type RecordTriggerExecution = 'RecordBeforeSave' | 'RecordAfterSave';
+export type RecordTriggerType = 'Create' | 'Update' | 'CreateAndUpdate' | 'Delete';
+export type RecordTriggerExecution = 'RecordBeforeSave' | 'RecordAfterSave' | 'RecordBeforeDelete';
 export type ScheduleFrequency = 'Once' | 'Daily' | 'Weekly';
 
 export interface RecordTriggerConfig {
