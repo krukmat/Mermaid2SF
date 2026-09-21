@@ -1,0 +1,7 @@
+flowchart TD
+    Start([START: Guided intake\nflow: screen\napi-version: 67.0\nstatus: draft\nchoice: HighPriority #40;String#41; = High | High Priority\nchoice: LowPriority #40;String#41; = Low | Low Priority])
+    Collect[SCREEN: Collect details\nallow-back: true\nallow-finish: true\nallow-pause: false\nshow-footer: true\nshow-header: true\ninput: CustomerName #40;String#41; #91;InputField#93; | Customer Name\nrequired: true\ninput: Priority #40;String#41; #91;DropdownBox#93; | Priority\nchoices: HighPriority,LowPriority\nrequired: true\ndisplay: Hint | High priority requests are reviewed first.\nvisible-if: ref:Priority = High]
+    Confirm[SCREEN: Confirm\nallow-back: true\nallow-finish: true\nallow-pause: false\nshow-footer: true\nshow-header: true\ndisplay: Message | Request captured.]
+    End([END: Complete])
+
+    Start --> Collect --> Confirm --> End

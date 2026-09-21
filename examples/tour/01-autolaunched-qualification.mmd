@@ -1,0 +1,10 @@
+flowchart TD
+    Start([START: Qualify lead\nflow: autolaunched\napi-version: 67.0\nstatus: draft\nvariable: score Number input])
+    Check{DECISION: Qualified?}
+    Create[CREATE: Create Account\nobject: Account\nfield: Name = Qualified Prospect]
+    End([END: Complete])
+
+    Start --> Check
+    Check -->|Qualified if ref:score >= 80| Create
+    Check -->|Skip default| End
+    Create --> End

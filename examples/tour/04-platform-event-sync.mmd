@@ -1,0 +1,6 @@
+flowchart TD
+    Start([START: Handle order event\nflow: platform-event-triggered\napi-version: 67.0\nstatus: draft\nevent: Order_Status__e])
+    Update[UPDATE: Sync account\nobject: Account\nfilter: Id = ref:$Record.Account_Id__c\nfield: Description = ref:$Record.Message__c]
+    End([END: Complete])
+
+    Start --> Update --> End

@@ -1,0 +1,6 @@
+flowchart TD
+    Start([START: Normalize account\nflow: record-triggered\napi-version: 67.0\nstatus: draft\nobject: Account\ntrigger: before-save\nrecord-trigger: create-and-update\nfilter-logic: and\nfilter: Industry = Technology])
+    Normalize[ASSIGNMENT: Normalize description\nset: $Record.Description = Reviewed by Mermaid2SF]
+    End([END: Complete])
+
+    Start --> Normalize --> End

@@ -1,0 +1,6 @@
+flowchart TD
+    Start([START: Nightly account hygiene\nflow: schedule-triggered\napi-version: 67.0\nstatus: draft\nfrequency: daily\nstart-date: 2030-01-01\nstart-time: 02:00:00.000Z\nobject: Account\nfilter-logic: and\nfilter: Industry = Technology])
+    Update[UPDATE: Mark reviewed\nobject: Account\nfilter: Id = ref:$Record.Id\nfield: Description = Nightly review]
+    End([END: Complete])
+
+    Start --> Update --> End
