@@ -5,14 +5,16 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { parseFlowXmlText } = require(path.join(__dirname, '../../dist/reverse/xml-parser'));
+const { executeFenixFlowRequest } = require('./fenix-contract');
 
 const PORT = process.env.PORT || 4000;
 
 function setCors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Fenix-Trace-ID, X-Fenix-Execution-ID');
 }
 
 const server = http.createServer((req, res) => {
@@ -27,6 +29,33 @@ const server = http.createServer((req, res) => {
   if (req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ status: 'ok' }));
+    return;
+  }
+
+  if (req.url === '/api/fenix/ready' && req.method === 'GET') {
+    const auth = authorizeFenix(req);
+    if (!auth.ok) {
+      writeJSON(res, auth.status, { error: auth.error });
+      return;
+    }
+    writeJSON(res, 200, { status: 'ready', contract_version: '1' });
+    return;
+  }
+
+  if (req.url === '/api/fenix/flow' && req.method === 'POST') {
+    const auth = authorizeFenix(req);
+    if (!auth.ok) {
+      writeJSON(res, auth.status, { error: auth.error });
+      return;
+    }
+    readJSONBody(req, 2 * 1024 * 1024, (error, payload) => {
+      if (error) {
+        writeJSON(res, error.status || 400, { error: error.message });
+        return;
+      }
+      const result = executeFenixFlowRequest(payload);
+      writeJSON(res, 200, result);
+    });
     return;
   }
 
@@ -154,6 +183,59 @@ function tryServeStatic(req, res) {
   res.writeHead(200, { 'Content-Type': mime });
   fs.createReadStream(filePath).pipe(res);
   return true;
+}
+
+function authorizeFenix(req) {
+  const configured = process.env.M2SF_FENIX_TOKEN || '';
+  if (!configured) {
+    return { ok: false, status: 503, error: 'Fenix integration token is not configured.' };
+  }
+  const header = req.headers.authorization || '';
+  const prefix = 'Bearer ';
+  if (!header.startsWith(prefix)) {
+    return { ok: false, status: 401, error: 'Missing bearer token.' };
+  }
+  const supplied = header.slice(prefix.length);
+  const expected = Buffer.from(configured);
+  const actual = Buffer.from(supplied);
+  if (expected.length !== actual.length || !crypto.timingSafeEqual(expected, actual)) {
+    return { ok: false, status: 401, error: 'Invalid bearer token.' };
+  }
+  return { ok: true };
+}
+
+function readJSONBody(req, limitBytes, callback) {
+  let body = '';
+  let size = 0;
+  let finished = false;
+
+  req.on('data', (chunk) => {
+    if (finished) return;
+    size += chunk.length;
+    if (size > limitBytes) {
+      finished = true;
+      const error = new Error('Request body exceeds 2 MiB limit.');
+      error.status = 413;
+      callback(error);
+      req.destroy();
+      return;
+    }
+    body += chunk.toString();
+  });
+
+  req.on('end', () => {
+    if (finished) return;
+    try {
+      callback(null, JSON.parse(body || '{}'));
+    } catch (error) {
+      callback(error);
+    }
+  });
+}
+
+function writeJSON(res, status, payload) {
+  res.writeHead(status, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(payload));
 }
 
 server.listen(PORT, () => {
