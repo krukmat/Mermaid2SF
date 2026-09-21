@@ -21,7 +21,7 @@
     "test:web": "vitest run",
     "test:web:watch": "vitest",
     "openapi:validate": "swagger-cli validate docs/openapi.yaml",
-    "ci": "npm run lint && npm run format:check && npm test && npm run build",
+    "ci": "npm run lint && npm run format:check && npm test && npm run build && node scripts/test-fenix-contract.js",
     "compile-examples": "node scripts/compile-examples.js",
     "validate-examples": "node scripts/validate-examples.js",
     "coverage-upload": "npx codecov",
