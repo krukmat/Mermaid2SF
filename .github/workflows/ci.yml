@@ -25,6 +25,8 @@ jobs:
       - name: TypeScript build
         if: always()
         run: npm run build
+      - name: Fenix integration contract smoke
+        run: node scripts/test-fenix-contract.js
 
   salesforce-org-gate:
     runs-on: ubuntu-latest
