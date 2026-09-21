@@ -26,6 +26,46 @@ paths:
                   version:
                     type: string
                     example: 1.0.0
+  /api/fenix/ready:
+    get:
+      summary: Fenix integration readiness
+      description: Authenticated readiness check for the Fenix provider surface.
+      security:
+        - FenixBearer: []
+      responses:
+        '200':
+          description: Fenix integration surface is ready
+        '401':
+          description: Missing or invalid Fenix bearer token
+        '503':
+          description: Fenix integration token is not configured
+  /api/fenix/flow:
+    post:
+      summary: Execute a Fenix Salesforce Flow semantic capability
+      description: >-
+        Versioned provider surface for salesforce.flow.import, export, validate,
+        and compare. FlowIR remains owned by Mermaid2SF.
+      security:
+        - FenixBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FenixFlowRequest'
+      responses:
+        '200':
+          description: Semantic provider result, including rejected/unsupported outcomes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FenixFlowResult'
+        '401':
+          description: Missing or invalid Fenix bearer token
+        '413':
+          description: Request body exceeds the provider limit
+        '503':
+          description: Fenix integration token is not configured
   /api/compile:
     post:
       summary: Compile Mermaid into Flow XML/DSL
@@ -50,7 +90,79 @@ paths:
         '500':
           description: Internal error
 components:
+  securitySchemes:
+    FenixBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque-shared-token
   schemas:
+    FenixFlowArtifact:
+      type: object
+      required: [format, content]
+      properties:
+        format:
+          type: string
+          enum: [mermaid, salesforce_flow_xml, flowir_v2]
+        name:
+          type: string
+        content:
+          type: string
+    FenixFlowRequest:
+      type: object
+      required: [contract_version, operation, input]
+      properties:
+        contract_version:
+          type: string
+          enum: ['1']
+        operation:
+          type: string
+          enum:
+            - salesforce.flow.import
+            - salesforce.flow.export
+            - salesforce.flow.validate
+            - salesforce.flow.compare
+        input:
+          $ref: '#/components/schemas/FenixFlowArtifact'
+        compare_to:
+          $ref: '#/components/schemas/FenixFlowArtifact'
+    FenixFlowResult:
+      type: object
+      required:
+        - contract_version
+        - operation
+        - status
+        - fidelity
+        - diagnostics
+        - provider_reference
+      properties:
+        contract_version:
+          type: string
+          enum: ['1']
+        operation:
+          type: string
+        status:
+          type: string
+          enum: [succeeded, rejected, unsupported]
+        artifacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/FenixFlowArtifact'
+        fidelity:
+          type: object
+          additionalProperties: true
+        semantic_metadata:
+          type: object
+          additionalProperties: true
+        diff:
+          type: object
+          additionalProperties: true
+        diagnostics:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        provider_reference:
+          type: string
     CompileRequest:
       type: object
       properties:
