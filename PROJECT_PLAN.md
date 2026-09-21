@@ -78,12 +78,13 @@ Detailed execution record: `docs/planning/compiler-correctness-execution.md`.
 Current evidence after Wave 6:
 
 ```text
-Test suites: 44 / 44 passed
-Tests:       349 / 349 passed
+Test suites: 45 / 45 passed
+Tests:       354 / 354 passed
 TypeScript:  build passed
 Golden XML:  passed
 Round-trip:  passed for Wave 1 Autolaunched + Wave 2A After Save + Wave 2B Before Save + Wave 3 Schedule-Triggered + Wave 4 Before Delete + Wave 5 Platform Event + Wave 6 Screen guaranteed subsets
 Org dry-run: Wave 1 PASS; Wave 2A PASS; Wave 2B PASS; Wave 3 PASS; Wave 4 PASS; Wave 5 PASS; Wave 6 PASS
+Tour examples: 5 / 5 compile through the canonical FlowIR pipeline
 ```
 
 ### M5 — Reverse parser and fidelity — ✅ Complete for guaranteed subset
