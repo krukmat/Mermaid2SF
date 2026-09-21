@@ -80,6 +80,17 @@ semanticDiff(A, C) == 0
 
 The guarantee is semantic, not byte-for-byte XML identity. Formatting, irrelevant XML ordering and synthetic terminal representation are normalized.
 
+## Current verification baseline
+
+After adding the executable README tour:
+
+```text
+Test suites: 45 / 45 passed
+Tests:       354 / 354 passed
+TypeScript:  build passed
+Tour:        5 / 5 representative examples compile through FlowIR
+```
+
 ## Salesforce verification
 
 The CI pipeline contains an authenticated Salesforce Metadata API dry-run gate for every guaranteed Flow family/trigger variant.
