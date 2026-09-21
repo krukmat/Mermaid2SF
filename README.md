@@ -9,9 +9,9 @@ Mermaid2SF is a bidirectional compiler experiment for Salesforce Flow. It turns 
 
 The core contract is:
 
-~~~text
+```text
 Salesforce Flow XML ⇄ FlowIR v2 ⇄ Mermaid
-~~~
+```
 
 **FlowIR v2 is the semantic source of truth.** Mermaid is the human-readable authoring/review format; Salesforce XML is the platform adapter.
 
@@ -38,7 +38,7 @@ For the consolidated implementation history, see [Project Compilation](docs/PROJ
 
 ## How the compiler works
 
-~~~mermaid
+```mermaid
 flowchart LR
     M[Mermaid source] --> IR[Canonical FlowIR v2]
     SF[Salesforce Flow XML] --> IR
@@ -50,7 +50,7 @@ flowchart LR
     G --> O[Salesforce Metadata API dry-run]
 
     IR --> MM[Canonical Mermaid]
-~~~
+```
 
 The important distinction is that Mermaid2SF does not treat Flow XML as arbitrary text generation. Supported metadata is normalized into FlowIR, validated, and only then serialized.
 
@@ -66,20 +66,20 @@ The executable source files live under [examples/tour/](examples/tour/), and CI 
 
 A reusable Flow receives data, evaluates it, and performs work without depending on a record trigger or UI.
 
-~~~mermaid
+```mermaid
 flowchart LR
     S([Input: score]) --> D{Qualified?}
     D -->|score >= 80| C[Create Account]
     D -->|otherwise| E([End])
     C --> E
-~~~
+```
 
 This maps naturally to a Mermaid2SF Flow with an explicit input variable and a structured Decision.
 
 <details>
 <summary>Compiler source</summary>
 
-~~~mermaid
+```mermaid
 flowchart TD
     Start([START: Qualify lead\nflow: autolaunched\napi-version: 67.0\nstatus: draft\nvariable: score Number input])
     Check{DECISION: Qualified?}
@@ -90,7 +90,7 @@ flowchart TD
     Check -->|Qualified if ref:score >= 80| Create
     Check -->|Skip default| End
     Create --> End
-~~~
+```
 
 Source: [01-autolaunched-qualification.mmd](examples/tour/01-autolaunched-qualification.mmd)
 
@@ -100,7 +100,7 @@ Source: [01-autolaunched-qualification.mmd](examples/tour/01-autolaunched-qualif
 
 Mermaid2SF models the three important record-triggered contracts separately because they have different Salesforce semantics.
 
-~~~mermaid
+```mermaid
 flowchart LR
     R[Record event] --> B[Before Save]
     R --> A[After Save]
@@ -109,29 +109,29 @@ flowchart LR
     B --> BF[Fast field update on $Record]
     A --> AF[Create / Update / Subflow work]
     D --> DF[Cleanup / related-record work]
-~~~
+```
 
 A typical **Before Save** Flow can normalize the triggering record without extra DML:
 
-~~~mermaid
+```mermaid
 flowchart LR
     S([Account create/update]) --> F{Industry = Technology?}
     F -->|yes| N[Set $Record.Description]
     F -->|no| E([End])
     N --> E
-~~~
+```
 
 <details>
 <summary>Compiler source</summary>
 
-~~~mermaid
+```mermaid
 flowchart TD
     Start([START: Normalize account\nflow: record-triggered\napi-version: 67.0\nstatus: draft\nobject: Account\ntrigger: before-save\nrecord-trigger: create-and-update\nfilter-logic: and\nfilter: Industry = Technology])
     Normalize[ASSIGNMENT: Normalize description\nset: $Record.Description = Reviewed by Mermaid2SF]
     End([END: Complete])
 
     Start --> Normalize --> End
-~~~
+```
 
 Source: [02-record-before-save.mmd](examples/tour/02-record-before-save.mmd)
 
@@ -143,24 +143,24 @@ The same family also has guaranteed subsets for **After Save** and **Before Dele
 
 A schedule becomes Start metadata rather than an ad-hoc timer embedded in the graph.
 
-~~~mermaid
+```mermaid
 flowchart LR
     T([02:00 every day]) --> Q[Accounts: Industry = Technology]
     Q --> U[Mark account reviewed]
     U --> E([End])
-~~~
+```
 
 <details>
 <summary>Compiler source</summary>
 
-~~~mermaid
+```mermaid
 flowchart TD
     Start([START: Nightly account hygiene\nflow: schedule-triggered\napi-version: 67.0\nstatus: draft\nfrequency: daily\nstart-date: 2030-01-01\nstart-time: 02:00:00.000Z\nobject: Account\nfilter-logic: and\nfilter: Industry = Technology])
     Update[UPDATE: Mark reviewed\nobject: Account\nfilter: Id = ref:$Record.Id\nfield: Description = Nightly review]
     End([END: Complete])
 
     Start --> Update --> End
-~~~
+```
 
 Source: [03-scheduled-maintenance.mmd](examples/tour/03-scheduled-maintenance.mmd)
 
@@ -172,7 +172,7 @@ Supported schedule frequencies in the guaranteed subset are **Once, Daily and We
 
 A Platform Event payload is represented as the Flow's <code>$Record</code> context.
 
-~~~mermaid
+```mermaid
 sequenceDiagram
     participant Producer
     participant PE as Order_Status__e
@@ -182,19 +182,19 @@ sequenceDiagram
     Producer->>PE: publish event
     PE->>Flow: $Record payload
     Flow->>Account: update using event fields
-~~~
+```
 
 <details>
 <summary>Compiler source</summary>
 
-~~~mermaid
+```mermaid
 flowchart TD
     Start([START: Handle order event\nflow: platform-event-triggered\napi-version: 67.0\nstatus: draft\nevent: Order_Status__e])
     Update[UPDATE: Sync account\nobject: Account\nfilter: Id = ref:$Record.Account_Id__c\nfield: Description = ref:$Record.Message__c]
     End([END: Complete])
 
     Start --> Update --> End
-~~~
+```
 
 Source: [04-platform-event-sync.mmd](examples/tour/04-platform-event-sync.mmd)
 
@@ -206,7 +206,7 @@ Offline validation checks the Flow semantics and event API-name shape; Salesforc
 
 Screen metadata is represented in FlowIR rather than being flattened into visual-only labels.
 
-~~~mermaid
+```mermaid
 flowchart LR
     S([Start]) --> C[Collect details]
     C --> P{Priority}
@@ -215,14 +215,14 @@ flowchart LR
     H --> F[Confirmation]
     N --> F
     F --> E([Finish])
-~~~
+```
 
 The Wave 6 contract preserves standard typed inputs, static choices, Display Text, navigation, defaults and one-condition visibility.
 
 <details>
 <summary>Compiler source</summary>
 
-~~~mermaid
+```mermaid
 flowchart TD
     Start([START: Guided intake\nflow: screen\napi-version: 67.0\nstatus: draft\nchoice: HighPriority #40;String#41; = High | High Priority\nchoice: LowPriority #40;String#41; = Low | Low Priority])
     Collect[SCREEN: Collect details\nallow-back: true\nallow-finish: true\nallow-pause: false\nshow-footer: true\nshow-header: true\ninput: CustomerName #40;String#41; #91;InputField#93; | Customer Name\nrequired: true\ninput: Priority #40;String#41; #91;DropdownBox#93; | Priority\nchoices: HighPriority,LowPriority\nrequired: true\ndisplay: Hint | High priority requests are reviewed first.\nvisible-if: ref:Priority = High]
@@ -230,7 +230,7 @@ flowchart TD
     End([END: Complete])
 
     Start --> Collect --> Confirm --> End
-~~~
+```
 
 Source: [05-screen-intake.mmd](examples/tour/05-screen-intake.mmd)
 
@@ -242,7 +242,7 @@ Source: [05-screen-intake.mmd](examples/tour/05-screen-intake.mmd)
 
 For a guaranteed feature, success means more than "the XML parser did not crash".
 
-~~~mermaid
+```mermaid
 flowchart LR
     A[Salesforce XML] --> B[FlowIR A]
     B --> C[Mermaid]
@@ -252,7 +252,7 @@ flowchart LR
 
     B -. semanticDiff = 0 .-> D
     B -. semanticDiff = 0 .-> F
-~~~
+```
 
 Formatting, irrelevant XML ordering, and the synthetic authoring <code>End</code> representation are normalized. The comparison is semantic rather than byte-for-byte.
 
@@ -260,7 +260,7 @@ Formatting, irrelevant XML ordering, and the synthetic authoring <code>End</code
 
 Requirements: Node.js 20+.
 
-~~~bash
+```bash
 npm install
 npm run build
 
@@ -268,13 +268,13 @@ npm run cli -- compile \
   --input examples/tour/01-autolaunched-qualification.mmd \
   --out-flow output/flows \
   --out-json output/dsl
-~~~
+```
 
 Flow family, trigger configuration, API version and status belong in the **START metadata** of the Mermaid source. They are not separate <code>--flow-kind</code> CLI switches.
 
 Useful commands:
 
-~~~bash
+```bash
 # Validate authoring semantics
 npm run cli -- lint --input examples/tour/01-autolaunched-qualification.mmd
 
@@ -289,13 +289,13 @@ npm test
 
 # TypeScript build
 npm run build
-~~~
+```
 
 ## Authoring model
 
 A Flow starts with an explicit execution contract:
 
-~~~text
+```text
 START: Normalize account
 flow: record-triggered
 api-version: 67.0
@@ -304,21 +304,21 @@ object: Account
 trigger: before-save
 record-trigger: create-and-update
 filter: Industry = Technology
-~~~
+```
 
 Business elements carry the Salesforce metadata required to make them meaningful:
 
-~~~text
+```text
 ASSIGNMENT: Normalize description
 set: $Record.Description = Reviewed by Mermaid2SF
-~~~
+```
 
-~~~text
+```text
 UPDATE: Mark reviewed
 object: Account
 filter: Id = ref:$Record.Id
 field: Description = Nightly review
-~~~
+```
 
 References use the canonical <code>ref:&lt;resource&gt;</code> form when ambiguity matters.
 
@@ -326,14 +326,14 @@ References use the canonical <code>ref:&lt;resource&gt;</code> form when ambigui
 
 Compilation is gated in layers:
 
-~~~mermaid
+```mermaid
 flowchart LR
     P[Parse Mermaid] --> G[Graph validation]
     G --> S[Salesforce semantic validation]
     S --> X[Generate Flow XML]
     X --> T[Golden + semantic tests]
     T --> O[Salesforce dry-run]
-~~~
+```
 
 Validation covers:
 
@@ -353,13 +353,13 @@ Stable Salesforce diagnostics use the <code>M2SF-SF-*</code> namespace so CI and
 
 For the documented subset:
 
-~~~text
+```text
 Salesforce XML
    ↓
 FlowIR
    ↓
 canonical Mermaid
-~~~
+```
 
 This makes the same semantic representation available to humans, source control, documentation tooling and agents.
 
@@ -367,11 +367,11 @@ This makes the same semantic representation available to humans, source control,
 
 The repository also includes a local visualizer with Mermaid/XML previews.
 
-~~~bash
+```bash
 npm run build
 node web/server/index.js
 # http://localhost:4000
-~~~
+```
 
 ![Flow Visualizer](docs/assets/web-visualizer-viewport.png)
 
@@ -409,7 +409,7 @@ Unsupported metadata is not described as lossless simply because part of it can 
 
 ## Project structure
 
-~~~text
+```text
 src/
 ├── parser/       Mermaid parsing
 ├── extractor/    authoring metadata extraction
@@ -429,7 +429,7 @@ examples/
 test/
 ├── fixtures/                  rich semantic fixtures
 └── salesforce-project/        org-safe Salesforce validation fixtures
-~~~
+```
 
 ## Contributing
 
@@ -437,14 +437,14 @@ Read [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md) before changing compiler 
 
 A new Salesforce feature should traverse the complete contract:
 
-~~~text
+```text
 Authoring / import
       → FlowIR
       → semantic validation
       → Salesforce adapter
       → golden / round-trip tests
       → authenticated org gate when deploy compatibility is claimed
-~~~
+```
 
 ## License
 
